@@ -1,24 +1,27 @@
 using UnityEngine;
 
-// Pure visual tracer: flies to a captured position then disappears.
-// Decoupled from the enemy so there is no race condition if the enemy dies.
+// Homes on the enemy it was fired at. Three independent ways it gets cleaned up
+// so it can NEVER linger on screen:
+//   1) reaches the enemy,
+//   2) its target enemy is gone (null),
+//   3) a hard lifetime cap (failsafe).
 public class Bullet : MonoBehaviour
 {
-    public float speed = 18f;
-    private Vector3 target;
-    private bool hasTarget;
+    public float speed = 40f;
+    public float lifeTime = 0.5f; // failsafe: destroyed after this no matter what
+    private Transform target;
+    private float age;
 
-    public void SetTarget(Vector3 worldTarget)
-    {
-        target = worldTarget;
-        hasTarget = true;
-    }
+    public void SetTarget(Transform enemy) { target = enemy; }
 
     void Update()
     {
-        if (!hasTarget) return;
-        transform.position = Vector3.MoveTowards(transform.position, target, speed * Time.deltaTime);
-        if (Vector3.Distance(transform.position, target) < 0.05f)
-            Destroy(gameObject);
+        age += Time.deltaTime;
+        if (age >= lifeTime) { Destroy(gameObject); return; }   // 3) failsafe
+        if (target == null) { Destroy(gameObject); return; }   // 2) enemy gone
+
+        transform.position = Vector3.MoveTowards(transform.position, target.position, speed * Time.deltaTime);
+        if (Vector3.Distance(transform.position, target.position) < 0.3f)
+            Destroy(gameObject);                                 // 1) reached it
     }
 }

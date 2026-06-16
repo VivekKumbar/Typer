@@ -1,17 +1,17 @@
 using UnityEngine;
 
-// The fortress turret. Spawns a visual bullet toward a target position.
+// Spawns a homing bullet aimed at a specific enemy.
 public class Tower : MonoBehaviour
 {
     [Header("Refs")]
     public Bullet bulletPrefab;
-    public Transform firePoint; // empty child where bullets spawn
+    public Transform firePoint;
 
-    public void FireAt(Vector3 worldTarget)
+    public void FireAt(Transform enemy)
     {
-        if (bulletPrefab == null) return;
+        if (bulletPrefab == null || enemy == null) return;
         Vector3 origin = firePoint ? firePoint.position : transform.position;
         Bullet b = Instantiate(bulletPrefab, origin, Quaternion.identity);
-        b.SetTarget(worldTarget);
+        b.SetTarget(enemy);
     }
 }
