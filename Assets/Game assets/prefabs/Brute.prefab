@@ -208,7 +208,7 @@ GameObject:
   - component: {fileID: 8209857148979017361}
   - component: {fileID: 74418523601202228}
   m_Layer: 0
-  m_Name: Enemy
+  m_Name: Brute
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -224,7 +224,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -2.38132, y: -0, z: -1.83882}
-  m_LocalScale: {x: 0.7, y: 0.7, z: 0.7}
+  m_LocalScale: {x: 1.1, y: 1.1, z: 1.1}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 8669410745287420114}
@@ -263,7 +263,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 9cb51f293d8ba184183f0be283dab61f, type: 2}
+  - {fileID: 2100000, guid: 9dc7556e5e092fc46a5ad14b85419fe3, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -321,7 +321,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Enemy
   label: {fileID: 8314609327209693863}
-  coinsOnDeath: 3
+  coinsOnDeath: 6
   coinPrefab: {fileID: 8797919699153396519, guid: 1c8fa89830f2e8d49a13a2c8df51bd27, type: 3}
+  damage: 15
+  wordTier: 0
   deathEffect: {fileID: 2918564761365751555, guid: 144a19a09c513b54ba557cf3d2645d72, type: 3}
   popScale: 1.3
+  moveSpeed: 1.5

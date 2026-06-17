@@ -1,19 +1,21 @@
 using UnityEngine;
-using UnityEngine.UI;
 using TMPro;
 
 // A single in-run upgrade. Hook a UI Button's OnClick to Purchase().
+// Cost, healed Amount, AND how fast the price climbs are all editable here.
 public class UpgradeButton : MonoBehaviour
 {
     public enum UpgradeType { RepairFortress, MaxHealth }
 
     [Header("Config")]
     public UpgradeType type = UpgradeType.RepairFortress;
-    public int cost = 10;
-    public int amount = 20;
+    public int cost = 10;          // starting price
+    public int amount = 20;        // how much it heals / adds
+    [Tooltip("Price is multiplied by this after each purchase. 1 = flat cost, 1.5 = +50% each time.")]
+    public float costMultiplier = 1.5f;
 
     [Header("Optional label")]
-    public TMP_Text labelText; // shows "Repair (10)"
+    public TMP_Text labelText;
 
     void Start() { RefreshLabel(); }
 
@@ -26,9 +28,10 @@ public class UpgradeButton : MonoBehaviour
         switch (type)
         {
             case UpgradeType.RepairFortress: gm.HealFortress(amount); break;
-            case UpgradeType.MaxHealth:      gm.maxHealth += amount; gm.HealFortress(amount); break;
+            case UpgradeType.MaxHealth: gm.maxHealth += amount; gm.HealFortress(amount); break;
         }
-        cost = Mathf.RoundToInt(cost * 1.5f); // price climbs each buy
+
+        cost = Mathf.RoundToInt(cost * costMultiplier); // climbs by the Inspector value
         RefreshLabel();
     }
 

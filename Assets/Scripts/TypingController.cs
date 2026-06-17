@@ -39,11 +39,17 @@ public class TypingController : MonoBehaviour
         bool correct = currentTarget.TryTypeLetter(c);
         if (correct)
         {
+            if (ComboManager.Instance) ComboManager.Instance.RegisterHit();
             // Only fire a bullet if the enemy is still alive. The killing letter
             // shows the death burst instead of leaving an orphan bullet flying.
             if (!currentTarget.IsDefeated && tower != null)
                 tower.FireAt(currentTarget.transform);
             if (currentTarget.IsDefeated) currentTarget = null; // word done, move on
+        }
+        else
+        {
+            // Wrong letter while locked on -> the combo breaks.
+            if (ComboManager.Instance) ComboManager.Instance.RegisterMiss();
         }
         // Wrong key while locked: ignore it (forgiving, like ZType).
     }

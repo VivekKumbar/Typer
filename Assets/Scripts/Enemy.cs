@@ -17,6 +17,12 @@ public class Enemy : MonoBehaviour
     public int coinsOnDeath = 3;
     public Coin coinPrefab;
 
+    [Header("Combat")]
+    public int damage = 10;   // how much health it removes if it reaches the fortress
+
+    [Header("Type")]
+    public WordTier wordTier = WordTier.Short;   // which word list this enemy draws from
+
     [Header("Juice")]
     public GameObject deathEffect;   // a Particle System prefab (optional)
     public float popScale = 1.3f;    // how much it punches up on a correct letter
@@ -26,18 +32,20 @@ public class Enemy : MonoBehaviour
     public bool IsDefeated { get; private set; }
 
     private Transform target;
-    private float moveSpeed = 1f;
+
+    [Header("Movement")]
+    public float moveSpeed = 1.5f;   // this type's base speed (the spawner adds a wave bonus)
 
     private Vector3 baseScale;
     private Coroutine popCo;
 
     void Awake() { baseScale = transform.localScale; }
 
-    public void Init(string word, Transform fortress, float speed)
+    public void Init(string word, Transform fortress, float speedBonus)
     {
         Word = word.ToUpper();
         target = fortress;
-        moveSpeed = speed;
+        moveSpeed += speedBonus;   // base (from prefab) + difficulty ramp
         TypedCount = 0;
         IsDefeated = false;
         RefreshLabel();
@@ -55,7 +63,7 @@ public class Enemy : MonoBehaviour
 
         if (Vector3.Distance(transform.position, target.position) < 0.5f)
         {
-            GameManager.Instance.DamageFortress(Word.Length);
+            GameManager.Instance.DamageFortress(damage);
             CameraShake.ShakeHit();  // big shake — tune on the Main Camera
             SfxPlayer.PlayHit();
             Die(false);
@@ -74,6 +82,9 @@ public class Enemy : MonoBehaviour
         if (TypedCount >= Word.Length) Die(true);
         return true;
     }
+
+    // Lets allies (soldiers) defeat this enemy with full death juice + coins.
+    public void Defeat() { Die(true); }
 
     public char NextChar => TypedCount < Word.Length ? Word[TypedCount] : '\0';
     public float DistanceToFortress => target ? Vector3.Distance(transform.position, target.position) : Mathf.Infinity;
@@ -119,8 +130,11 @@ public class Enemy : MonoBehaviour
             SfxPlayer.PlayKill();
 
             if (coinPrefab != null)
-                for (int i = 0; i < coinsOnDeath; i++)
+            {
+                int reward = Mathf.Clamp(Mathf.RoundToInt(coinsOnDeath * ComboManager.Multiplier), coinsOnDeath, 30);
+                for (int i = 0; i < reward; i++)
                     Instantiate(coinPrefab, transform.position, Quaternion.identity).Launch();
+            }
         }
         Destroy(gameObject);
     }
