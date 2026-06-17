@@ -12,7 +12,7 @@ public class MainMenu : MonoBehaviour
 {
     [Header("Scene")]
     [Tooltip("Exact name of your game scene (must be added to Build Settings).")]
-    public string gameSceneName = "SampleScene";
+    public string gameSceneName = "GameScene";
 
     [Header("Loading UI (optional, but you asked for it)")]
     public GameObject loadingPanel;   // full-screen panel, disabled by default
