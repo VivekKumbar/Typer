@@ -324,7 +324,8 @@ MonoBehaviour:
   coinsOnDeath: 6
   coinPrefab: {fileID: 8797919699153396519, guid: 1c8fa89830f2e8d49a13a2c8df51bd27, type: 3}
   damage: 15
-  wordTier: 0
+  minLetters: 6
+  maxLetters: 7
   deathEffect: {fileID: 2918564761365751555, guid: 144a19a09c513b54ba557cf3d2645d72, type: 3}
   popScale: 1.3
-  moveSpeed: 1.5
+  moveSpeed: 1

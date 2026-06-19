@@ -106,7 +106,7 @@ public class WaveManager : MonoBehaviour
         Enemy prefab = enemyPrefabs[Random.Range(0, enemyPrefabs.Length)];
         Vector3 pos = new Vector3(Random.Range(minX, maxX), groundY, spawnZ);
         Enemy e = Instantiate(prefab, pos, Quaternion.identity);
-        string word = wordBank.GetWord(prefab.wordTier);
+        string word = wordBank.GetWord(prefab.minLetters, prefab.maxLetters);
         e.Init(word, fortress, speedBonus);
     }
 

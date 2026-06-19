@@ -12,30 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d4a6f36b78339fd468e5ab4f172efd0f, type: 3}
   m_Name: WordBank
   m_EditorClassIdentifier: Assembly-CSharp::WordBank
-  note: Keep words SHORT for mobile. Grouped by difficulty tier.
-  easyWords:
-  - cat
-  - dog
-  - run
-  - sun
-  - ice
-  - key
-  - map
-  - owl
-  - fox
-  - bee
-  mediumWords:
-  - shield
-  - castle
-  - arrow
-  - sword
-  - guard
-  - tower
-  - stone
-  - raven
-  hardWords:
-  - fortress
-  - catapult
-  - defender
-  - keystone
-  - barricade
+  wordFile: {fileID: 4900000, guid: 2273e4efbd948db42a95a11f0130490f, type: 3}
+  fallbackWords: cat dog run sun ice key map owl fox bee wall gate bow axe pike moat
+    shield castle arrow sword guard tower stone raven knight fortress catapult defender
+    keystone barricade rampart

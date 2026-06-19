@@ -20,8 +20,9 @@ public class Enemy : MonoBehaviour
     [Header("Combat")]
     public int damage = 10;   // how much health it removes if it reaches the fortress
 
-    [Header("Type")]
-    public WordTier wordTier = WordTier.Short;   // which word list this enemy draws from
+    [Header("Word length for this enemy")]
+    public int minLetters = 3;   // shortest word this enemy can carry
+    public int maxLetters = 5;   // longest word this enemy can carry
 
     [Header("Juice")]
     public GameObject deathEffect;   // a Particle System prefab (optional)
