@@ -87,7 +87,7 @@ public class Enemy : MonoBehaviour
     // Lets allies (soldiers) defeat this enemy with full death juice + coins.
     public void Defeat() { Die(true); }
 
-    public char NextChar => TypedCount < Word.Length ? Word[TypedCount] : '\0';
+    public char NextChar => (!string.IsNullOrEmpty(Word) && TypedCount < Word.Length) ? Word[TypedCount] : '\0';
     public float DistanceToFortress => target ? Vector3.Distance(transform.position, target.position) : Mathf.Infinity;
 
     void RefreshLabel()
