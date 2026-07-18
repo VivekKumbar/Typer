@@ -40,7 +40,7 @@ public class WaveManager : MonoBehaviour
     public float minX = -4f;
     public float maxX = 4f;
     public float spawnZ = 12f;
-    public float groundY = 0.5f;
+    public float groundY = 100f;
 
     private int waveIndex = 0;
 

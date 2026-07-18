@@ -578,9 +578,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WaveManager
   enemyPrefabs:
-  - {fileID: 74418523601202228, guid: e2a4c5b4833c02241a8865d1938f781b, type: 3}
-  - {fileID: 74418523601202228, guid: 034fbf0d5b1306c4aa0e229bea818209, type: 3}
-  - {fileID: 74418523601202228, guid: bcb67e3009975b9479798a2a7e310a09, type: 3}
+  - {fileID: 5561196258077725470, guid: 3ba50791f030bf544b3674f6225667bc, type: 3}
   wordBank: {fileID: 11400000, guid: e7fed34dd66589049adf5ce74e0dc873, type: 2}
   fortress: {fileID: 2017509312}
   banner: {fileID: 936444596}
@@ -3060,6 +3058,37 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1016567544
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1016567545}
+  m_Layer: 0
+  m_Name: GameObject (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1016567545
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1016567544}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 201.603, y: 421.00214, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5812,3 +5841,4 @@ SceneRoots:
   - {fileID: 987156803}
   - {fileID: 731350187}
   - {fileID: 826205314}
+  - {fileID: 1016567545}
