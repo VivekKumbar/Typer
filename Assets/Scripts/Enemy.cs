@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
-// One marching enemy carrying a word. Now with JUICE: a scale-pop on each
-// correct letter, a particle burst + screen shake + sound on death, and a
-// bigger shake + boom when it reaches the fortress.
+// One marching enemy carrying a word. Rotates to face the fortress as it walks,
+// with juice: scale-pop per correct letter, particles + shake + sound on death.
 public class Enemy : MonoBehaviour
 {
     public static readonly List<Enemy> Active = new List<Enemy>();
@@ -18,54 +17,92 @@ public class Enemy : MonoBehaviour
     public Coin coinPrefab;
 
     [Header("Combat")]
-    public int damage = 10;   // how much health it removes if it reaches the fortress
+    public int damage = 10;
 
     [Header("Word length for this enemy")]
-    public int minLetters = 3;   // shortest word this enemy can carry
-    public int maxLetters = 5;   // longest word this enemy can carry
+    public int minLetters = 3;
+    public int maxLetters = 5;
+
+    [Header("Movement")]
+    public float moveSpeed = 1.5f;
+
+    [Header("Facing (3D models)")]
+    [Tooltip("How fast it turns to face the tower. Higher = snappier.")]
+    public float turnSpeed = 10f;
+    [Tooltip("Fix for models that don't face +Z. Try 180 if it walks backwards, 90 or -90 if sideways.")]
+    public float modelYawOffset = 0f;
+    [Tooltip("Uncheck if you don't want the enemy to rotate at all (e.g. flat sprites).")]
+    public bool rotateTowardsTarget = true;
+
+    [Header("Animation")]
+    [Tooltip("Optional. Assign this enemy's EnemyAnimator (holds its Walk/Death clips).")]
+    public EnemyAnimator enemyAnimator;
+    [Tooltip("Extra seconds to linger after death so the animation can play. 0 = use the clip's own length.")]
+    public float deathLinger = 0f;
 
     [Header("Juice")]
-    public GameObject deathEffect;   // a Particle System prefab (optional)
-    public float popScale = 1.3f;    // how much it punches up on a correct letter
+    public GameObject deathEffect;
+    public float popScale = 1.3f;
 
     public string Word { get; private set; }
     public int TypedCount { get; private set; }
     public bool IsDefeated { get; private set; }
 
     private Transform target;
-
-    [Header("Movement")]
-    public float moveSpeed = 1.5f;   // this type's base speed (the spawner adds a wave bonus)
-
     private Vector3 baseScale;
     private Coroutine popCo;
 
-    void Awake() { baseScale = transform.localScale; }
+    void Awake()
+    {
+        baseScale = transform.localScale;
+        if (enemyAnimator == null) enemyAnimator = GetComponentInChildren<EnemyAnimator>();
+    }
 
     public void Init(string word, Transform fortress, float speedBonus)
     {
         Word = word.ToUpper();
         target = fortress;
-        moveSpeed += speedBonus;   // base (from prefab) + difficulty ramp
+        moveSpeed += speedBonus;
         TypedCount = 0;
         IsDefeated = false;
         RefreshLabel();
+
+        // Face the tower immediately on spawn (no initial spin)
+        if (rotateTowardsTarget && target != null)
+        {
+            Vector3 d = target.position - transform.position;
+            d.y = 0f;
+            if (d.sqrMagnitude > 0.001f)
+                transform.rotation = Quaternion.LookRotation(d) * Quaternion.Euler(0f, modelYawOffset, 0f);
+        }
+
+        if (!Active.Contains(this)) Active.Add(this); // only join once it has a word
     }
 
-    void OnEnable() { if (!Active.Contains(this)) Active.Add(this); }
     void OnDisable() { Active.Remove(this); }
 
     void Update()
     {
         if (IsDefeated || target == null) return;
 
-        Vector3 dir = (target.position - transform.position).normalized;
-        transform.position += dir * moveSpeed * Time.deltaTime;
+        Vector3 dir = target.position - transform.position;
+        dir.y = 0f;                       // stay level on the ground plane
+        Vector3 flat = dir.normalized;
+
+        // Walk
+        transform.position += flat * moveSpeed * Time.deltaTime;
+
+        // Turn to face the tower
+        if (rotateTowardsTarget && flat.sqrMagnitude > 0.001f)
+        {
+            Quaternion want = Quaternion.LookRotation(flat) * Quaternion.Euler(0f, modelYawOffset, 0f);
+            transform.rotation = Quaternion.Slerp(transform.rotation, want, turnSpeed * Time.deltaTime);
+        }
 
         if (Vector3.Distance(transform.position, target.position) < 0.5f)
         {
             GameManager.Instance.DamageFortress(damage);
-            CameraShake.ShakeHit();  // big shake — tune on the Main Camera
+            CameraShake.ShakeHit();
             SfxPlayer.PlayHit();
             Die(false);
         }
@@ -73,18 +110,17 @@ public class Enemy : MonoBehaviour
 
     public bool TryTypeLetter(char c)
     {
-        if (IsDefeated || TypedCount >= Word.Length) return false;
+        if (IsDefeated || string.IsNullOrEmpty(Word) || TypedCount >= Word.Length) return false;
         if (char.ToUpper(c) != Word[TypedCount]) return false;
 
         TypedCount++;
         RefreshLabel();
-        Pop();                 // juice: punch the scale
-        SfxPlayer.PlayType();  // juice: blip
+        Pop();
+        SfxPlayer.PlayType();
         if (TypedCount >= Word.Length) Die(true);
         return true;
     }
 
-    // Lets allies (soldiers) defeat this enemy with full death juice + coins.
     public void Defeat() { Die(true); }
 
     public char NextChar => (!string.IsNullOrEmpty(Word) && TypedCount < Word.Length) ? Word[TypedCount] : '\0';
@@ -122,12 +158,12 @@ public class Enemy : MonoBehaviour
     {
         if (IsDefeated) return;
         IsDefeated = true;
-        Active.Remove(this);
+        Active.Remove(this);   // leaves the wave count immediately, so waves flow
 
         if (rewardCoins)
         {
             if (deathEffect != null) Instantiate(deathEffect, transform.position, Quaternion.identity);
-            CameraShake.ShakeKill(); // small shake — tune on the Main Camera
+            CameraShake.ShakeKill();
             SfxPlayer.PlayKill();
 
             if (coinPrefab != null)
@@ -137,6 +173,20 @@ public class Enemy : MonoBehaviour
                     Instantiate(coinPrefab, transform.position, Quaternion.identity).Launch();
             }
         }
-        Destroy(gameObject);
+
+        // Play the death animation, then clean up
+        float wait = deathLinger;
+        if (enemyAnimator != null)
+        {
+            enemyAnimator.PlayDeath();
+            if (wait <= 0f) wait = enemyAnimator.DeathLength;
+        }
+
+        if (wait > 0f)
+        {
+            if (label != null) label.gameObject.SetActive(false); // hide the word
+            Destroy(gameObject, wait);
+        }
+        else Destroy(gameObject);
     }
 }
