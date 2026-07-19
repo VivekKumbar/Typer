@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 096a8c925c85ad6439b517470e151ef8
+timeCreated: 1476056585
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 75818
+  packageName: The Big Castle Kit
+  packageVersion: 1.9
+  assetPath: Assets/castle/prefabs/decals/decal_wall_c.prefab
+  uploadId: 716458

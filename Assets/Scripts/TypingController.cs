@@ -43,7 +43,7 @@ public class TypingController : MonoBehaviour
             // Only fire a bullet if the enemy is still alive. The killing letter
             // shows the death burst instead of leaving an orphan bullet flying.
             if (!currentTarget.IsDefeated && tower != null)
-                tower.FireAt(currentTarget.transform);
+                tower.FireAt(currentTarget);
             if (currentTarget.IsDefeated) currentTarget = null; // word done, move on
         }
         else

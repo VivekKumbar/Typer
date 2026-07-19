@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: f0583dd50bae80440a62dd394e1b467e
+timeCreated: 1476753204
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 75818
+  packageName: The Big Castle Kit
+  packageVersion: 1.9
+  assetPath: Assets/castle/prefabs/props/wallDeco_c.prefab
+  uploadId: 716458

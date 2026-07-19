@@ -40,6 +40,9 @@ public class Enemy : MonoBehaviour
     [Tooltip("Extra seconds to linger after death so the animation can play. 0 = use the clip's own length.")]
     public float deathLinger = 0f;
 
+    [Tooltip("Optional dissolve-on-death effect. Auto-found if left empty.")]
+    public EnemyDissolve dissolve;
+
     [Header("Juice")]
     public GameObject deathEffect;
     public float popScale = 1.3f;
@@ -56,6 +59,7 @@ public class Enemy : MonoBehaviour
     {
         baseScale = transform.localScale;
         if (enemyAnimator == null) enemyAnimator = GetComponentInChildren<EnemyAnimator>();
+        if (dissolve == null) dissolve = GetComponentInChildren<EnemyDissolve>();
     }
 
     public void Init(string word, Transform fortress, float speedBonus)
@@ -174,12 +178,17 @@ public class Enemy : MonoBehaviour
             }
         }
 
-        // Play the death animation, then clean up
+        // Play the death animation + dissolve, then clean up
         float wait = deathLinger;
         if (enemyAnimator != null)
         {
             enemyAnimator.PlayDeath();
             if (wait <= 0f) wait = enemyAnimator.DeathLength;
+        }
+        if (dissolve != null)
+        {
+            dissolve.Dissolve();
+            wait = Mathf.Max(wait, dissolve.TotalTime); // don't destroy mid-dissolve
         }
 
         if (wait > 0f)

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: f0e85fe6ecd730848a9a3507cd7d80c9
+timeCreated: 1464172759
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 75818
+  packageName: The Big Castle Kit
+  packageVersion: 1.9
+  assetPath: Assets/castle/materials/glass_a_outside.mat
+  uploadId: 716458

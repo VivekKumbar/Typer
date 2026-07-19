@@ -7,11 +7,18 @@ public class Tower : MonoBehaviour
     public Bullet bulletPrefab;
     public Transform firePoint;
 
-    public void FireAt(Transform enemy)
+    [Header("Juice")]
+    public GameObject muzzleFlash; // optional particle at the fire point
+
+    public void FireAt(Enemy enemy)
     {
         if (bulletPrefab == null || enemy == null) return;
+
         Vector3 origin = firePoint ? firePoint.position : transform.position;
         Bullet b = Instantiate(bulletPrefab, origin, Quaternion.identity);
         b.SetTarget(enemy);
+
+        if (muzzleFlash != null)
+            Instantiate(muzzleFlash, origin, Quaternion.identity);
     }
 }
