@@ -551,7 +551,6 @@ MonoBehaviour:
   lifeTime: 0.1
   faceTravelDirection: 1
   impactEffect: {fileID: 0}
-  debugLog: 0
 --- !u!4 &143583367 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7535274335487503128, guid: 68e13b47841f41640920b13143a2dd87, type: 3}
@@ -3435,7 +3434,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1091154365595022421, guid: e28f1d90ce9d0d541859a784aa1bbff7, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.32
+      value: -0.361
       objectReference: {fileID: 0}
     - target: {fileID: 1091154365595022421, guid: e28f1d90ce9d0d541859a784aa1bbff7, type: 3}
       propertyPath: m_LocalPosition.y
@@ -3443,7 +3442,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1091154365595022421, guid: e28f1d90ce9d0d541859a784aa1bbff7, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.25
+      value: 0.246
       objectReference: {fileID: 0}
     - target: {fileID: 1091154365595022421, guid: e28f1d90ce9d0d541859a784aa1bbff7, type: 3}
       propertyPath: m_LocalRotation.w

@@ -118,6 +118,7 @@ public class Enemy : MonoBehaviour
         if (char.ToUpper(c) != Word[TypedCount]) return false;
 
         TypedCount++;
+        GetComponent<EnemyHitFlash>()?.Flash();
         RefreshLabel();
         Pop();
         SfxPlayer.PlayType();

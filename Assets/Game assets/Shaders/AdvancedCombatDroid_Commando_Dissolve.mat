@@ -48,7 +48,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - Enemy_Material_Dissolve: -3.01
+    - Enemy_Material_Dissolve: 0
     - _AlphaClip: 1
     - _AlphaToMask: 1
     - _Blend: 0
@@ -76,8 +76,9 @@ Material:
     - _ZWrite: 1
     - _ZWriteControl: 0
     m_Colors:
+    - Enemy_Material_Colour: {r: 1, g: 1, b: 1, a: 1}
     - _BaseColour: {r: 1, g: 1, b: 1, a: 1}
-    - _Dissolve_color: {r: 6.13441, g: 6.13441, b: 6.13441, a: 1}
+    - _Dissolve_color: {r: 8.189918, g: 8.189918, b: 8.189918, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
 --- !u!114 &4867051616887799131

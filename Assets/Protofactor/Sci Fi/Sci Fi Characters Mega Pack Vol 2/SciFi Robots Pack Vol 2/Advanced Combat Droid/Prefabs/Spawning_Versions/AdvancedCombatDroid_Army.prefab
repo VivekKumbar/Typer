@@ -1400,8 +1400,6 @@ MonoBehaviour:
   delay: 0.1
   startValue: 0
   endValue: 1
-  verboseLogging: 1
-  renderers: []
 --- !u!114 &6143357071221722724
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1414,10 +1412,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a46c43fb0505c7941a8eec1534055931, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHitFlash
-  flashColor: {r: 1, g: 0.15, b: 0.15, a: 1}
-  flashTime: 0.12
-  flashStrength: 0.85
   colorProperty: Enemy_Material_Colour
+  redColor: {r: 1, g: 0, b: 0, a: 1}
+  flashTime: 0.12
 --- !u!1 &8396047466213538047
 GameObject:
   m_ObjectHideFlags: 0
