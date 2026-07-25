@@ -1,43 +1,58 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class EnemyHitFlash : MonoBehaviour
 {
     [Header("Setup")]
-    public string colorProperty = "Enemy_Material_Colour";
+    // It flashes whichever of these a material has.
+    public string[] colorProperties = { "Enemy_Material_Colour", "_BaseColor", "_Color" };
     public Color redColor = Color.red;
     public float flashTime = 0.15f;
 
-    private Renderer[] renderers;
-    private Color[] originalColors;
-    private int propId;
+    private List<Material> mats = new List<Material>();
+    private List<int> propIds = new List<int>();
+    private List<Color> originals = new List<Color>();
     private Coroutine co;
 
     void Awake()
     {
-        propId = Shader.PropertyToID(colorProperty);
-        renderers = GetComponentsInChildren<Renderer>(true);
-
-        originalColors = new Color[renderers.Length];
-        for (int i = 0; i < renderers.Length; i++)
-            originalColors[i] = renderers[i].material.GetColor(propId);
+        foreach (Renderer r in GetComponentsInChildren<Renderer>(true))
+        {
+            foreach (Material m in r.materials)
+            {
+                if (m == null) continue;
+                foreach (string p in colorProperties)
+                {
+                    int id = Shader.PropertyToID(p);
+                    if (m.HasProperty(id))
+                    {
+                        mats.Add(m);
+                        propIds.Add(id);
+                        originals.Add(m.GetColor(id));
+                        break; // one property per material
+                    }
+                }
+            }
+        }
     }
 
     public void Flash()
     {
+        if (mats.Count == 0) return;
         if (co != null) StopCoroutine(co);
         co = StartCoroutine(FlashRoutine());
     }
 
     IEnumerator FlashRoutine()
     {
-        for (int i = 0; i < renderers.Length; i++)
-            renderers[i].material.SetColor(propId, redColor);
+        for (int i = 0; i < mats.Count; i++)
+            mats[i].SetColor(propIds[i], redColor);
 
         yield return new WaitForSeconds(flashTime);
 
-        for (int i = 0; i < renderers.Length; i++)
-            renderers[i].material.SetColor(propId, originalColors[i]);
+        for (int i = 0; i < mats.Count; i++)
+            mats[i].SetColor(propIds[i], originals[i]);
 
         co = null;
     }

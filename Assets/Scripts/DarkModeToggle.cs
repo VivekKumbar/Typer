@@ -1,8 +1,8 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-// Put on an object in the MAIN MENU. Assign a UI Toggle to it, OR hook a plain
-// Button's OnClick to ToggleDarkMode(). Saves the choice for the game scene.
+// Assign a UI Toggle, or hook a Button's OnClick to ToggleDarkMode().
+// Applies the change live if a DarkModeController exists in this scene.
 public class DarkModeToggle : MonoBehaviour
 {
     public Toggle toggle;
@@ -11,11 +11,19 @@ public class DarkModeToggle : MonoBehaviour
     {
         if (toggle != null)
         {
-            toggle.isOn = DarkMode.Enabled;                // reflect saved state
+            toggle.isOn = DarkMode.Enabled;
             toggle.onValueChanged.AddListener(SetDarkMode);
         }
     }
 
-    public void SetDarkMode(bool on) { DarkMode.Enabled = on; }
-    public void ToggleDarkMode() { DarkMode.Enabled = !DarkMode.Enabled; }
+    public void SetDarkMode(bool on)
+    {
+        DarkMode.Enabled = on;
+
+        // Apply immediately if we're in a scene that has the controller
+        DarkModeController c = FindObjectOfType<DarkModeController>();
+        if (c != null) c.SetDarkMode(on);
+    }
+
+    public void ToggleDarkMode() { SetDarkMode(!DarkMode.Enabled); }
 }

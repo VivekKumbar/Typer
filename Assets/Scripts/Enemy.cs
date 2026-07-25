@@ -50,6 +50,9 @@ public class Enemy : MonoBehaviour
     public string Word { get; private set; }
     public int TypedCount { get; private set; }
     public bool IsDefeated { get; private set; }
+    public bool IsBlocked { get; private set; }   // held in place by a Blocker ally
+
+    public void SetBlocked(bool blocked) { IsBlocked = blocked; }
 
     private Transform target;
     private Vector3 baseScale;
@@ -93,8 +96,9 @@ public class Enemy : MonoBehaviour
         dir.y = 0f;                       // stay level on the ground plane
         Vector3 flat = dir.normalized;
 
-        // Walk
-        transform.position += flat * moveSpeed * Time.deltaTime;
+        // Walk (unless a Blocker ally is holding this enemy in place)
+        if (!IsBlocked)
+            transform.position += flat * moveSpeed * Time.deltaTime;
 
         // Turn to face the tower
         if (rotateTowardsTarget && flat.sqrMagnitude > 0.001f)
@@ -105,7 +109,7 @@ public class Enemy : MonoBehaviour
 
         if (Vector3.Distance(transform.position, target.position) < 0.5f)
         {
-            GameManager.Instance.DamageFortress(damage);
+            GameManager.Instance.DamageFortress(damage, transform.position);
             CameraShake.ShakeHit();
             SfxPlayer.PlayHit();
             Die(false);
@@ -118,7 +122,6 @@ public class Enemy : MonoBehaviour
         if (char.ToUpper(c) != Word[TypedCount]) return false;
 
         TypedCount++;
-        GetComponent<EnemyHitFlash>()?.Flash();
         RefreshLabel();
         Pop();
         SfxPlayer.PlayType();

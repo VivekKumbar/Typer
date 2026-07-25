@@ -14,11 +14,15 @@ public class GameManager : MonoBehaviour
     [Header("Economy")]
     public int coins = 0;
 
+    [Header("Shield")]
+    public int shield = 0;      // absorbs damage before health
+
     public bool IsGameOver { get; private set; }
 
     // The UI subscribes to these so it auto-updates. No polling needed.
     public event Action<int, int> OnHealthChanged; // (current, max)
     public event Action<int> OnCoinsChanged;        // (total)
+    public event Action<int> OnShieldChanged;      // (shield amount)
     public event Action OnGameOver;
 
     void Awake()
@@ -32,6 +36,7 @@ public class GameManager : MonoBehaviour
     {
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
         OnCoinsChanged?.Invoke(coins);
+        OnShieldChanged?.Invoke(shield);
     }
 
     public void AddCoins(int amount)
@@ -48,9 +53,33 @@ public class GameManager : MonoBehaviour
         return true;
     }
 
-    public void DamageFortress(int amount)
+    public void AddShield(int amount, bool stack = true)
+    {
+        shield = stack ? shield + amount : Mathf.Max(shield, amount);
+        OnShieldChanged?.Invoke(shield);
+    }
+
+    public void DamageFortress(int amount) { DamageFortress(amount, Vector3.zero); }
+
+    public void DamageFortress(int amount, Vector3 hitPos)
     {
         if (IsGameOver) return;
+
+        // Shield soaks damage first (if one is up)
+        if (ShieldManager.Instance != null)
+            amount = ShieldManager.Instance.AbsorbDamage(amount, hitPos);
+        if (amount <= 0) return;
+
+        // Shield soaks damage first
+        if (shield > 0)
+        {
+            int absorbed = Mathf.Min(shield, amount);
+            shield -= absorbed;
+            amount -= absorbed;
+            OnShieldChanged?.Invoke(shield);
+            if (amount <= 0) return;
+        }
+
         currentHealth = Mathf.Max(0, currentHealth - amount);
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
         if (currentHealth <= 0)

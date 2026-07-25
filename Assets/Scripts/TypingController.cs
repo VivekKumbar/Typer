@@ -11,6 +11,7 @@ public class TypingController : MonoBehaviour
     public Tower tower; // fires the visual bullet tracers
 
     private Enemy currentTarget;
+    public Enemy CurrentTarget => currentTarget;   // so the spotlight can follow it
 
     void Awake()
     {
