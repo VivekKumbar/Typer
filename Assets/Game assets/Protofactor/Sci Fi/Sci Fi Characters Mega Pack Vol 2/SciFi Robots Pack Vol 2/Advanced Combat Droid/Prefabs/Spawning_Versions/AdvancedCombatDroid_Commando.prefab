@@ -1366,7 +1366,7 @@ MonoBehaviour:
   deathLinger: 0
   dissolve: {fileID: 0}
   deathEffect: {fileID: 0}
-  popScale: 1.3
+  popScale: 1.5
 --- !u!114 &3323389371276388430
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1380,7 +1380,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyAnimator
   walkClip: {fileID: 7400000, guid: 8a18d9fab34717b4fb2ac5726de32577, type: 3}
-  deathClip: {fileID: 7400000, guid: 2b0e87e6ee674d643abf09bd7e8b4180, type: 3}
+  deathClip: {fileID: 7400000, guid: c39285b02fe1f0f499c6be4a614437b7, type: 3}
   walkSpeed: 1
   deathBlend: 0.1
 --- !u!114 &3151379122228883405
@@ -1412,7 +1412,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a46c43fb0505c7941a8eec1534055931, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHitFlash
-  colorProperty: Enemy_Material_Colour
+  colorProperties:
+  - Enemy_Material_Colour
+  - _BaseColor
+  - _Color
   redColor: {r: 1, g: 0, b: 0, a: 1}
   flashTime: 0.12
 --- !u!1 &8396047466213538047

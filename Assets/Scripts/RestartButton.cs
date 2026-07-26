@@ -12,12 +12,14 @@ public class RestartButton : MonoBehaviour
 
     public void Restart()
     {
+        if (GameManager.Instance != null) GameManager.Instance.BankEarnings();
         Time.timeScale = 1f;
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
     public void GoToMenu()
     {
+        if (GameManager.Instance != null) GameManager.Instance.BankEarnings();
         Time.timeScale = 1f;
         SceneManager.LoadScene(menuSceneName);
     }

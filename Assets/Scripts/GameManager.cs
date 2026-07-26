@@ -12,7 +12,9 @@ public class GameManager : MonoBehaviour
     public int currentHealth;
 
     [Header("Economy")]
-    public int coins = 0;
+    public int coins = 0;             // spendable this run
+    public int coinsEarnedThisRun = 0; // total earned this run (for banking)
+    private bool earningsBanked = false;
 
     [Header("Shield")]
     public int shield = 0;      // absorbs damage before health
@@ -42,6 +44,7 @@ public class GameManager : MonoBehaviour
     public void AddCoins(int amount)
     {
         coins += amount;
+        coinsEarnedThisRun += amount;
         OnCoinsChanged?.Invoke(coins);
     }
 
@@ -85,6 +88,7 @@ public class GameManager : MonoBehaviour
         if (currentHealth <= 0)
         {
             IsGameOver = true;
+            BankEarnings();
             OnGameOver?.Invoke();
             Time.timeScale = 0f; // freeze the game
         }
@@ -95,5 +99,25 @@ public class GameManager : MonoBehaviour
         if (IsGameOver) return;
         currentHealth = Mathf.Min(maxHealth, currentHealth + amount);
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
+    }
+
+    // Deposits this run's earnings into the persistent Wallet exactly once.
+    // Safe to call from game over, quit-to-menu, or app background.
+    public void BankEarnings()
+    {
+        if (earningsBanked) return;
+        earningsBanked = true;
+        Wallet.Add(coinsEarnedThisRun);
+    }
+
+    // If the app is closed/backgrounded mid-run, bank what we have.
+    void OnApplicationPause(bool paused)
+    {
+        if (paused) BankEarnings();
+    }
+
+    void OnApplicationQuit()
+    {
+        BankEarnings();
     }
 }
