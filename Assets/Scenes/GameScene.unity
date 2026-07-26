@@ -3460,6 +3460,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2017509312}
     m_Modifications:
+    - target: {fileID: 2512476877915996349, guid: 479ca233a1b472b4eb5edaa3241ffa4e, type: 3}
+      propertyPath: colorProp
+      value: Color_cf12b49411d94583a269f83e6981abd1
+      objectReference: {fileID: 0}
     - target: {fileID: 8370624712863927339, guid: 479ca233a1b472b4eb5edaa3241ffa4e, type: 3}
       propertyPath: m_Name
       value: Bubble Shield
@@ -3470,7 +3474,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9178826969115793041, guid: 479ca233a1b472b4eb5edaa3241ffa4e, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.601
+      value: 0.6010001
       objectReference: {fileID: 0}
     - target: {fileID: 9178826969115793041, guid: 479ca233a1b472b4eb5edaa3241ffa4e, type: 3}
       propertyPath: m_LocalPosition.z
@@ -3514,9 +3518,9 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 9178826969115793041, guid: 479ca233a1b472b4eb5edaa3241ffa4e, type: 3}
   m_PrefabInstance: {fileID: 978582818}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &978582829 stripped
+--- !u!114 &978582825 stripped
 MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 1000823577310351377, guid: 479ca233a1b472b4eb5edaa3241ffa4e, type: 3}
+  m_CorrespondingSourceObject: {fileID: 2512476877915996349, guid: 479ca233a1b472b4eb5edaa3241ffa4e, type: 3}
   m_PrefabInstance: {fileID: 978582818}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
@@ -6513,7 +6517,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShieldManager
   shieldMax: 40
   cost: 5
-  controller: {fileID: 978582829}
+  controller: {fileID: 978582825}
 --- !u!4 &1741584517
 Transform:
   m_ObjectHideFlags: 0
