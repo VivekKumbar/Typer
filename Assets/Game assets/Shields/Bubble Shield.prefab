@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 5246242673557444916}
   - component: {fileID: 8010376118575295998}
   - component: {fileID: 8713065609354456772}
-  - component: {fileID: 169437586413739500}
+  - component: {fileID: 1000823577310351377}
   m_Layer: 0
   m_Name: Bubble Shield
   m_TagString: Untagged
@@ -30,7 +30,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0.48406148, z: 0, w: 0.875034}
   m_LocalPosition: {x: 0, y: 0.728, z: 0}
-  m_LocalScale: {x: 1.6233255, y: 1.6233255, z: 1.6233255}
+  m_LocalScale: {x: 0.8359, y: 1.6718, z: 0.8359}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -112,8 +112,8 @@ SphereCollider:
   m_Enabled: 1
   serializedVersion: 3
   m_Radius: 1.0000001
-  m_Center: {x: 0.00000011920928, y: 0, z: -0.00000017881392}
---- !u!114 &169437586413739500
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &1000823577310351377
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

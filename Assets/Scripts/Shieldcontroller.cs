@@ -60,19 +60,29 @@ public class ShieldController : MonoBehaviour
         rend.enabled = false;
     }
 
-    void OnEnable()
+    private bool subscribed;
+
+    void Start()
     {
+        Subscribe();
+    }
+
+    void Subscribe()
+    {
+        if (subscribed) return;
         var sm = ShieldManager.Instance;
         if (sm != null)
         {
             sm.OnShieldRaised += RaiseShield;
             sm.OnShieldBroken += SinkShield;
             sm.OnShieldChanged += OnShieldChanged;
+            subscribed = true;
         }
     }
 
     void OnDisable()
     {
+        if (!subscribed) return;
         var sm = ShieldManager.Instance;
         if (sm != null)
         {
@@ -80,12 +90,13 @@ public class ShieldController : MonoBehaviour
             sm.OnShieldBroken -= SinkShield;
             sm.OnShieldChanged -= OnShieldChanged;
         }
+        subscribed = false;
     }
 
     // ---- rise / sink ----
     void RaiseShield()
     {
-        rend.enabled = true;
+        if (rend != null) rend.enabled = true;
         if (dissolveCo != null) StopCoroutine(dissolveCo);
         dissolveCo = StartCoroutine(DissolveTo(0f, false)); // 0 = fully up
     }
