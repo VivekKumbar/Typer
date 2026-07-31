@@ -12,13 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 93330e628daf67244b7ad53b7bb92ded, type: 3}
   m_Name: Item_TowerBlue
   m_EditorClassIdentifier: Assembly-CSharp::ShopItem
-  id: item_id
-  displayName: Red Turret
+  id: tower_blue
+  displayName: Blue Turret
   description: 
   icon: {fileID: 0}
   previewImage: {fileID: 0}
   price: 500
   kind: 0
   slot: TowerSkin
-  payload: {fileID: 1000012174300454, guid: fea8d3f288c8ec140b813f0b0f1b8caf, type: 3}
+  payload: {fileID: 2100000, guid: 4903e681e747a5a41b7bd4017cd154a0, type: 2}
   ownedByDefault: 0

@@ -6200,7 +6200,10 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 1000012174300454, guid: 8a4fca54c9faa3449bcff12193992420, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1712126300}
   m_SourcePrefab: {fileID: 100100000, guid: 8a4fca54c9faa3449bcff12193992420, type: 3}
 --- !u!4 &1712126297 stripped
 Transform:
@@ -6212,12 +6215,32 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 1244156230268100930, guid: 8a4fca54c9faa3449bcff12193992420, type: 3}
   m_PrefabInstance: {fileID: 1712126296}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 1712126299}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c6d8c35e335700b4c8cc9a340b325659, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TurretAim
+--- !u!1 &1712126299 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1000012174300454, guid: 8a4fca54c9faa3449bcff12193992420, type: 3}
+  m_PrefabInstance: {fileID: 1712126296}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1712126300
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1712126299}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 646380a4937d7ab4fab9d52c9df2b7d3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SkinApplier
+  catalog: {fileID: 11400000, guid: 3fda77be314c8734cb3d665715c79171, type: 2}
+  slot: TowerSkin
+  targetRenderers: []
 --- !u!1 &1715142942
 GameObject:
   m_ObjectHideFlags: 0
