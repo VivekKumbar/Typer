@@ -4830,6 +4830,61 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 1841705508312629574, guid: e28f1d90ce9d0d541859a784aa1bbff7, type: 3}
   m_PrefabInstance: {fileID: 1222107709}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1238721727
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1238721729}
+  - component: {fileID: 1238721728}
+  m_Layer: 0
+  m_Name: Popup Manager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1238721728
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1238721727}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b316a0f3ee241c44e966f4aa52e36a61, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PopupManager
+  enablePopups: 1
+  floatingTextPrefab: {fileID: 5969769706923203533, guid: 54cef451128730c4a8ac14383e19ccb4, type: 3}
+  prewarmCount: 5
+  spawnOffset: {x: 0, y: 1.5, z: 0}
+  horizontalJitter: 0.3
+  defaultFontSize: 5
+  coinColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  comboColor: {r: 1, g: 0.5, b: 0.1, a: 1}
+  perfectColor: {r: 0.3, g: 0.95, b: 1, a: 1}
+  comboSizeMultiplier: 1.4
+  perfectSizeMultiplier: 1.6
+--- !u!4 &1238721729
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1238721727}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1255574779
 GameObject:
   m_ObjectHideFlags: 0
@@ -6219,6 +6274,80 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1507705334}
   m_CullTransparentMesh: 1
+--- !u!1 &1536371649
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1536371651}
+  - component: {fileID: 1536371650}
+  m_Layer: 0
+  m_Name: Hit Stop
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1536371650
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1536371649}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fa23fc21df5edfd4f99b81f57831135e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitStop
+  enableHitStop: 1
+  smallKillFreeze: 0.1
+  bigKillFreeze: 0.2
+  recoverDuration: 0.8
+  recoverCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 2
+      outSlope: 2
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  bigShakeDuration: 0.18
+  bigShakeMagnitude: 0.4
+--- !u!4 &1536371651
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1536371649}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1550818398
 GameObject:
   m_ObjectHideFlags: 0
@@ -8370,3 +8499,5 @@ SceneRoots:
   - {fileID: 834807975}
   - {fileID: 1741584517}
   - {fileID: 956119707}
+  - {fileID: 1536371651}
+  - {fileID: 1238721729}

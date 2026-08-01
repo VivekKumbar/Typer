@@ -23,6 +23,10 @@ public class Enemy : MonoBehaviour
     public int minLetters = 3;
     public int maxLetters = 5;
 
+    [Header("Hit-stop")]
+    [Tooltip("Words longer than this trigger the bigger hit-stop freeze + shake on kill.")]
+    [Range(1, 15)] public int bigWordLength = 5;
+
     [Header("Movement")]
     public float moveSpeed = 1.5f;
 
@@ -176,15 +180,25 @@ public class Enemy : MonoBehaviour
         {
             StatsManager.RecordEnemyKilled();
             if (deathEffect != null) Instantiate(deathEffect, transform.position, Quaternion.identity);
+
+            bool big = Word.Length > bigWordLength;
+            if (HitStop.Instance != null)
+                HitStop.Stop(big ? HitStop.Instance.bigKillFreeze : HitStop.Instance.smallKillFreeze);
             CameraShake.ShakeKill();
+            if (big && HitStop.Instance != null)
+                CameraShake.Shake(HitStop.Instance.bigShakeDuration, HitStop.Instance.bigShakeMagnitude);
             SfxPlayer.PlayKill();
 
+            int reward = Mathf.Clamp(Mathf.RoundToInt(coinsOnDeath * ComboManager.Multiplier), coinsOnDeath, 30);
             if (coinPrefab != null)
             {
-                int reward = Mathf.Clamp(Mathf.RoundToInt(coinsOnDeath * ComboManager.Multiplier), coinsOnDeath, 30);
                 for (int i = 0; i < reward; i++)
                     Instantiate(coinPrefab, transform.position, Quaternion.identity).Launch();
             }
+            if (reward > 0) PopupManager.ShowCoins(transform.position, reward); // one "+N", not many "+1"s
+
+            if (ComboManager.Instance != null && ComboManager.Instance.CurrentWordPerfect)
+                PopupManager.ShowPerfect(transform.position);
         }
 
         // Play the death animation + dissolve, then clean up

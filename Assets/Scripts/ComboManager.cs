@@ -18,6 +18,11 @@ public class ComboManager : MonoBehaviour
     // so this naturally starts at 0 per run — no manual reset needed).
     public int HighestComboThisRun { get; private set; }
 
+    // True if the word currently locked in TypingController hasn't had a wrong
+    // keystroke yet. Reset via NotifyNewTarget() when a new target locks, cleared
+    // on a miss. Enemy.Die reads this to show the PERFECT! popup.
+    public bool CurrentWordPerfect { get; private set; } = true;
+
     [Header("Overload")]
     [Tooltip("Correct letters needed to fill the Overload meter.")]
     public float overloadMax = 30f;
@@ -43,11 +48,24 @@ public class ComboManager : MonoBehaviour
         return Mathf.Min(m, maxMultiplier);
     }
 
+    // Call when TypingController locks onto a fresh enemy — starts a clean
+    // "no mistakes yet" slate for the word that's now being typed.
+    public void NotifyNewTarget()
+    {
+        CurrentWordPerfect = true;
+    }
+
     public void RegisterHit()
     {
+        float multiplierBefore = CurrentMultiplier();
         combo++;
         if (combo > HighestComboThisRun) HighestComboThisRun = combo;
         OnComboChanged?.Invoke(combo, CurrentMultiplier());
+
+        // Popup only on an actual multiplier step-up (every comboPerMultiplierStep
+        // combo) — not on every hit, so it doesn't clutter the screen.
+        if (CurrentMultiplier() > multiplierBefore && TypingController.Instance != null && TypingController.Instance.CurrentTarget != null)
+            PopupManager.ShowCombo(TypingController.Instance.CurrentTarget.transform.position, combo);
 
         if (!overloadReady)
         {
@@ -64,6 +82,7 @@ public class ComboManager : MonoBehaviour
 
     public void RegisterMiss()
     {
+        CurrentWordPerfect = false;
         if (combo == 0) return;
         combo = 0;
         OnComboChanged?.Invoke(combo, CurrentMultiplier());

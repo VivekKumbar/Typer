@@ -1358,6 +1358,7 @@ MonoBehaviour:
   damage: 10
   minLetters: 3
   maxLetters: 5
+  bigWordLength: 5
   moveSpeed: 1.5
   turnSpeed: 10
   modelYawOffset: 0
@@ -1367,6 +1368,7 @@ MonoBehaviour:
   dissolve: {fileID: 0}
   deathEffect: {fileID: 0}
   popScale: 1.5
+  SlowMultiplier: 1
 --- !u!114 &3323389371276388430
 MonoBehaviour:
   m_ObjectHideFlags: 0

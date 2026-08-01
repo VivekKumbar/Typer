@@ -7,9 +7,16 @@ using UnityEngine;
 // (Restart / Main Menu buttons reuse the RestartButton script.)
 public class PauseMenu : MonoBehaviour
 {
+    public static PauseMenu Instance { get; private set; }
+
     public GameObject pausePanel;   // the pause UI, disabled by default
 
     public bool IsPaused { get; private set; }
+
+    void Awake()
+    {
+        Instance = this;
+    }
 
     public void Pause()
     {

@@ -33,7 +33,11 @@ public class TypingController : MonoBehaviour
 
         // Not locked on yet? Find the closest enemy whose next letter is c.
         if (currentTarget == null)
+        {
             currentTarget = FindTarget(c);
+            if (currentTarget != null && ComboManager.Instance != null)
+                ComboManager.Instance.NotifyNewTarget(); // fresh word -> reset the "no mistakes" flag
+        }
 
         if (currentTarget == null) return; // no match -> ignore the keypress
 
