@@ -52,6 +52,10 @@ public class Enemy : MonoBehaviour
     public bool IsDefeated { get; private set; }
     public bool IsBlocked { get; private set; }   // held in place by a Blocker ally
 
+    // TIME SINK multiplies this (1 = normal speed). Not a coroutine/tween —
+    // just read every frame, so it always reflects whatever's currently active.
+    public float SlowMultiplier = 1f;
+
     public void SetBlocked(bool blocked) { IsBlocked = blocked; }
 
     private Transform target;
@@ -98,7 +102,7 @@ public class Enemy : MonoBehaviour
 
         // Walk (unless a Blocker ally is holding this enemy in place)
         if (!IsBlocked)
-            transform.position += flat * moveSpeed * Time.deltaTime;
+            transform.position += flat * moveSpeed * SlowMultiplier * Time.deltaTime;
 
         // Turn to face the tower
         if (rotateTowardsTarget && flat.sqrMagnitude > 0.001f)
@@ -170,6 +174,7 @@ public class Enemy : MonoBehaviour
 
         if (rewardCoins)
         {
+            StatsManager.RecordEnemyKilled();
             if (deathEffect != null) Instantiate(deathEffect, transform.position, Quaternion.identity);
             CameraShake.ShakeKill();
             SfxPlayer.PlayKill();

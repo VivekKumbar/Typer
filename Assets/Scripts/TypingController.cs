@@ -41,6 +41,8 @@ public class TypingController : MonoBehaviour
         if (correct)
         {
             if (ComboManager.Instance) ComboManager.Instance.RegisterHit();
+            StatsManager.RecordCorrectLetter();
+            if (TimeSinkManager.Instance) TimeSinkManager.Instance.AddCharge();
             // Only fire a bullet if the enemy is still alive. The killing letter
             // shows the death burst instead of leaving an orphan bullet flying.
             if (!currentTarget.IsDefeated && tower != null)
@@ -51,6 +53,7 @@ public class TypingController : MonoBehaviour
         {
             // Wrong letter while locked on -> the combo breaks.
             if (ComboManager.Instance) ComboManager.Instance.RegisterMiss();
+            StatsManager.RecordMissedLetter();
         }
         // Wrong key while locked: ignore it (forgiving, like ZType).
     }

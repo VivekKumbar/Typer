@@ -7,6 +7,7 @@ public class ComboHUD : MonoBehaviour
     public TMP_Text comboText;
     public Slider overloadBar;
     public Button overloadButton;
+    public ReadyStateHighlight overloadHighlight;
 
     void Start()
     {
@@ -18,6 +19,7 @@ public class ComboHUD : MonoBehaviour
 
         if (overloadBar) { overloadBar.minValue = 0; overloadBar.maxValue = 1; overloadBar.value = 0; }
         if (overloadButton) overloadButton.interactable = false;
+        if (overloadHighlight) overloadHighlight.SetReady(false);
         UpdateCombo(0, 1f);
     }
 
@@ -38,11 +40,16 @@ public class ComboHUD : MonoBehaviour
     void UpdateOverload(float fill)
     {
         if (overloadBar) overloadBar.value = fill;
-        if (fill < 1f && overloadButton) overloadButton.interactable = false;
+        if (fill < 1f)
+        {
+            if (overloadButton) overloadButton.interactable = false;
+            if (overloadHighlight) overloadHighlight.SetReady(false);
+        }
     }
 
     void OnReady()
     {
         if (overloadButton) overloadButton.interactable = true;
+        if (overloadHighlight) overloadHighlight.SetReady(true);
     }
 }

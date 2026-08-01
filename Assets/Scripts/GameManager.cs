@@ -45,6 +45,7 @@ public class GameManager : MonoBehaviour
     {
         coins += amount;
         coinsEarnedThisRun += amount;
+        StatsManager.RecordCoins(amount);
         OnCoinsChanged?.Invoke(coins);
     }
 
@@ -108,6 +109,10 @@ public class GameManager : MonoBehaviour
         if (earningsBanked) return;
         earningsBanked = true;
         Wallet.Add(coinsEarnedThisRun);
+
+        int wave = WaveManager.Instance != null ? WaveManager.Instance.CurrentWaveNumber : 0;
+        int peakCombo = ComboManager.Instance != null ? ComboManager.Instance.HighestComboThisRun : 0;
+        StatsManager.EndRun(wave, peakCombo, coinsEarnedThisRun, StatsManager.CurrentRunAccuracy);
     }
 
     // If the app is closed/backgrounded mid-run, bank what we have.

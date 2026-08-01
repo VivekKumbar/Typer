@@ -17,13 +17,15 @@ public class Wave
 
 public class WaveManager : MonoBehaviour
 {
+    public static WaveManager Instance { get; private set; }
+
     [Header("Refs")]
     public Enemy[] enemyPrefabs;
     public WordBank wordBank;
     public Transform fortress;
     public WaveBanner banner;            // optional
 
-    [Header("WAVES — edit these to set words-per-wave")]
+    [Header("WAVES ï¿½ edit these to set words-per-wave")]
     public Wave[] waves;
 
     [Header("Endless mode (after the authored waves)")]
@@ -44,7 +46,16 @@ public class WaveManager : MonoBehaviour
 
     private int waveIndex = 0;
 
+    // 1-based, matching the "WAVE N" banner â€” the wave reached so far this run.
+    public int CurrentWaveNumber => waveIndex + 1;
+
     bool GameOver => GameManager.Instance != null && GameManager.Instance.IsGameOver;
+
+    void Awake()
+    {
+        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
+        Instance = this;
+    }
 
     void Start() { StartCoroutine(RunWaves()); }
 

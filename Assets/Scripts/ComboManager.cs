@@ -14,6 +14,10 @@ public class ComboManager : MonoBehaviour
     public int comboPerMultiplierStep = 10;
     public float maxMultiplier = 5f;
 
+    // Highest combo reached this run (a fresh instance each time GameScene loads,
+    // so this naturally starts at 0 per run â€” no manual reset needed).
+    public int HighestComboThisRun { get; private set; }
+
     [Header("Overload")]
     [Tooltip("Correct letters needed to fill the Overload meter.")]
     public float overloadMax = 30f;
@@ -42,6 +46,7 @@ public class ComboManager : MonoBehaviour
     public void RegisterHit()
     {
         combo++;
+        if (combo > HighestComboThisRun) HighestComboThisRun = combo;
         OnComboChanged?.Invoke(combo, CurrentMultiplier());
 
         if (!overloadReady)
@@ -62,7 +67,7 @@ public class ComboManager : MonoBehaviour
         if (combo == 0) return;
         combo = 0;
         OnComboChanged?.Invoke(combo, CurrentMultiplier());
-        // Overload is NOT drained on a miss — only the combo resets.
+        // Overload is NOT drained on a miss ï¿½ only the combo resets.
     }
 
     public void TriggerOverload()
