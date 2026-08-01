@@ -21,6 +21,7 @@ public class TimeSinkHUD : MonoBehaviour
     public Button activateButton;
     public TMP_Text buttonLabel;
     public ReadyStateHighlight readyHighlight;
+    public ReadyPulse readyPulse;
 
     void Awake()
     {
@@ -43,6 +44,7 @@ public class TimeSinkHUD : MonoBehaviour
         // value comparison — so this can never desync from a different max.
         if (activateButton) activateButton.interactable = ts.IsReady;
         if (readyHighlight) readyHighlight.SetReady(ts.IsReady);
+        if (readyPulse) readyPulse.SetActive(ts.IsReady);
         if (durationBarRoot) durationBarRoot.SetActive(ts.IsActive);
         RefreshLabel();
     }
@@ -98,12 +100,14 @@ public class TimeSinkHUD : MonoBehaviour
     {
         if (activateButton) activateButton.interactable = true;
         if (readyHighlight) readyHighlight.SetReady(true);
+        if (readyPulse) readyPulse.SetActive(true);
     }
 
     void OnActivated()
     {
         if (activateButton) activateButton.interactable = false;
         if (readyHighlight) readyHighlight.SetReady(false);
+        if (readyPulse) readyPulse.SetActive(false);
         if (durationBarRoot) durationBarRoot.SetActive(true);
         RefreshLabel();
     }
@@ -121,6 +125,7 @@ public class TimeSinkHUD : MonoBehaviour
         // effect ends until the next full charge fires OnReady again.
         if (activateButton) activateButton.interactable = false;
         if (readyHighlight) readyHighlight.SetReady(false);
+        if (readyPulse) readyPulse.SetActive(false);
         RefreshLabel();
     }
 
