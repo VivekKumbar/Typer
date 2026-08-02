@@ -23,6 +23,10 @@ public class ShopItem : ScriptableObject
     [Tooltip("For cosmetics: which slot it belongs to (e.g. 'TowerSkin', 'EnemySkin', 'BulletSkin').")]
     public string slot = "TowerSkin";
 
+    [Header("Enemy Skin targeting (optional, only used when slot == \"EnemySkin\")")]
+    [Tooltip("Restricts this skin to enemies whose Enemy.enemyTypeId matches (case-insensitive), e.g. \"Brute\". Leave empty to apply to ALL enemy types.")]
+    public string appliesToEnemyType = "";
+
     [Header("Payload (assign your assets here)")]
     [Tooltip("Material/prefab/etc this item applies. Read by whatever consumes the slot.")]
     public Object payload;   // drag a Material, GameObject, etc.

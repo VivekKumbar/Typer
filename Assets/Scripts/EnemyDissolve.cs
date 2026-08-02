@@ -24,7 +24,12 @@ public class EnemyDissolve : MonoBehaviour
     private int propId;
     private bool started;
 
-    void Awake()
+    // Start, not Awake: must run AFTER EnemySkinApplier.Awake() so these
+    // instances are the equipped skin's material, not the prefab default
+    // (Unity guarantees all Awakes finish before any Start runs) — otherwise
+    // this would cache orphaned instances that the dissolve would silently
+    // animate on a material nothing is actually rendering with.
+    void Start()
     {
         propId = Shader.PropertyToID(propertyName);
 

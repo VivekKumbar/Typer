@@ -12,6 +12,10 @@ public class Enemy : MonoBehaviour
     [Header("Refs")]
     public TMP_Text label;
 
+    [Header("Identity")]
+    [Tooltip("Optional type name for this enemy (e.g. \"Grunt\", \"Brute\", \"Runner\"). Used by EnemySkinApplier to support skins restricted to specific enemy types (ShopItem.appliesToEnemyType). Leave empty if you don't need per-type skins.")]
+    public string enemyTypeId = "";
+
     [Header("Reward")]
     public int coinsOnDeath = 3;
     public Coin coinPrefab;
@@ -47,6 +51,9 @@ public class Enemy : MonoBehaviour
     [Tooltip("Optional dissolve-on-death effect. Auto-found if left empty.")]
     public EnemyDissolve dissolve;
 
+    [Tooltip("Optional. Auto-found if left empty. Applies the equipped Enemy Skin — runs in Awake, before this so hit-flash/dissolve pick up the skinned material (see EnemySkinApplier).")]
+    public EnemySkinApplier skinApplier;
+
     [Header("Juice")]
     public GameObject deathEffect;
     public float popScale = 1.3f;
@@ -71,6 +78,7 @@ public class Enemy : MonoBehaviour
         baseScale = transform.localScale;
         if (enemyAnimator == null) enemyAnimator = GetComponentInChildren<EnemyAnimator>();
         if (dissolve == null) dissolve = GetComponentInChildren<EnemyDissolve>();
+        if (skinApplier == null) skinApplier = GetComponentInChildren<EnemySkinApplier>();
     }
 
     public void Init(string word, Transform fortress, float speedBonus)

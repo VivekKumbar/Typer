@@ -1654,6 +1654,7 @@ GameObject:
   - component: {fileID: 369125554}
   - component: {fileID: 369125553}
   - component: {fileID: 369125552}
+  - component: {fileID: 369125555}
   m_Layer: 0
   m_Name: Ground
   m_TagString: Untagged
@@ -1755,6 +1756,23 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 369125550}
   m_Mesh: {fileID: 10209, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &369125555
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 369125550}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4bd3d75570f6fc844bbf70e2da25fc7d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GroundSkinApplier
+  enableSkin: 1
+  catalog: {fileID: 11400000, guid: 3fda77be314c8734cb3d665715c79171, type: 2}
+  slot: GroundSkin
+  groundRenderer: {fileID: 369125553}
+  defaultMaterial: {fileID: 2100000, guid: 65c2ab63f5166034984dade4ca49ecc1, type: 2}
 --- !u!1 &400156363
 GameObject:
   m_ObjectHideFlags: 0

@@ -15,7 +15,10 @@ public class EnemyHitFlash : MonoBehaviour
     private List<Color> originals = new List<Color>();
     private Coroutine co;
 
-    void Awake()
+    // Start, not Awake: must run AFTER EnemySkinApplier.Awake() so the "original"
+    // colour cached here is the equipped skin's colour, not the prefab default
+    // (Unity guarantees all Awakes finish before any Start runs).
+    void Start()
     {
         foreach (Renderer r in GetComponentsInChildren<Renderer>(true))
         {

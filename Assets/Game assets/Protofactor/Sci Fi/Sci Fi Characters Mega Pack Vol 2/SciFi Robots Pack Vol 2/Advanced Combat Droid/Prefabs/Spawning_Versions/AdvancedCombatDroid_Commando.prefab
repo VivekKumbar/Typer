@@ -1293,6 +1293,7 @@ GameObject:
   - component: {fileID: 3323389371276388430}
   - component: {fileID: 3151379122228883405}
   - component: {fileID: 2337957431359539303}
+  - component: {fileID: 8798723849052519475}
   m_Layer: 0
   m_Name: AdvancedCombatDroid_Commando
   m_TagString: Untagged
@@ -1353,6 +1354,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Enemy
   label: {fileID: 3073460102839146858}
+  enemyTypeId: 
   coinsOnDeath: 3
   coinPrefab: {fileID: 8797919699153396519, guid: 1c8fa89830f2e8d49a13a2c8df51bd27, type: 3}
   damage: 10
@@ -1366,6 +1368,7 @@ MonoBehaviour:
   enemyAnimator: {fileID: 0}
   deathLinger: 0
   dissolve: {fileID: 0}
+  skinApplier: {fileID: 8798723849052519475}
   deathEffect: {fileID: 0}
   popScale: 1.5
   SlowMultiplier: 1
@@ -1420,6 +1423,24 @@ MonoBehaviour:
   - _Color
   redColor: {r: 1, g: 0, b: 0, a: 1}
   flashTime: 0.12
+--- !u!114 &8798723849052519475
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8396047466213538043}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a35cab9d61d4e4b9ef421fecb95f12, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemySkinApplier
+  enableSkins: 1
+  catalog: {fileID: 11400000, guid: 3fda77be314c8734cb3d665715c79171, type: 2}
+  slot: EnemySkin
+  targetRenderers:
+  - {fileID: 8396047466199872947}
+  defaultMaterial: {fileID: 0}
 --- !u!1 &8396047466213538047
 GameObject:
   m_ObjectHideFlags: 0
