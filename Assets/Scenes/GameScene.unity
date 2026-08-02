@@ -2805,6 +2805,93 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShieldBar
   bar: {fileID: 636481881}
   barRoot: {fileID: 1791331599}
+--- !u!1 &662607723
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 662607725}
+  - component: {fileID: 662607724}
+  m_Layer: 0
+  m_Name: Coin Fly Manager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &662607724
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 662607723}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6484850d780b76d46ae9d1483acf0c1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CoinFlyManager
+  enableCoinFly: 1
+  coinPrefab: {fileID: 0}
+  coinSprite: {fileID: 21300000, guid: f3c870240c713434e9f8795bff850111, type: 3}
+  coinSize: 48
+  coinSizeRandomness: 0.15
+  flyLayer: {fileID: 936444593}
+  counterTarget: {fileID: 1635178848}
+  counterText: {fileID: 1635178849}
+  counterBounce: {fileID: 1635178851}
+  worldCamera: {fileID: 330585545}
+  maxCoinsPerKill: 8
+  burstOutDistance: 60
+  burstRandomness: 0.4
+  burstOutDuration: 0.12
+  hangTime: 0.08
+  arrivalJitterTime: 0.18
+  flyDuration: 0.6
+  flyEaseCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 2
+      outSlope: 2
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  arcHeight: 150
+  prewarmCount: 8
+--- !u!4 &662607725
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 662607723}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &666779033
 GameObject:
   m_ObjectHideFlags: 0
@@ -3765,7 +3852,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HUD
   healthBar: {fileID: 666779035}
-  coinText: {fileID: 1635178849}
   gameOverPanel: {fileID: 1201547484}
 --- !u!114 &936444595
 MonoBehaviour:
@@ -6848,6 +6934,7 @@ GameObject:
   - component: {fileID: 1635178848}
   - component: {fileID: 1635178850}
   - component: {fileID: 1635178849}
+  - component: {fileID: 1635178851}
   m_Layer: 5
   m_Name: CoinText
   m_TagString: Untagged
@@ -6974,6 +7061,63 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1635178847}
   m_CullTransparentMesh: 1
+--- !u!114 &1635178851
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1635178847}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15d15b2cc22ef344bb930935790a3f0a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CounterBounce
+  enableBounce: 1
+  bounceScale: 1.25
+  bounceDuration: 0.25
+  bounceCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.35
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.6
+      value: 0.85
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1001 &1640897623
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -8769,3 +8913,4 @@ SceneRoots:
   - {fileID: 956119707}
   - {fileID: 1536371651}
   - {fileID: 1238721729}
+  - {fileID: 662607725}

@@ -18,6 +18,7 @@ public class Enemy : MonoBehaviour
 
     [Header("Reward")]
     public int coinsOnDeath = 3;
+    [Tooltip("No longer spawned by Die() — replaced by CoinFlyManager's fly-to-counter visual. Left here unused in case you want the old ground-hop coins for something else.")]
     public Coin coinPrefab;
 
     [Header("Combat")]
@@ -198,12 +199,20 @@ public class Enemy : MonoBehaviour
             SfxPlayer.PlayKill();
 
             int reward = Mathf.Clamp(Mathf.RoundToInt(coinsOnDeath * ComboManager.Multiplier), coinsOnDeath, 30);
-            if (coinPrefab != null)
+            if (reward > 0)
             {
-                for (int i = 0; i < reward; i++)
-                    Instantiate(coinPrefab, transform.position, Quaternion.identity).Launch();
+                // Spawn BEFORE banking: CoinFlyManager marks the reward as
+                // "pending in flight" synchronously inside Spawn(), so when
+                // AddCoins() immediately fires OnCoinsChanged right after, its
+                // reconciliation sees the full amount already accounted for
+                // and lets the fly-in animate it in — instead of finding an
+                // "unexplained" coin gain and snapping the counter instantly.
+                // Either way the real economy is banked this same frame, so
+                // it's correct even if the visual never finishes.
+                CoinFlyManager.Spawn(transform.position, reward);
+                GameManager.Instance.AddCoins(reward);
+                PopupManager.ShowCoins(transform.position, reward); // one "+N", not many "+1"s
             }
-            if (reward > 0) PopupManager.ShowCoins(transform.position, reward); // one "+N", not many "+1"s
 
             if (ComboManager.Instance != null && ComboManager.Instance.CurrentWordPerfect)
                 PopupManager.ShowPerfect(transform.position);
