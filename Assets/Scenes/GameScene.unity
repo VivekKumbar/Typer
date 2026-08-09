@@ -4711,6 +4711,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Bubble Shield
       objectReference: {fileID: 0}
+    - target: {fileID: 8370624712863927339, guid: 479ca233a1b472b4eb5edaa3241ffa4e, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 9178826969115793041, guid: 479ca233a1b472b4eb5edaa3241ffa4e, type: 3}
       propertyPath: m_LocalPosition.x
       value: -0.027
@@ -5392,7 +5396,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1218578649
 Transform:
   m_ObjectHideFlags: 0
@@ -5658,6 +5662,10 @@ PrefabInstance:
     - target: {fileID: 3568670107807407100, guid: e28f1d90ce9d0d541859a784aa1bbff7, type: 3}
       propertyPath: m_Name
       value: tower_e
+      objectReference: {fileID: 0}
+    - target: {fileID: 3568670107807407100, guid: e28f1d90ce9d0d541859a784aa1bbff7, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects:
@@ -7109,7 +7117,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1502471510
 Transform:
   m_ObjectHideFlags: 0

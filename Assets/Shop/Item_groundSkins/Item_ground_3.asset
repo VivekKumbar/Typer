@@ -13,14 +13,14 @@ MonoBehaviour:
   m_Name: Item_ground_3
   m_EditorClassIdentifier: Assembly-CSharp::ShopItem
   id: ground_3
-  displayName: Ground Skin 3 (PLACEHOLDER - replace me)
+  displayName: Snow
   description: PLACEHOLDER - replace me. Assign a real ground Material as the payload,
     a real icon sprite, and a real price before shipping.
-  icon: {fileID: 0}
-  previewImage: {fileID: 0}
+  icon: {fileID: 21300000, guid: 9fd4ff0a5e39a2c44bbbf87973e60f10, type: 3}
+  previewImage: {fileID: 21300000, guid: 9fd4ff0a5e39a2c44bbbf87973e60f10, type: 3}
   price: 100
   kind: 0
   slot: GroundSkin
   appliesToEnemyType: 
-  payload: {fileID: 0}
+  payload: {fileID: 2100000, guid: 79be888a81f799d4faed08144168f23e, type: 2}
   ownedByDefault: 0

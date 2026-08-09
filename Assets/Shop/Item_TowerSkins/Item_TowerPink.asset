@@ -16,9 +16,10 @@ MonoBehaviour:
   displayName: Pink Turret
   description: 
   icon: {fileID: 0}
-  previewImage: {fileID: 0}
+  previewImage: {fileID: 21300000, guid: 31e3a27c876c8a14daf69197ed6c33dc, type: 3}
   price: 500
   kind: 0
   slot: TowerSkin
+  appliesToEnemyType: 
   payload: {fileID: 2100000, guid: 59a351f9eda9d254a9c746e69aeb8340, type: 2}
   ownedByDefault: 0

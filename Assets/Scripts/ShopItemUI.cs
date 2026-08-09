@@ -9,6 +9,8 @@ public class ShopItemUI : MonoBehaviour
 {
     [Header("Refs")]
     public Image iconImage;
+    [Tooltip("The large card background/preview image — a DIFFERENT Image component from iconImage's small icon. Falls back to item.icon if the item has no previewImage assigned.")]
+    public Image previewImage;
     public TMP_Text nameText;
     public TMP_Text priceText;
     public Button actionButton;
@@ -26,6 +28,7 @@ public class ShopItemUI : MonoBehaviour
         shop = owner;
 
         if (iconImage) iconImage.sprite = item.icon;
+        if (previewImage) previewImage.sprite = item.previewImage != null ? item.previewImage : item.icon;
         if (nameText)  nameText.text = item.displayName;
 
         Refresh();

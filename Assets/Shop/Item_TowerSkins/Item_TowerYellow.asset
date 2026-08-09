@@ -15,10 +15,11 @@ MonoBehaviour:
   id: tower_yellow
   displayName: Yellow Turret
   description: 
-  icon: {fileID: 0}
-  previewImage: {fileID: 0}
+  icon: {fileID: 21300000, guid: 7288ef5b3606ec746b3943028c769718, type: 3}
+  previewImage: {fileID: 21300000, guid: 7288ef5b3606ec746b3943028c769718, type: 3}
   price: 500
   kind: 0
   slot: TowerSkin
+  appliesToEnemyType: 
   payload: {fileID: 2100000, guid: 3f006730299c9dc4f8cff67d1f5fa275, type: 2}
   ownedByDefault: 0

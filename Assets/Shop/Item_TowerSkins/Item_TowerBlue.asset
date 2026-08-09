@@ -15,10 +15,11 @@ MonoBehaviour:
   id: tower_blue
   displayName: Blue Turret
   description: 
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 989b0b9c19f935b4195bb2dd899156f4, type: 3}
   previewImage: {fileID: 0}
   price: 500
   kind: 0
   slot: TowerSkin
+  appliesToEnemyType: 
   payload: {fileID: 2100000, guid: 4903e681e747a5a41b7bd4017cd154a0, type: 2}
   ownedByDefault: 0

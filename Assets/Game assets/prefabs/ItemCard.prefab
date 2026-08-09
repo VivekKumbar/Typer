@@ -777,6 +777,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ShopItemUI
   iconImage: {fileID: 8146698953755744894}
+  previewImage: {fileID: 4567253650400935694}
   nameText: {fileID: 1389063793248959540}
   priceText: {fileID: 3463534111566305057}
   actionButton: {fileID: 4747710290918431061}
