@@ -16,3 +16,5 @@ MonoBehaviour:
   fallbackWords: cat dog run sun ice key map owl fox bee wall gate bow axe pike moat
     shield castle arrow sword guard tower stone raven knight fortress catapult defender
     keystone barricade rampart
+  catalog: {fileID: 11400000, guid: 3fda77be314c8734cb3d665715c79171, type: 2}
+  maxActivePacks: 3

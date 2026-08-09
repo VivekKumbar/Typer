@@ -13,8 +13,8 @@ public class ShieldController : MonoBehaviour
     public string dissolveProp = "_Disolve";                 // 0 = up, 1 = gone
     public string hitPosProp = "_HitPos";
     public string displacementProp = "_DisplacementStrength";
-    [Tooltip("Which color property to flash red on hit (your main shield colour).")]
-    public string colorProp = "FresnelColor";
+    [Tooltip("Which color property to flash red on hit (your main shield colour). Must be the shader's REFERENCE name, not its display name — Shader Graph only uses a clean reference name if one was explicitly set on the Blackboard property; otherwise it auto-generates a GUID-suffixed one. BubbleShieldShader's Fresnel Color property was never given a clean reference, so this has to be its generated name.")]
+    public string colorProp = "Color_cf12b49411d94583a269f83e6981abd1"; // Shader Graph display name "FresnelColor"
 
     [Header("Rise / sink")]
     [Tooltip("Seconds for the shield to rise up or sink down.")]
@@ -65,6 +65,18 @@ public class ShieldController : MonoBehaviour
     void Start()
     {
         Subscribe();
+
+        // Sync-now: reflect whatever state ShieldManager already holds instead
+        // of only reacting to future events. Needed for a Continue restore —
+        // ShieldManager.Awake() sets Current directly from RunSaveData without
+        // firing OnShieldRaised (there's no "this is a resume, not a fresh buy"
+        // event to fire), so without this the bar (which self-syncs the same
+        // way in ShieldBar.Start) shows correctly but the bubble never appears.
+        // Also covers the Start()-ordering case where ShieldManager.Start()'s
+        // own OnShieldChanged broadcast fires before this object has subscribed.
+        var sm = ShieldManager.Instance;
+        if (sm != null && sm.IsActive)
+            RaiseShield();
     }
 
     void Subscribe()

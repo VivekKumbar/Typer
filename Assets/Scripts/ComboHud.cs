@@ -18,11 +18,16 @@ public class ComboHUD : MonoBehaviour
         cm.OnOverloadChanged += UpdateOverload;
         cm.OnOverloadReady += OnReady;
 
-        if (overloadBar) { overloadBar.minValue = 0; overloadBar.maxValue = 1; overloadBar.value = 0; }
-        if (overloadButton) overloadButton.interactable = false;
-        if (overloadHighlight) overloadHighlight.SetReady(false);
-        if (overloadPulse) overloadPulse.SetActive(false);
-        UpdateCombo(0, 1f);
+        if (overloadBar) { overloadBar.minValue = 0; overloadBar.maxValue = 1; }
+
+        // Pull current values right now instead of assuming a fresh 0/1f
+        // start — on a Continue, ComboManager may already hold a restored
+        // combo/overload from before, and this makes the HUD reflect it
+        // immediately regardless of script execution order (same idiom HUD.cs
+        // uses for health).
+        UpdateCombo(cm.combo, ComboManager.Multiplier);
+        UpdateOverload(cm.OverloadFill);
+        if (cm.overloadReady) OnReady();
     }
 
     void OnDestroy()

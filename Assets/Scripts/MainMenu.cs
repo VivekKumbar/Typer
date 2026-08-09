@@ -1,12 +1,18 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
 
 // Put this on an object in your MAIN MENU scene.
-// - Hook the Play button's OnClick to PlayGame()
+// - Hook the "NEW GAME" / "PLAY" button's OnClick to PlayGame() (unchanged
+//   binding — if a save exists it now shows a confirm popup before erasing it)
+// - Hook the "CONTINUE" button's OnClick to ContinueGame() (shows a "Continuing
+//   from Wave X" confirm popup, then proceeds)
 // - Hook a Quit button (optional) to Quit()
+// Both confirm flows share ONE ConfirmPopup instance (confirmPopup below) —
+// it's just Show()'n with different text/callbacks each time, not duplicated.
 // It loads the game scene asynchronously and shows a loading bar.
 public class MainMenu : MonoBehaviour
 {
@@ -21,7 +27,105 @@ public class MainMenu : MonoBehaviour
     [Tooltip("Keep the loading screen visible at least this long so it doesn't flash by.")]
     public float minShowTime = 1.2f;
 
-    public void PlayGame() { StartCoroutine(LoadGame()); }
+    [Header("Continue / New Game")]
+    [Tooltip("The whole Continue button — shown only when a save exists.")]
+    public GameObject continueButtonRoot;
+    [Tooltip("Label on the Continue button, set to 'CONTINUE - WAVE X'.")]
+    public TMP_Text continueLabel;
+    [Tooltip("Single shared popup used to confirm BOTH New Game (erase warning) and Continue (resume confirmation). Leave empty to skip confirmation entirely (not recommended) and act immediately.")]
+    public ConfirmPopup confirmPopup;
+    [Tooltip("The full upgrade pool — used to resolve the Continue popup's saved upgrade ids to their icon/name for the build-preview row. Assign the same UpgradePool asset UpgradeManager uses in GameScene.")]
+    public UpgradePool upgradePool;
+
+    void Start()
+    {
+        RefreshContinueButton();
+    }
+
+    void RefreshContinueButton()
+    {
+        bool hasSave = SaveManager.HasSave();
+        if (continueButtonRoot != null) continueButtonRoot.SetActive(hasSave);
+        if (hasSave && continueLabel != null)
+            continueLabel.text = "CONTINUE - WAVE " + SaveManager.GetSavedWave();
+    }
+
+    // Hook the "CONTINUE" button here. Button should already be hidden/
+    // disabled when no save exists (see RefreshContinueButton), but the
+    // HasSave() check below is the real guard in case it's clicked anyway.
+    public void ContinueGame()
+    {
+        if (!SaveManager.HasSave()) return;
+
+        if (confirmPopup != null)
+        {
+            RunSaveData save = SaveManager.LoadRun();
+            int wave = save != null ? save.waveNumber : SaveManager.GetSavedWave();
+            confirmPopup.ShowWithPreview(
+                "Continue Run",
+                "Continuing from Wave " + wave + ".",
+                BuildAbilityPreview(save),
+                ProceedWithContinue);
+        }
+        else
+        {
+            ProceedWithContinue();
+        }
+    }
+
+    // Resolves RunSaveData's saved (id, level) pairs to their UpgradeDefinition
+    // via upgradePool — UpgradeManager.Instance doesn't exist in this scene, so
+    // the pool has to be looked up directly rather than through the runtime
+    // singleton. Reads ANY unlocked upgrade generically (no hardcoded ability
+    // list), so it stays correct as more upgrades are added later.
+    List<(UpgradeDefinition def, int level)> BuildAbilityPreview(RunSaveData save)
+    {
+        var result = new List<(UpgradeDefinition, int)>();
+        if (save == null || save.upgradeIds == null || upgradePool == null || upgradePool.upgrades == null)
+            return result;
+
+        for (int i = 0; i < save.upgradeIds.Length; i++)
+        {
+            int level = i < save.upgradeLevels.Length ? save.upgradeLevels[i] : 0;
+            if (level <= 0) continue;
+
+            UpgradeDefinition def = upgradePool.upgrades.Find(u => u != null && u.id == save.upgradeIds[i]);
+            if (def != null) result.Add((def, level));
+        }
+        return result;
+    }
+
+    void ProceedWithContinue()
+    {
+        SaveManager.IsContinuing = true;
+        StartCoroutine(LoadGame());
+    }
+
+    // Hook the "NEW GAME" / "PLAY" button here. If a save exists, confirms
+    // first (erasing it is a one-way action); if not, starts immediately —
+    // no point confirming "start a new game" when there's nothing to lose.
+    public void PlayGame()
+    {
+        if (SaveManager.HasSave() && confirmPopup != null)
+        {
+            int wave = SaveManager.GetSavedWave();
+            confirmPopup.Show(
+                "Start New Game?",
+                "Your current progress at Wave " + wave + " will be lost. Are you sure you want to start a new game?",
+                StartFreshGame);
+        }
+        else
+        {
+            StartFreshGame();
+        }
+    }
+
+    void StartFreshGame()
+    {
+        SaveManager.ClearSave();
+        SaveManager.IsContinuing = false;
+        StartCoroutine(LoadGame());
+    }
 
     public void Quit()
     {

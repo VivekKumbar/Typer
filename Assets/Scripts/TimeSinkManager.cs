@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 
 // TIME SINK ability: charges as the player types correct letters (mirrors
@@ -25,6 +26,12 @@ public class TimeSinkManager : MonoBehaviour
     [Tooltip("Distance from the tower where enemies get the full slow.")]
     public float dangerDistance = 3f;
 
+    [Header("Upgrade: Slow-Mo (optional)")]
+    [Tooltip("If assigned, each level adds this many seconds to Duration and slightly deepens Max Slow (by value*0.02, clamped). Boss (6) uses Boss Value the same way, and also briefly freezes affected enemies at activation — see Boss Freeze Duration.")]
+    public UpgradeDefinition slowMoUpgrade;
+    [Tooltip("Boss-only: seconds enemies are held at a full stop when Slow-Mo activates, before the normal distance-based slow curve takes over.")]
+    public float bossFreezeDuration = 0.5f;
+
     public bool IsActive { get; private set; }
     public float RemainingFraction { get; private set; } // 1 -> 0 over the duration
 
@@ -35,6 +42,9 @@ public class TimeSinkManager : MonoBehaviour
     public event Action OnEnded;
 
     float remainingTime;
+    float activeDuration;   // this activation's actual duration (base + upgrade)
+    float activeMaxSlow;    // this activation's actual max slow (base + upgrade)
+    bool freezingAtStart;   // true while the boss freeze-then-slow coroutine owns the slow
 
     void Awake()
     {
@@ -42,17 +52,19 @@ public class TimeSinkManager : MonoBehaviour
         Instance = this;
     }
 
+    int UpgradeLevel() => (UpgradeManager.Instance != null && slowMoUpgrade != null) ? UpgradeManager.Instance.LevelOf(slowMoUpgrade) : 0;
+
     void Update()
     {
         if (!IsActive) return;
 
         remainingTime -= Time.deltaTime;
-        RemainingFraction = duration > 0f ? Mathf.Clamp01(remainingTime / duration) : 0f;
+        RemainingFraction = activeDuration > 0f ? Mathf.Clamp01(remainingTime / activeDuration) : 0f;
         OnDurationChanged?.Invoke(RemainingFraction);
 
         if (remainingTime <= 0f) { EndEffect(); return; }
 
-        ApplySlow();
+        if (!freezingAtStart) ApplySlow();
     }
 
     // Hook this to the same "correct letter" path ComboManager.RegisterHit uses.
@@ -81,13 +93,36 @@ public class TimeSinkManager : MonoBehaviour
         IsReady = false;
         OnChargeChanged?.Invoke(0f);
 
+        int level = UpgradeLevel();
+        bool boss = level >= UpgradeDefinition.BossLevel;
+        float extra = level > 0 && slowMoUpgrade != null ? slowMoUpgrade.ValueForLevel(level) : 0f;
+        activeDuration = duration + extra;
+        activeMaxSlow = level > 0 ? Mathf.Clamp(maxSlow - extra * 0.02f, 0.02f, 1f) : maxSlow;
+
         IsActive = true;
-        remainingTime = duration;
+        remainingTime = activeDuration;
         RemainingFraction = 1f;
         OnActivated?.Invoke();
         OnDurationChanged?.Invoke(1f);
 
-        ApplySlow(); // apply immediately so there's no one-frame gap before the next Update
+        if (boss && bossFreezeDuration > 0f)
+            StartCoroutine(BossFreezeThenSlow());
+        else
+            ApplySlow(); // apply immediately so there's no one-frame gap before the next Update
+    }
+
+    // Boss (6): hold every affected enemy at a dead stop for a moment before
+    // handing off to the normal distance-based slow curve.
+    IEnumerator BossFreezeThenSlow()
+    {
+        freezingAtStart = true;
+        foreach (Enemy e in Enemy.Active)
+            if (e != null) e.SlowMultiplier = 0f;
+
+        yield return new WaitForSeconds(Mathf.Min(bossFreezeDuration, activeDuration));
+
+        freezingAtStart = false;
+        if (IsActive) ApplySlow();
     }
 
     // Enemies spawned mid-effect join Enemy.Active and get slowed on the very
@@ -98,7 +133,7 @@ public class TimeSinkManager : MonoBehaviour
         {
             if (e == null || e.IsDefeated) continue;
             float t = Mathf.Clamp01(Mathf.InverseLerp(safeDistance, dangerDistance, e.DistanceToFortress));
-            e.SlowMultiplier = Mathf.Lerp(1f, maxSlow, t);
+            e.SlowMultiplier = Mathf.Lerp(1f, activeMaxSlow, t);
         }
     }
 
@@ -107,6 +142,7 @@ public class TimeSinkManager : MonoBehaviour
         IsActive = false;
         remainingTime = 0f;
         RemainingFraction = 0f;
+        freezingAtStart = false;
 
         foreach (Enemy e in Enemy.Active)
             if (e != null) e.SlowMultiplier = 1f;
