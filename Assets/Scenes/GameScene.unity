@@ -2033,7 +2033,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GroundSkinApplier
   enableSkin: 1
   catalog: {fileID: 11400000, guid: 3fda77be314c8734cb3d665715c79171, type: 2}
-  slot: GroundSkin
   groundRenderer: {fileID: 369125553}
   defaultMaterial: {fileID: 2100000, guid: 65c2ab63f5166034984dade4ca49ecc1, type: 2}
 --- !u!1 &400156363
