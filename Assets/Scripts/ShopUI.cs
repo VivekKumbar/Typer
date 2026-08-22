@@ -36,6 +36,10 @@ public class ShopUI : MonoBehaviour
     [Tooltip("Shown when the player tries to select a pack while already at Max Active Packs. Same simple pattern as Not Enough Coins Popup.")]
     public GameObject maxPacksSelectedPopup;
 
+    [Header("Main Menu refresh (optional)")]
+    [Tooltip("The Main Menu's level carousel -- refreshed on OnDisable so its card backgrounds pick up any Ground Skin change made while the shop was open, without needing to close/reopen the app. Leave empty if this ShopUI isn't the one shown over the Main Menu.")]
+    public LevelCarousel levelCarousel;
+
     private readonly List<ShopItemUI> spawnedCards = new List<ShopItemUI>();
     private int currentCategory = 0;
 
@@ -52,6 +56,7 @@ public class ShopUI : MonoBehaviour
     void OnDisable()
     {
         Wallet.OnChanged -= _ => RefreshCoins();
+        if (levelCarousel != null) levelCarousel.RefreshGroundSkinBackgrounds();
     }
 
     void Start()

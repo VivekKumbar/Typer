@@ -36,6 +36,8 @@ public class MainMenu : MonoBehaviour
     public ConfirmPopup confirmPopup;
     [Tooltip("The full upgrade pool — used to resolve the Continue popup's saved upgrade ids to their icon/name for the build-preview row. Assign the same UpgradePool asset UpgradeManager uses in GameScene.")]
     public UpgradePool upgradePool;
+    [Tooltip("The shop catalog — used to resolve the Continue popup's saved word-pack ids AND ground-skin id to their ShopItems (icon/name/previewImage). Assign the same ShopCatalog WordBank/GroundSkinApplier use in GameScene.")]
+    public ShopCatalog shopCatalog;
 
     void Start()
     {
@@ -65,6 +67,8 @@ public class MainMenu : MonoBehaviour
                 "Continue Run",
                 "Continuing from Wave " + wave + ".",
                 BuildAbilityPreview(save),
+                BuildWordPackPreview(save),
+                ResolveGroundSkinBackground(save),
                 ProceedWithContinue);
         }
         else
@@ -93,6 +97,51 @@ public class MainMenu : MonoBehaviour
             if (def != null) result.Add((def, level));
         }
         return result;
+    }
+
+    // Resolves RunSaveData's LOCKED word-pack ids (see RunContext) to their
+    // ShopItem via shopCatalog — same pattern as BuildAbilityPreview
+    // above (a live WordBank doesn't exist in the Main Menu scene either, so
+    // the catalog has to be searched directly). Empty/no packs locked in
+    // returns an empty list; ConfirmPopup shows its own "Default Words"
+    // placeholder for that case.
+    List<ShopItem> BuildWordPackPreview(RunSaveData save)
+    {
+        var result = new List<ShopItem>();
+        if (save == null || save.selectedWordPackIds == null || shopCatalog == null || shopCatalog.categories == null)
+            return result;
+
+        foreach (string id in save.selectedWordPackIds)
+        {
+            ShopItem found = null;
+            foreach (ShopCategory cat in shopCatalog.categories)
+            {
+                if (cat == null || cat.items == null) continue;
+                found = cat.items.Find(i => i != null && i.kind == ShopItemKind.WordPack && i.id == id);
+                if (found != null) break;
+            }
+            if (found != null) result.Add(found);
+        }
+        return result;
+    }
+
+    // Resolves RunSaveData's LOCKED ground-skin id (see RunContext) to its
+    // ShopItem's previewImage/icon via shopCatalog -- the SAVED run's
+    // ground, not whatever's currently equipped in the shop. Returns null if
+    // nothing was locked in or it can't be resolved; ConfirmPopup then just
+    // resets the Dialog to its default background sprite.
+    Sprite ResolveGroundSkinBackground(RunSaveData save)
+    {
+        if (save == null || string.IsNullOrEmpty(save.groundSkinId) || shopCatalog == null || shopCatalog.categories == null)
+            return null;
+
+        foreach (ShopCategory cat in shopCatalog.categories)
+        {
+            if (cat == null || cat.items == null) continue;
+            ShopItem item = cat.items.Find(i => i != null && i.id == save.groundSkinId);
+            if (item != null) return item.previewImage != null ? item.previewImage : item.icon;
+        }
+        return null;
     }
 
     void ProceedWithContinue()

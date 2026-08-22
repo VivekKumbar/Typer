@@ -94,7 +94,15 @@ public class WaveManager : MonoBehaviour
         }
     }
 
-    void Start() { StartCoroutine(RunWaves()); }
+    void Start()
+    {
+        // RunContext is locked in GameManager.Awake() (guaranteed to run before
+        // any Start()) — force WordBank to rebuild its cached pool from that
+        // locked snapshot instead of reusing whatever a previous run in this
+        // app session left cached.
+        if (wordBank != null) wordBank.RebuildForNewRun();
+        StartCoroutine(RunWaves());
+    }
 
     IEnumerator RunWaves()
     {

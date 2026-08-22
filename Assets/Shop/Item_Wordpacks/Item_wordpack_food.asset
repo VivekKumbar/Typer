@@ -12,15 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 93330e628daf67244b7ad53b7bb92ded, type: 3}
   m_Name: Item_wordpack_food
   m_EditorClassIdentifier: Assembly-CSharp::ShopItem
-  id: food
-  displayName: Food (PLACEHOLDER - replace me)
-  description: "Food-themed words \u2014 PLACEHOLDER word list \u2014 replace with
-    your real CSV and a real icon/price."
-  icon: {fileID: 0}
+  id: FOOD
+  displayName: FOOD
+  description: Discover delicious foods from around the world.
+  icon: {fileID: 21300000, guid: c5d48382bfb47684ab93caf68c2befc6, type: 3}
   previewImage: {fileID: 0}
   price: 150
   kind: 3
   slot: WordPack
   appliesToEnemyType: 
-  payload: {fileID: 4900000, guid: fd6dfc0ae89f11e4c89c0322d332bf21, type: 3}
+  payload: {fileID: 4900000, guid: dbbb40be5e8244a489092c30d27e954d, type: 3}
   ownedByDefault: 0

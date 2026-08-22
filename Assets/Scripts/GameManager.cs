@@ -43,10 +43,12 @@ public class GameManager : MonoBehaviour
             shield = Mathf.Max(0, save.gmShield);
             coins = Mathf.Max(0, save.coins);
             coinsEarnedThisRun = Mathf.Max(0, save.coinsEarnedThisRun);
+            RunContext.RestoreFromSave(save); // word packs: exactly what was locked in when saved
         }
         else
         {
             currentHealth = maxHealth;
+            RunContext.LockForNewRun(); // word packs: fresh snapshot of the shop's current selection
         }
     }
 

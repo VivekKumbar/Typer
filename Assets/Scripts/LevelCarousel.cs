@@ -27,6 +27,10 @@ public class LevelCarousel : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
     [Tooltip("The card RectTransforms, left to right. Auto-filled from children if empty.")]
     public List<RectTransform> cards = new List<RectTransform>();
 
+    [Header("Ground Skin preview")]
+    [Tooltip("The shop catalog to resolve the equipped Ground Skin's ShopItem from, for each card's background (see LevelCard.RefreshGroundSkinBackground). Leave empty to leave cards on their Inspector-assigned backgrounds.")]
+    public ShopCatalog groundSkinCatalog;
+
     public int CurrentIndex { get; private set; }
 
     private float dragStartX;
@@ -46,6 +50,23 @@ public class LevelCarousel : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
     {
         LayoutCards();
         SnapTo(0, true);
+        RefreshGroundSkinBackgrounds();
+    }
+
+    // Re-reads the equipped Ground Skin so card backgrounds update without
+    // needing to close/reopen the app. OnEnable (not just Start) so this
+    // re-fires if the carousel/its parent panel is ever toggled off and back
+    // on; ShopUI.OnDisable also calls this directly since the Shop panel
+    // itself doesn't currently disable the carousel underneath it.
+    void OnEnable() { RefreshGroundSkinBackgrounds(); }
+
+    public void RefreshGroundSkinBackgrounds()
+    {
+        foreach (RectTransform card in cards)
+        {
+            LevelCard lc = card != null ? card.GetComponent<LevelCard>() : null;
+            if (lc != null) lc.RefreshGroundSkinBackground(groundSkinCatalog);
+        }
     }
 
     void LayoutCards()

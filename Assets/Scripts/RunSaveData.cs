@@ -33,4 +33,17 @@ public class RunSaveData
     // JsonUtility can't serialize a Dictionary, so id/level are parallel arrays.
     public string[] upgradeIds = new string[0];
     public int[] upgradeLevels = new int[0];
+
+    [Header("Word Packs — locked in for this run (see RunContext)")]
+    // Snapshot of WordPackSelection at the moment this run started (New Game)
+    // or was last saved (Continue) — NOT the live shop selection, so changing
+    // packs in the shop mid-run can't swap the active word pool under the player.
+    public string[] selectedWordPackIds = new string[0];
+
+    [Header("Ground Skin — locked in for this run (see RunContext)")]
+    // Snapshot of the equipped Ground Skin at the moment this run started
+    // (New Game) or was last saved (Continue) — NOT the live equipped skin,
+    // so re-equipping a skin in the shop mid-run can't change a run already
+    // in progress. Same locking pattern as selectedWordPackIds above.
+    public string groundSkinId = "";
 }

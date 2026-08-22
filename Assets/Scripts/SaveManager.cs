@@ -86,6 +86,9 @@ public static class SaveManager
             highestComboThisRun = ComboManager.Instance != null ? ComboManager.Instance.HighestComboThisRun : 0,
             overload = ComboManager.Instance != null ? ComboManager.Instance.overload : 0f,
             overloadReady = ComboManager.Instance != null && ComboManager.Instance.overloadReady,
+
+            selectedWordPackIds = RunContext.LockedWordPackIds.ToArray(), // re-save the SAME locked packs, not the live shop selection
+            groundSkinId = RunContext.LockedGroundSkinId, // re-save the SAME locked ground skin, not the live equipped one
         };
 
         if (UpgradeManager.Instance != null)
