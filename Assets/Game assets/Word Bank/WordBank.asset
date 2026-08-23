@@ -18,4 +18,5 @@ MonoBehaviour:
     keystone barricade rampart
   catalog: {fileID: 11400000, guid: 3fda77be314c8734cb3d665715c79171, type: 2}
   maxActivePacks: 3
+  variation: 1
   logPackSelection: 1
