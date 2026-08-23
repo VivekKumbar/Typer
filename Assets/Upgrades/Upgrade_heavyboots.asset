@@ -15,7 +15,7 @@ MonoBehaviour:
   id: heavyboots
   displayName: Heavy Boots
   description: All enemies move slower with each level.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 9c4bdd7612497f547b9811ccb6ef65a3, type: 3}
   category: 0
   levelValues:
   - 0.15
@@ -26,5 +26,5 @@ MonoBehaviour:
   bossName: 'Heavy Boots: Quagmire'
   bossDescription: Enemies are much slower everywhere, and crawl to a near-stop right
     next to the tower.
-  bossIcon: {fileID: 0}
+  bossIcon: {fileID: 21300000, guid: 24e2c4cb3bf1bf94bb038d6e6ed79c3a, type: 3}
   bossValue: 1

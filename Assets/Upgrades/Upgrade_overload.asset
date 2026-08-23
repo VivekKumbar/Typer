@@ -15,7 +15,7 @@ MonoBehaviour:
   id: overload
   displayName: Overheat
   description: Overload charges faster with each level.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: d6d6703ec34262b489f585c2a0649d21, type: 3}
   category: 0
   levelValues:
   - 0.9
@@ -26,5 +26,5 @@ MonoBehaviour:
   bossName: 'Overheat: Meltdown'
   bossDescription: Overload charges much faster and drops bonus coins for every enemy
     cleared.
-  bossIcon: {fileID: 0}
+  bossIcon: {fileID: 21300000, guid: c6ce42fa619189144a1db4f097ee5149, type: 3}
   bossValue: 5

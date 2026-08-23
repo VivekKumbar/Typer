@@ -15,7 +15,7 @@ MonoBehaviour:
   id: coinmagnet
   displayName: Coin Magnet
   description: Raises the per-kill coin reward cap, so big combos aren't wasted.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: bbad83b5a3cb2994982dd70020f8adba, type: 3}
   category: 2
   levelValues:
   - 10
@@ -25,5 +25,5 @@ MonoBehaviour:
   - 50
   bossName: 'Coin Magnet: Vacuum'
   bossDescription: The per-kill coin reward cap is raised dramatically.
-  bossIcon: {fileID: 0}
+  bossIcon: {fileID: 21300000, guid: 0e70651354efffa4295477ab3a7c7a6c, type: 3}
   bossValue: 100

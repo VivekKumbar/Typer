@@ -15,7 +15,7 @@ MonoBehaviour:
   id: greed
   displayName: Greed
   description: Coin rewards are increased by a percentage per level.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 10a9d02eb35aac04fb8fa592f6bafc6b, type: 3}
   category: 2
   levelValues:
   - 10
@@ -26,5 +26,5 @@ MonoBehaviour:
   bossName: 'Greed: Jackpot'
   bossDescription: "Coin rewards are hugely increased \u2014 but enemies move a little
     faster too. Spicy."
-  bossIcon: {fileID: 0}
+  bossIcon: {fileID: 21300000, guid: 78d98ba5c3895f142a86c442fce4da69, type: 3}
   bossValue: 100

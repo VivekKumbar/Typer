@@ -15,7 +15,7 @@ MonoBehaviour:
   id: repair
   displayName: Field Repair
   description: Automatically heals the fortress at the start of every wave.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: a8a9ba8ec9aff3545bdff153ab9226d7, type: 3}
   category: 1
   levelValues:
   - 3
@@ -26,5 +26,5 @@ MonoBehaviour:
   bossName: 'Field Repair: Overhaul'
   bossDescription: Heals much more every wave, and heals a big chunk instantly the
     moment it's picked.
-  bossIcon: {fileID: 0}
+  bossIcon: {fileID: 21300000, guid: c38ca57208c216e41b871e454237bb83, type: 3}
   bossValue: 25

@@ -15,7 +15,7 @@ MonoBehaviour:
   id: slowmo
   displayName: Chronos
   description: Slow-Mo lasts longer and slows enemies more with each level.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: de4e6fbe1f6adb04180e7ee0d8d6302e, type: 3}
   category: 3
   levelValues:
   - 1
@@ -26,5 +26,5 @@ MonoBehaviour:
   bossName: 'Chronos: Stasis'
   bossDescription: Slow-Mo lasts much longer and freezes enemies solid for a moment
     when activated.
-  bossIcon: {fileID: 0}
+  bossIcon: {fileID: 21300000, guid: c2418540af3d14e4ebdbf275aa3e4b38, type: 3}
   bossValue: 8

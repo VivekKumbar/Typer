@@ -15,7 +15,7 @@ MonoBehaviour:
   id: musclememory
   displayName: Muscle Memory
   description: Ignore a few typos per wave before the combo actually breaks.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: cb71fa77b251f414f80b3abf00e637fe, type: 3}
   category: 3
   levelValues:
   - 1
@@ -25,5 +25,5 @@ MonoBehaviour:
   - 5
   bossName: 'Muscle Memory: Autopilot'
   bossDescription: Typos never break your combo for one full wave, every night.
-  bossIcon: {fileID: 0}
+  bossIcon: {fileID: 21300000, guid: d61305e53e589e542b18ef622e73fc91, type: 3}
   bossValue: 999
