@@ -13566,6 +13566,7 @@ MonoBehaviour:
   swipeThreshold: 150
   cards:
   - {fileID: 1275870066}
+  - {fileID: 379145199}
   groundSkinCatalog: {fileID: 11400000, guid: 3fda77be314c8734cb3d665715c79171, type: 2}
   loader: {fileID: 2139229527}
 --- !u!1 &1728485215

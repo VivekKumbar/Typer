@@ -22,10 +22,20 @@ public class MainMenu : MonoBehaviour
 
     [Header("Loading UI (optional, but you asked for it)")]
     public GameObject loadingPanel;   // full-screen panel, disabled by default
-    public Slider progressBar;
-    public TMP_Text progressText;
-    [Tooltip("Keep the loading screen visible at least this long so it doesn't flash by.")]
+    [Tooltip("Shared progress-bar piece (see LoadingBarUI) -- driven from the REAL scene-load progress, blended with Min Show Time so a fast load still visibly fills instead of flashing to 100%.")]
+    public LoadingBarUI loadingBar;
+    [Tooltip("Keep the loading screen visible at least this long so it doesn't flash by, even if the scene loads faster than that.")]
     public float minShowTime = 1.2f;
+
+    public enum LoadingBackgroundVariant { A, B }
+
+    [Header("Loading screen background — two selectable variants")]
+    [Tooltip("LOADING_A_PLACEHOLDER - replace me. Shown when Loading Variant = A. Default rule: New Game uses A.")]
+    public Image loadingBackgroundA;
+    [Tooltip("LOADING_B_PLACEHOLDER - replace me. Shown when Loading Variant = B. Default rule: Continue uses B.")]
+    public Image loadingBackgroundB;
+    [Tooltip("Which background the loading screen shows THE NEXT TIME it appears. Set automatically right before LoadGame() starts (New Game -> A, Continue -> B) -- change PlayGame/ContinueGame's assignments below to wire a different rule later.")]
+    public LoadingBackgroundVariant loadingVariant = LoadingBackgroundVariant.A;
 
     [Header("Continue / New Game")]
     [Tooltip("The whole Continue button — shown only when a save exists.")]
@@ -147,6 +157,7 @@ public class MainMenu : MonoBehaviour
     void ProceedWithContinue()
     {
         SaveManager.IsContinuing = true;
+        loadingVariant = LoadingBackgroundVariant.B; // default rule: Continue -> B
         StartCoroutine(LoadGame());
     }
 
@@ -173,6 +184,7 @@ public class MainMenu : MonoBehaviour
     {
         SaveManager.ClearSave();
         SaveManager.IsContinuing = false;
+        loadingVariant = LoadingBackgroundVariant.A; // default rule: New Game -> A
         StartCoroutine(LoadGame());
     }
 
@@ -184,9 +196,20 @@ public class MainMenu : MonoBehaviour
 #endif
     }
 
+    // Shows exactly one of the two placeholder backgrounds according to
+    // loadingVariant, leaving everything else about the loading panel (the
+    // progress bar, its trigger points) untouched.
+    void ApplyLoadingVariant()
+    {
+        if (loadingBackgroundA != null) loadingBackgroundA.gameObject.SetActive(loadingVariant == LoadingBackgroundVariant.A);
+        if (loadingBackgroundB != null) loadingBackgroundB.gameObject.SetActive(loadingVariant == LoadingBackgroundVariant.B);
+    }
+
     IEnumerator LoadGame()
     {
+        ApplyLoadingVariant();
         if (loadingPanel) loadingPanel.SetActive(true);
+        if (loadingBar != null) loadingBar.SnapTo01(0f); // start visibly empty, no carry-over from a previous load
         float start = Time.unscaledTime;
 
         AsyncOperation op = SceneManager.LoadSceneAsync(gameSceneName);
@@ -194,16 +217,24 @@ public class MainMenu : MonoBehaviour
 
         while (!op.isDone)
         {
-            // Unity reports 0 -> 0.9 while loading, then holds at 0.9 until activated
-            float progress = Mathf.Clamp01(op.progress / 0.9f);
-            if (progressBar) progressBar.value = progress;
-            if (progressText) progressText.text = Mathf.RoundToInt(progress * 100f) + "%";
+            // Unity reports 0 -> 0.9 while loading, then holds at 0.9 until
+            // activated -- famously in big, jumpy steps for a small scene, not
+            // a smooth ramp. realProgress alone would make the bar snap.
+            float realProgress = Mathf.Clamp01(op.progress / 0.9f);
+            // pacedProgress ramps linearly over Min Show Time regardless of how
+            // the real load is going, so a load that finishes instantly still
+            // has something to visibly fill.
+            float pacedProgress = Mathf.Clamp01((Time.unscaledTime - start) / minShowTime);
+            // Whichever is FURTHER BEHIND wins: never claim more progress than
+            // has genuinely happened (realProgress caps it), and never let a
+            // fast load flash to 100% before Min Show Time's pacing catches up.
+            float target = Mathf.Min(realProgress, pacedProgress);
+            if (loadingBar != null) loadingBar.SetTargetProgress01(target);
 
             // Loaded AND minimum display time elapsed -> enter the game
             if (op.progress >= 0.9f && Time.unscaledTime - start >= minShowTime)
             {
-                if (progressBar) progressBar.value = 1f;
-                if (progressText) progressText.text = "100%";
+                if (loadingBar != null) loadingBar.SetTargetProgress01(1f);
                 op.allowSceneActivation = true;
             }
             yield return null;
