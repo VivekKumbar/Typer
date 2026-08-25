@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: be9d59c88d840c744b755a7593f28e45, type: 3}
+  m_Name: Cat_TowerSkins
+  m_EditorClassIdentifier: Assembly-CSharp::ShopCategory
+  categoryName: Tower Skins
+  categoryIcon: {fileID: 0}
+  items:
+  - {fileID: 11400000, guid: 44617ce8eeed2ef4098d321343a7dd1d, type: 2}
+  - {fileID: 11400000, guid: 55782d462e8df404cb1d9731fb06ff42, type: 2}
+  - {fileID: 11400000, guid: 1a58e04acf230dd4ca9f62351d2f9ed3, type: 2}
+  - {fileID: 11400000, guid: 761a8b0f8f27a3b4abe569a2cf96bc23, type: 2}
+  - {fileID: 11400000, guid: b1331cd201cb3a84f97223552bdb3f54, type: 2}

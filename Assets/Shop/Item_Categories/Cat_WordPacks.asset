@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: be9d59c88d840c744b755a7593f28e45, type: 3}
+  m_Name: Cat_WordPacks
+  m_EditorClassIdentifier: Assembly-CSharp::ShopCategory
+  categoryName: Word Packs
+  categoryIcon: {fileID: 0}
+  items:
+  - {fileID: 11400000, guid: fa2a90797153b3a44a14193b70c7b663, type: 2}
+  - {fileID: 11400000, guid: 7723c9f5de0470e408d3ba4f57063b29, type: 2}
+  - {fileID: 11400000, guid: 5f945e25a959ccb4aa05158b914ef609, type: 2}
+  - {fileID: 11400000, guid: ccc326cebe705a740af098465dd8b19c, type: 2}
+  - {fileID: 11400000, guid: b93b4aa2a29323d439c9945f3acb5dc4, type: 2}
+  - {fileID: 11400000, guid: 215e17ecf45e8f444aa1d3f776f9ab20, type: 2}
+  - {fileID: 11400000, guid: e3283cf43f9f23d40ae9d516cc28fe4a, type: 2}
+  - {fileID: 11400000, guid: 479bfeee0966fa446a431f6400dddadc, type: 2}
+  - {fileID: 11400000, guid: 038f36dcfeaa9d545a57fdd0696d9714, type: 2}
+  - {fileID: 11400000, guid: 01936b460290b6b47bf99f802f12e7dd, type: 2}
