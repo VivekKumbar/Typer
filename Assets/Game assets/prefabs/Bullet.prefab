@@ -245,9 +245,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 21962999acea0dd42ad8b86790971598, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Bullet
-  speed: 200
+  speed: 100
   hitDistance: 0.4
   lifeTime: 1
   faceTravelDirection: 1
   impactEffect: {fileID: 7262648107381900536, guid: 48e6220daf5f4134a985269f5d59b2ac, type: 3}
+  smokePuffEffect: {fileID: 1273915125232972, guid: 5537a339013db9845b82b5266fc964e4, type: 3}
+  smokeLifetime: 1.5
   debugLog: 0

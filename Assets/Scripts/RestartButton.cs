@@ -19,7 +19,11 @@ public class RestartButton : MonoBehaviour
 
     public void GoToMenu()
     {
-        if (GameManager.Instance != null) GameManager.Instance.BankEarnings();
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.BankEarnings();
+            GameManager.Instance.SaveProgressIfActive(); // autosave so Continue picks this run back up
+        }
         Time.timeScale = 1f;
         SceneManager.LoadScene(menuSceneName);
     }

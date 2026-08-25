@@ -28,11 +28,14 @@ public class ShopItem : ScriptableObject
     public string appliesToEnemyType = "";
 
     [Header("Payload (assign your assets here)")]
-    [Tooltip("Material/prefab/etc this item applies. Read by whatever consumes the slot.")]
-    public Object payload;   // drag a Material, GameObject, etc.
+    [Tooltip("Material/prefab/TextAsset/etc this item applies. Read by whatever consumes the slot. For Kind == WordPack, this is a TextAsset word file — same CSV format WordBank already parses.")]
+    public Object payload;   // drag a Material, GameObject, TextAsset, etc.
 
     [Tooltip("Owned from the start (free / default option).")]
     public bool ownedByDefault = false;
 }
 
-public enum ShopItemKind { Cosmetic, Consumable, Upgrade }
+// WordPack items don't use Slot/Equip at all — they're multi-select (up to
+// WordBank.maxActivePacks) via WordPackSelection instead of the single-slot
+// ShopInventory.Equip pattern the other kinds use.
+public enum ShopItemKind { Cosmetic, Consumable, Upgrade, WordPack }

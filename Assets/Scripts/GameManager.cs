@@ -19,6 +19,10 @@ public class GameManager : MonoBehaviour
     [Header("Shield")]
     public int shield = 0;      // absorbs damage before health
 
+    [Header("Upgrade: Repair (optional)")]
+    [Tooltip("If assigned, each level heals this many HP automatically at the start of every wave. Boss (6) also heals Boss Value HP instantly the moment it's picked.")]
+    public UpgradeDefinition repairUpgrade;
+
     public bool IsGameOver { get; private set; }
 
     // The UI subscribes to these so it auto-updates. No polling needed.
@@ -31,7 +35,21 @@ public class GameManager : MonoBehaviour
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
-        currentHealth = maxHealth;
+
+        if (SaveManager.IsContinuing && SaveManager.HasSave())
+        {
+            RunSaveData save = SaveManager.LoadRun();
+            currentHealth = Mathf.Clamp(save.health, 0, maxHealth);
+            shield = Mathf.Max(0, save.gmShield);
+            coins = Mathf.Max(0, save.coins);
+            coinsEarnedThisRun = Mathf.Max(0, save.coinsEarnedThisRun);
+            RunContext.RestoreFromSave(save); // word packs: exactly what was locked in when saved
+        }
+        else
+        {
+            currentHealth = maxHealth;
+            RunContext.LockForNewRun(); // word packs: fresh snapshot of the shop's current selection
+        }
     }
 
     void Start()
@@ -39,6 +57,31 @@ public class GameManager : MonoBehaviour
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
         OnCoinsChanged?.Invoke(coins);
         OnShieldChanged?.Invoke(shield);
+
+        if (UpgradeManager.Instance != null)
+            UpgradeManager.Instance.OnUpgradeChanged += HandleUpgradeChanged;
+    }
+
+    void OnDestroy()
+    {
+        if (UpgradeManager.Instance != null)
+            UpgradeManager.Instance.OnUpgradeChanged -= HandleUpgradeChanged;
+    }
+
+    void HandleUpgradeChanged(UpgradeDefinition def, int newLevel)
+    {
+        if (def == null || def != repairUpgrade) return;
+        if (newLevel >= UpgradeDefinition.BossLevel)
+            HealFortress(Mathf.RoundToInt(repairUpgrade.bossValue)); // instant chunk heal on reaching boss
+    }
+
+    // Called by WaveManager at the start of each wave.
+    public void ApplyRepairUpgrade()
+    {
+        if (repairUpgrade == null || UpgradeManager.Instance == null) return;
+        int level = UpgradeManager.Instance.LevelOf(repairUpgrade);
+        if (level <= 0) return;
+        HealFortress(Mathf.RoundToInt(repairUpgrade.ValueForLevel(level)));
     }
 
     public void AddCoins(int amount)
@@ -90,6 +133,7 @@ public class GameManager : MonoBehaviour
         {
             IsGameOver = true;
             BankEarnings();
+            SaveManager.ClearSave(); // run is over — nothing left to continue
             OnGameOver?.Invoke();
             Time.timeScale = 0f; // freeze the game
         }
@@ -115,14 +159,32 @@ public class GameManager : MonoBehaviour
         StatsManager.EndRun(wave, peakCombo, coinsEarnedThisRun, StatsManager.CurrentRunAccuracy);
     }
 
-    // If the app is closed/backgrounded mid-run, bank what we have.
+    // Writes a mid-run save if the run is still active — used when pausing to
+    // the Main Menu (RestartButton.GoToMenu) and from the app-exit hooks
+    // below. Unlike BankEarnings this has no "only once" guard: saving is
+    // idempotent (each write just overwrites the last), so it's safe to call
+    // on every background/foreground cycle, not just the first.
+    public void SaveProgressIfActive()
+    {
+        if (IsGameOver) return;
+        if (WaveManager.Instance == null) return;
+        SaveManager.CaptureAndSave(WaveManager.Instance.CurrentWaveNumber);
+    }
+
+    // If the app is closed/backgrounded mid-run, bank what we have and save
+    // the run so Continue picks it back up. Mirrors BankEarnings' own guard
+    // (IsGameOver) rather than sharing its one-time latch, since a save write
+    // should still happen on every background, not just the first.
     void OnApplicationPause(bool paused)
     {
-        if (paused) BankEarnings();
+        if (!paused) return;
+        BankEarnings();
+        SaveProgressIfActive();
     }
 
     void OnApplicationQuit()
     {
         BankEarnings();
+        SaveProgressIfActive();
     }
 }

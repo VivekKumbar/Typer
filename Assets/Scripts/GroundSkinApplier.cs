@@ -1,9 +1,13 @@
 using UnityEngine;
 
-// Put this on the battlefield ground object. Reads which skin is equipped for
-// "GroundSkin" (via ShopInventory) and swaps the ground's material — same
-// equip/ownership pattern as SkinApplier (turret) / EnemySkinApplier, just
-// simplified for one object with one renderer.
+// Put this on the battlefield ground object. Reads the Ground Skin LOCKED IN
+// for this run (RunContext.LockedGroundSkinId — snapshotted once at run start
+// by GameManager.Awake(), same pattern as Word Packs) and swaps the ground's
+// material — same equip/ownership pattern as SkinApplier (turret) /
+// EnemySkinApplier, just simplified for one object with one renderer.
+// Deliberately does NOT read ShopInventory.EquippedId("GroundSkin") directly:
+// that would let re-equipping a skin in the Shop swap the ground out from
+// under a run already in progress.
 public class GroundSkinApplier : MonoBehaviour
 {
     [Header("Master control")]
@@ -11,10 +15,8 @@ public class GroundSkinApplier : MonoBehaviour
     public bool enableSkin = true;
 
     [Header("Config")]
-    [Tooltip("The shop catalog to resolve the equipped skin's ShopItem from.")]
+    [Tooltip("The shop catalog to resolve the locked-in skin's ShopItem from.")]
     public ShopCatalog catalog;
-    [Tooltip("Must match the ShopItem.slot used by your Ground Skins category items.")]
-    public string slot = "GroundSkin";
 
     [Header("Target")]
     [Tooltip("The ground's renderer. Auto-found on this object if left empty.")]
@@ -29,9 +31,10 @@ public class GroundSkinApplier : MonoBehaviour
         if (groundRenderer == null) groundRenderer = GetComponent<Renderer>();
     }
 
-    // Start, not OnEnable: matches the project convention of reading singleton-
-    // backed state (ShopInventory reads PlayerPrefs, no singleton race here, but
-    // keeping it consistent with the other appliers).
+    // Start, not OnEnable: matches the project convention. Safe to read
+    // RunContext.LockedGroundSkinId here because GameManager.Awake() (which
+    // locks it, either fresh for New Game or restored from RunSaveData for
+    // Continue) always runs before ANY Start() in the scene.
     void Start()
     {
         Apply();
@@ -49,10 +52,10 @@ public class GroundSkinApplier : MonoBehaviour
     {
         if (catalog == null) return defaultMaterial;
 
-        string equippedId = ShopInventory.EquippedId(slot);
-        if (string.IsNullOrEmpty(equippedId)) return defaultMaterial;
+        string lockedId = RunContext.LockedGroundSkinId;
+        if (string.IsNullOrEmpty(lockedId)) return defaultMaterial;
 
-        ShopItem item = FindItem(equippedId);
+        ShopItem item = FindItem(lockedId);
         if (item == null) return defaultMaterial;
 
         return (item.payload as Material) ?? defaultMaterial;

@@ -68,6 +68,15 @@ public class Enemy : MonoBehaviour
     // just read every frame, so it always reflects whatever's currently active.
     public float SlowMultiplier = 1f;
 
+    // Heavy Boots boss upgrade's passive near-tower slow (UpgradeManager writes
+    // this every frame). Kept separate from SlowMultiplier so Time Sink's
+    // temporary burst slow and this passive one never fight over the same field.
+    public float NearTowerSlowMultiplier = 1f;
+
+    // Display-only copy of Word, may have mixed case for the Night difficulty
+    // profile. Word itself (used for matching) always stays uppercase.
+    private string displayWord;
+
     public void SetBlocked(bool blocked) { IsBlocked = blocked; }
 
     private Transform target;
@@ -85,6 +94,7 @@ public class Enemy : MonoBehaviour
     public void Init(string word, Transform fortress, float speedBonus)
     {
         Word = word.ToUpper();
+        displayWord = Word;
         target = fortress;
         moveSpeed += speedBonus;
         TypedCount = 0;
@@ -115,7 +125,7 @@ public class Enemy : MonoBehaviour
 
         // Walk (unless a Blocker ally is holding this enemy in place)
         if (!IsBlocked)
-            transform.position += flat * moveSpeed * SlowMultiplier * Time.deltaTime;
+            transform.position += flat * moveSpeed * SlowMultiplier * NearTowerSlowMultiplier * Time.deltaTime;
 
         // Turn to face the tower
         if (rotateTowardsTarget && flat.sqrMagnitude > 0.001f)
@@ -151,11 +161,35 @@ public class Enemy : MonoBehaviour
     public char NextChar => (!string.IsNullOrEmpty(Word) && TypedCount < Word.Length) ? Word[TypedCount] : '\0';
     public float DistanceToFortress => target ? Vector3.Distance(transform.position, target.position) : Mathf.Infinity;
 
+    // Night difficulty profile ("Mixed Case Words"): scrambles the DISPLAYED
+    // case only. Word (matching) stays uppercase, so typing is unaffected —
+    // TryTypeLetter already compares case-insensitively via char.ToUpper.
+    public void SetDisplayWordMixedCase()
+    {
+        if (string.IsNullOrEmpty(Word)) return;
+        char[] chars = Word.ToCharArray();
+        for (int i = 0; i < chars.Length; i++)
+            if (Random.value < 0.5f) chars[i] = char.ToLower(chars[i]);
+        displayWord = new string(chars);
+        RefreshLabel();
+    }
+
+    // Head Start upgrade: advances TypedCount directly (no combo/SFX side
+    // effects, since the player didn't actually type these letters).
+    public void PreType(int count)
+    {
+        if (IsDefeated || string.IsNullOrEmpty(Word)) return;
+        TypedCount = Mathf.Clamp(count, 0, Word.Length);
+        RefreshLabel();
+        if (TypedCount >= Word.Length) Die(true); // fully pre-typed (short word + high pre-type) is still a real kill
+    }
+
     void RefreshLabel()
     {
         if (label == null) return;
-        string typed = Word.Substring(0, TypedCount);
-        string rest = Word.Substring(TypedCount);
+        string src = string.IsNullOrEmpty(displayWord) ? Word : displayWord;
+        string typed = src.Substring(0, TypedCount);
+        string rest = src.Substring(TypedCount);
         label.text = "<color=#46E36B>" + typed + "</color>" + rest;
     }
 
@@ -198,7 +232,15 @@ public class Enemy : MonoBehaviour
                 CameraShake.Shake(HitStop.Instance.bigShakeDuration, HitStop.Instance.bigShakeMagnitude);
             SfxPlayer.PlayKill();
 
-            int reward = Mathf.Clamp(Mathf.RoundToInt(coinsOnDeath * ComboManager.Multiplier), coinsOnDeath, 30);
+            // Coin Magnet upgrade raises this cap so a big combo multiplier isn't
+            // wasted once rewards would otherwise hit the ceiling.
+            int rewardCap = 30;
+            if (UpgradeManager.Instance != null && UpgradeManager.Instance.coinMagnetUpgrade != null)
+            {
+                int cmLevel = UpgradeManager.Instance.LevelOf(UpgradeManager.Instance.coinMagnetUpgrade);
+                if (cmLevel > 0) rewardCap += Mathf.RoundToInt(UpgradeManager.Instance.coinMagnetUpgrade.ValueForLevel(cmLevel));
+            }
+            int reward = Mathf.Clamp(Mathf.RoundToInt(coinsOnDeath * ComboManager.Multiplier), coinsOnDeath, rewardCap);
             if (reward > 0)
             {
                 // Spawn BEFORE banking: CoinFlyManager marks the reward as

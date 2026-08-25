@@ -20,9 +20,9 @@ public class SfxPlayer : MonoBehaviour
         hitClip = MakeTone(120f, 0.28f, 0.40f); // low boom when fortress is hit
     }
 
-    public static void PlayType() { if (Instance) Instance.src.PlayOneShot(Instance.typeClip); }
-    public static void PlayKill() { if (Instance) Instance.src.PlayOneShot(Instance.killClip); }
-    public static void PlayHit() { if (Instance) Instance.src.PlayOneShot(Instance.hitClip); }
+    public static void PlayType() { if (Instance && GameSettings.SfxEnabled) Instance.src.PlayOneShot(Instance.typeClip); }
+    public static void PlayKill() { if (Instance && GameSettings.SfxEnabled) Instance.src.PlayOneShot(Instance.killClip); }
+    public static void PlayHit() { if (Instance && GameSettings.SfxEnabled) Instance.src.PlayOneShot(Instance.hitClip); }
 
     static AudioClip MakeTone(float freq, float duration, float volume)
     {
