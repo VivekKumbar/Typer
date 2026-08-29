@@ -134,6 +134,7 @@ public class GameManager : MonoBehaviour
             IsGameOver = true;
             BankEarnings();
             SaveManager.ClearSave(); // run is over — nothing left to continue
+            SfxPlayer.PlayGameOver();
             OnGameOver?.Invoke();
             Time.timeScale = 0f; // freeze the game
         }

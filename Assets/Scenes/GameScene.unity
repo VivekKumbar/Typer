@@ -6508,6 +6508,7 @@ GameObject:
   - component: {fileID: 1321742871}
   - component: {fileID: 1321742870}
   - component: {fileID: 1321742869}
+  - component: {fileID: 1321742872}
   m_Layer: 0
   m_Name: SFX
   m_TagString: Untagged
@@ -6527,6 +6528,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3add98e775bd3f54b94a5ce727fd7f87, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SfxPlayer
+  wrongKeySound: {fileID: 0}
+  enemyDestroyedSound: {fileID: 0}
+  gameStartSound: {fileID: 0}
+  mainMenuSound: {fileID: 0}
+  buttonClickSound: {fileID: 0}
+  gameOverSound: {fileID: 0}
 --- !u!82 &1321742870
 AudioSource:
   m_ObjectHideFlags: 0
@@ -6639,6 +6646,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1321742872
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1321742868}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d053868338b875f4c8d678660f7785fa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GlobalButtonSfx
 --- !u!1 &1343784906
 GameObject:
   m_ObjectHideFlags: 0

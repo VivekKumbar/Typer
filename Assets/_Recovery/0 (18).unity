@@ -665,10 +665,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: LoadingBarRoot
       objectReference: {fileID: 0}
-    - target: {fileID: 4397716592871551387, guid: 2f005d491eadfcd478c2733e98870104, type: 3}
-      propertyPath: m_TextStyleHashCode
-      value: -1183493901
-      objectReference: {fileID: 0}
     - target: {fileID: 4591786079147249529, guid: 2f005d491eadfcd478c2733e98870104, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
