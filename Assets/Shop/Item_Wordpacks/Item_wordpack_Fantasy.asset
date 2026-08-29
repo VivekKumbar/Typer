@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93330e628daf67244b7ad53b7bb92ded, type: 3}
+  m_Name: Item_wordpack_Fantasy
+  m_EditorClassIdentifier: Assembly-CSharp::ShopItem
+  id: FANTASY
+  displayName: FANTASY
+  description: Enter magical worlds filled with wonder.
+  icon: {fileID: 21300000, guid: 29d573d9bede5ee4db45e2e54fe66a6d, type: 3}
+  previewImage: {fileID: 0}
+  price: 150
+  kind: 3
+  slot: WordPack
+  appliesToEnemyType: 
+  payload: {fileID: 4900000, guid: 6879904c12184604fab852a43d4b3c53, type: 3}
+  ownedByDefault: 0

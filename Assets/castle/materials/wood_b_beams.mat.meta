@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 8ec74e396ad79470d93768f122d947a7
+timeCreated: 1468847031
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 75818
+  packageName: The Big Castle Kit
+  packageVersion: 1.9
+  assetPath: Assets/castle/materials/wood_b_beams.mat
+  uploadId: 716458
