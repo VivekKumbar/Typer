@@ -39,7 +39,15 @@ public class TypingController : MonoBehaviour
                 ComboManager.Instance.NotifyNewTarget(); // fresh word -> reset the "no mistakes" flag
         }
 
-        if (currentTarget == null) return; // no match -> ignore the keypress
+        if (currentTarget == null)
+        {
+            // No enemy on screen needs this letter next -- still a miss from
+            // the player's perspective (they pressed a key and nothing
+            // happened), so it gets the wrong-key sound even though there's
+            // no combo to break.
+            SfxPlayer.PlayWrongKey();
+            return;
+        }
 
         bool correct = currentTarget.TryTypeLetter(c);
         if (correct)
@@ -58,8 +66,9 @@ public class TypingController : MonoBehaviour
             // Wrong letter while locked on -> the combo breaks.
             if (ComboManager.Instance) ComboManager.Instance.RegisterMiss();
             StatsManager.RecordMissedLetter();
+            SfxPlayer.PlayWrongKey();
         }
-        // Wrong key while locked: ignore it (forgiving, like ZType).
+        // Wrong key while locked: ignore it (forgiving, like ZType) -- but it still made a sound above.
     }
 
     Enemy FindTarget(char c)
