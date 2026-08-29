@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 1d8cca811ffdca041ac7a280f0fc8078
+timeCreated: 1474015172
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 75818
+  packageName: The Big Castle Kit
+  packageVersion: 1.9
+  assetPath: Assets/castle/prefabs/props/stone_row_a.prefab
+  uploadId: 716458
