@@ -49,10 +49,64 @@ public class MainMenu : MonoBehaviour
     [Tooltip("The shop catalog — used to resolve the Continue popup's saved word-pack ids AND ground-skin id to their ShopItems (icon/name/previewImage). Assign the same ShopCatalog WordBank/GroundSkinApplier use in GameScene.")]
     public ShopCatalog shopCatalog;
 
+    [Header("Interstitial on return to Main Menu")]
+    [Tooltip("Show an interstitial ad every Nth time the player returns to this scene (persisted across app sessions via PlayerPrefs, not just this session).")]
+    public int showInterstitialEveryNReturns = 3;
+    [Tooltip("Never show an interstitial within this many seconds of a rewarded ad closing, to avoid back-to-back ad fatigue.")]
+    public float interstitialCooldownAfterRewardedSeconds = 60f;
+    const string ReturnCountKey = "TypeKeep_MainMenuReturnCount";
+
+    [Header("Watch Ad for Coins (Main Menu)")]
+    [Tooltip("Flat coin reward for watching a rewarded ad from the Main Menu (separate from Game Over's run-based +50% bonus).")]
+    public int watchAdCoinReward = 500;
+    [Tooltip("The whole Watch Ad button root -- hidden whenever no rewarded ad is ready, so the player never taps a dead button.")]
+    public GameObject watchAdButtonRoot;
+    public Button watchAdButton;
+
     void Start()
     {
         RefreshContinueButton();
         SfxPlayer.PlayMainMenu();
+        if (watchAdButton != null) watchAdButton.onClick.AddListener(OnWatchAdClicked);
+        RefreshWatchAdButton();
+        MaybeShowInterstitial();
+    }
+
+    void RefreshWatchAdButton()
+    {
+        bool ready = AdsManager.Instance != null && AdsManager.Instance.IsRewardedReady();
+        if (watchAdButtonRoot != null) watchAdButtonRoot.SetActive(ready);
+        else if (watchAdButton != null) watchAdButton.gameObject.SetActive(ready);
+    }
+
+    void OnWatchAdClicked()
+    {
+        if (AdsManager.Instance == null) return;
+        AdsManager.Instance.ShowRewardedAd(
+            onRewardGranted: () => Wallet.Add(watchAdCoinReward),
+            onFailedOrSkipped: () => { }); // no partial reward
+        RefreshWatchAdButton(); // re-check readiness now that this ad's been consumed
+    }
+
+    // Counts every Main Menu load (New Game/Continue -> GameScene -> back to
+    // Main Menu all funnel back through this scene's Start) and shows an
+    // interstitial every Nth return -- persisted so the count survives app
+    // restarts, not just this play session.
+    void MaybeShowInterstitial()
+    {
+        int count = PlayerPrefs.GetInt(ReturnCountKey, 0) + 1;
+        PlayerPrefs.SetInt(ReturnCountKey, count);
+        PlayerPrefs.Save();
+
+        if (AdsManager.Instance == null || showInterstitialEveryNReturns <= 0) return;
+        if (count % showInterstitialEveryNReturns != 0) return;
+        if (!AdsManager.Instance.IsInterstitialReady()) return;
+
+        float sinceRewarded = Time.realtimeSinceStartup - AdsManager.Instance.LastRewardedClosedRealtime;
+        if (AdsManager.Instance.LastRewardedClosedRealtime >= 0f && sinceRewarded < interstitialCooldownAfterRewardedSeconds)
+            return; // just watched a rewarded ad -- skip this one to avoid fatigue
+
+        AdsManager.Instance.ShowInterstitial(onClosed: null);
     }
 
     void RefreshContinueButton()
