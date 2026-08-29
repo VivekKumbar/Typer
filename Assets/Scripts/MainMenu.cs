@@ -49,9 +49,39 @@ public class MainMenu : MonoBehaviour
     [Tooltip("The shop catalog — used to resolve the Continue popup's saved word-pack ids AND ground-skin id to their ShopItems (icon/name/previewImage). Assign the same ShopCatalog WordBank/GroundSkinApplier use in GameScene.")]
     public ShopCatalog shopCatalog;
 
+    [Header("Interstitial on return to Main Menu")]
+    [Tooltip("Show an interstitial ad every Nth time the player returns to the Main Menu -- counted across app sessions (PlayerPrefs), not just this one.")]
+    public int showInterstitialEveryNReturns = 3;
+    [Tooltip("Skip the interstitial if a rewarded ad closed within this many seconds -- avoids showing two ads back to back.")]
+    public float interstitialCooldownAfterRewardedSeconds = 60f;
+
+    const string ReturnCountKey = "TypeKeep_MainMenuReturnCount";
+
     void Start()
     {
         RefreshContinueButton();
+        SfxPlayer.PlayMainMenu(); // once per Main Menu scene load
+        MaybeShowInterstitial();
+    }
+
+    // Right as the Main Menu loads, before it needs to be interactive for
+    // anything else -- the ad SDK's own fullscreen overlay already blocks
+    // input to whatever's underneath while it's showing, so there's nothing
+    // extra to disable on the Unity side.
+    void MaybeShowInterstitial()
+    {
+        int count = PlayerPrefs.GetInt(ReturnCountKey, 0) + 1;
+        PlayerPrefs.SetInt(ReturnCountKey, count);
+        PlayerPrefs.Save();
+
+        if (showInterstitialEveryNReturns <= 0 || count % showInterstitialEveryNReturns != 0) return;
+        if (AdsManager.Instance == null || !AdsManager.Instance.IsInterstitialReady()) return;
+
+        float sinceRewarded = Time.realtimeSinceStartup - AdsManager.Instance.LastRewardedClosedRealtime;
+        if (AdsManager.Instance.LastRewardedClosedRealtime >= 0f && sinceRewarded < interstitialCooldownAfterRewardedSeconds)
+            return;
+
+        AdsManager.Instance.ShowInterstitial(onClosed: null); // menu proceeds normally either way, nothing else needed on close
     }
 
     void RefreshContinueButton()

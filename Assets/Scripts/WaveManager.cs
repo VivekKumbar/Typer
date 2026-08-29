@@ -101,6 +101,7 @@ public class WaveManager : MonoBehaviour
         // locked snapshot instead of reusing whatever a previous run in this
         // app session left cached.
         if (wordBank != null) wordBank.RebuildForNewRun();
+        SfxPlayer.PlayGameStart(); // once per run, New Game and Continue both land here
         StartCoroutine(RunWaves());
     }
 

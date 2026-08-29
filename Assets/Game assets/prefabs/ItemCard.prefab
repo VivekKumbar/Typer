@@ -87,6 +87,7 @@ GameObject:
   - component: {fileID: 272961353900255299}
   - component: {fileID: 8391518274342385353}
   - component: {fileID: 4747710290918431061}
+  - component: {fileID: 5690667396417438008}
   m_Layer: 5
   m_Name: ActionButton
   m_TagString: Untagged
@@ -196,6 +197,18 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &5690667396417438008
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3709049940829622437}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1274e334c8a933b48acb386c722d8d0e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonClickSound
 --- !u!1 &4271130468908266775
 GameObject:
   m_ObjectHideFlags: 0
@@ -270,7 +283,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4281479730
+    rgba: 4294967295
   m_fontColor: {r: 1, g: 1, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
