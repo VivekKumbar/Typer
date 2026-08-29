@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0cc0c05e983d4094fa8c8826a30ae852, type: 3}
+  m_Name: UpgradePool
+  m_EditorClassIdentifier: Assembly-CSharp::UpgradePool
+  upgrades:
+  - {fileID: 11400000, guid: 362a43d26b0a1a14e93a6624d2f5c20f, type: 2}
+  - {fileID: 11400000, guid: af3e1957e771f9e46acd92b1d0ef6dbb, type: 2}
+  - {fileID: 11400000, guid: c97e8b7fb8c01a94db6b95b67a82b35b, type: 2}
+  - {fileID: 11400000, guid: 14b74e12a8aa28f43a1e47329f0695f6, type: 2}
+  - {fileID: 11400000, guid: 27621e756f9289e4d99ec6cd5796b99a, type: 2}
+  - {fileID: 11400000, guid: c95c4d91179c84a48a43eafef306eedb, type: 2}
+  - {fileID: 11400000, guid: 1385701b514de864eb4eff1f4c2f4cae, type: 2}
+  - {fileID: 11400000, guid: b2913d9369e4e1b479702741edae4ed5, type: 2}
+  - {fileID: 11400000, guid: 84bdacc53b07fed4baf202779e40cc96, type: 2}

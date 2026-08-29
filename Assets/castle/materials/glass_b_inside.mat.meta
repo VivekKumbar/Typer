@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: e69533b970c0c6c42933c4df2c6b665a
+timeCreated: 1464173995
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 75818
+  packageName: The Big Castle Kit
+  packageVersion: 1.9
+  assetPath: Assets/castle/materials/glass_b_inside.mat
+  uploadId: 716458

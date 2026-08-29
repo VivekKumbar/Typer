@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1241d80064dddcb49825065f694e87d7, type: 3}
+  m_Name: Upgrade_headstart
+  m_EditorClassIdentifier: Assembly-CSharp::UpgradeDefinition
+  id: headstart
+  displayName: Head Start
+  description: Chance for spawning words to arrive with their first letter pre-typed.
+  icon: {fileID: 21300000, guid: 645377420fa3d614cbd6d6af920353e6, type: 3}
+  category: 3
+  levelValues:
+  - 0.25
+  - 0.4
+  - 0.55
+  - 0.7
+  - 0.85
+  bossName: 'Head Start: Jump Cut'
+  bossDescription: Words always spawn with their first TWO letters pre-typed.
+  bossIcon: {fileID: 21300000, guid: 24e2c4cb3bf1bf94bb038d6e6ed79c3a, type: 3}
+  bossValue: 1

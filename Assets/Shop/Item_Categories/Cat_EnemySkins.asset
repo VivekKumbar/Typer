@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: be9d59c88d840c744b755a7593f28e45, type: 3}
+  m_Name: Cat_EnemySkins
+  m_EditorClassIdentifier: Assembly-CSharp::ShopCategory
+  categoryName: Enemy Skins
+  categoryIcon: {fileID: 0}
+  items:
+  - {fileID: 11400000, guid: bb301412924310c48ab8eb6de6ca44f1, type: 2}
+  - {fileID: 11400000, guid: 705c541e35631424aa733775073b70ca, type: 2}
+  - {fileID: 11400000, guid: f598d27ecd329cd4cbf2dac346624d43, type: 2}
+  - {fileID: 11400000, guid: 34971bfe1deae45449fb42436c8571a6, type: 2}

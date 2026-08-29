@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 9e113bf70b70ea24d94adc0f59639352
+timeCreated: 1467201476
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 75818
+  packageName: The Big Castle Kit
+  packageVersion: 1.9
+  assetPath: Assets/castle/materials/tower_b_deco.mat
+  uploadId: 716458
