@@ -39,7 +39,13 @@ public class TypingController : MonoBehaviour
                 ComboManager.Instance.NotifyNewTarget(); // fresh word -> reset the "no mistakes" flag
         }
 
-        if (currentTarget == null) return; // no match -> ignore the keypress
+        if (currentTarget == null)
+        {
+            // No enemy anywhere matches this key -> still a miss, just not one
+            // ComboManager tracks (there's no locked word to break combo on).
+            SfxPlayer.PlayWrongKey();
+            return;
+        }
 
         bool correct = currentTarget.TryTypeLetter(c);
         if (correct)
@@ -58,8 +64,9 @@ public class TypingController : MonoBehaviour
             // Wrong letter while locked on -> the combo breaks.
             if (ComboManager.Instance) ComboManager.Instance.RegisterMiss();
             StatsManager.RecordMissedLetter();
+            SfxPlayer.PlayWrongKey();
         }
-        // Wrong key while locked: ignore it (forgiving, like ZType).
+        // Wrong key while locked: ignore it otherwise (forgiving, like ZType).
     }
 
     Enemy FindTarget(char c)

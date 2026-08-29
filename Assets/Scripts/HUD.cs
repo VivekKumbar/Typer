@@ -35,5 +35,9 @@ public class HUD : MonoBehaviour
         if (healthBar) { healthBar.maxValue = max; healthBar.value = cur; }
     }
 
-    void ShowGameOver() { if (gameOverPanel) gameOverPanel.SetActive(true); }
+    void ShowGameOver()
+    {
+        SfxPlayer.PlayGameOver();
+        if (gameOverPanel) gameOverPanel.SetActive(true);
+    }
 }

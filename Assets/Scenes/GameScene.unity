@@ -6508,6 +6508,7 @@ GameObject:
   - component: {fileID: 1321742871}
   - component: {fileID: 1321742870}
   - component: {fileID: 1321742869}
+  - component: {fileID: 1955600201}
   m_Layer: 0
   m_Name: SFX
   m_TagString: Untagged
@@ -6525,8 +6526,22 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3add98e775bd3f54b94a5ce727fd7f87, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::SfxPlayer
+--- !u!114 &1955600201
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1321742868}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6877cb50c7bed5499884bf0e159a247, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::GlobalButtonSfx
+  excludeRoots:
+  - {fileID: 1862011185}
 --- !u!82 &1321742870
 AudioSource:
   m_ObjectHideFlags: 0

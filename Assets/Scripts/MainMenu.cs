@@ -52,6 +52,7 @@ public class MainMenu : MonoBehaviour
     void Start()
     {
         RefreshContinueButton();
+        SfxPlayer.PlayMainMenu();
     }
 
     void RefreshContinueButton()

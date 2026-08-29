@@ -712,6 +712,7 @@ GameObject:
   - component: {fileID: 4657863514132785241}
   - component: {fileID: 3571078017797303903}
   - component: {fileID: 916192670144165966}
+  - component: {fileID: 9111000000000000103}
   m_Layer: 0
   m_Name: UpgradeCard
   m_TagString: Untagged
@@ -843,3 +844,15 @@ MonoBehaviour:
   levelText: {fileID: 856033811818609815}
   bossBadge: {fileID: 6173176388111392532}
   pickButton: {fileID: 3571078017797303903}
+--- !u!114 &9111000000000000103
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9134620926346647821}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 39faa5b3c5ad86241ad97e6a08e7110c, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonClickSfx
