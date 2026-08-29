@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "500598197342",
+    "project_id": "typer-445ee",
+    "storage_bucket": "typer-445ee.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:500598197342:android:bebc7bfa53eb2ac922b8cf",
+        "android_client_info": {
+          "package_name": "com.VBK.Typer"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBrwcZ4uQZVbF2XPx3WF-AOruQdgDzN48s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
