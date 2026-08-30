@@ -198,6 +198,7 @@ public class GameOverAdOffer : MonoBehaviour
 
         if (rewardPopup != null)
         {
+            rewardPopup.gameObject.SetActive(true);
             rewardPopup.ShowReward(bonus, percent, "REWARD CLAIMED!", () =>
             {
                 RefreshButton();

@@ -35,12 +35,8 @@ public class RewardPopup : MonoBehaviour
     {
         if (closeButton != null)
         {
+            closeButton.onClick.RemoveListener(Close);
             closeButton.onClick.AddListener(Close);
-        }
-
-        if (panel != null)
-        {
-            panel.SetActive(false);
         }
     }
 
@@ -77,30 +73,57 @@ public class RewardPopup : MonoBehaviour
             amountText.gameObject.SetActive(!string.IsNullOrEmpty(amountString));
         }
 
-        transform.SetAsLastSibling();
-        if (panel != null)
+        // 1. Ensure the RewardPopup GameObject is active
+        gameObject.SetActive(true);
+
+        // 2. Ensure the panel is active if assigned separately
+        if (panel != null && panel != gameObject)
         {
-            panel.transform.SetAsLastSibling();
             panel.SetActive(true);
+            panel.transform.SetAsLastSibling();
         }
-        else
-        {
-            gameObject.SetActive(true);
-        }
+
+        transform.SetAsLastSibling();
 
         if (canvasGroup != null)
         {
+            canvasGroup.alpha = 1f;
             canvasGroup.blocksRaycasts = true;
             canvasGroup.interactable = true;
         }
 
-        SfxPlayer.PlayGameStart(); // Celebratory rising stinger sound on reward popup show
+        if (closeButton != null)
+        {
+            closeButton.onClick.RemoveListener(Close);
+            closeButton.onClick.AddListener(Close);
+        }
+
+        try
+        {
+            SfxPlayer.PlayGameStart(); // Celebratory rising stinger sound on reward popup show
+        }
+        catch (Exception) { }
 
         if (animationCoroutine != null)
         {
             StopCoroutine(animationCoroutine);
+            animationCoroutine = null;
         }
-        animationCoroutine = StartCoroutine(AnimateShow());
+
+        // 3. Start animation if active in hierarchy; otherwise apply visual state immediately
+        if (gameObject.activeInHierarchy)
+        {
+            animationCoroutine = StartCoroutine(AnimateShow());
+        }
+        else
+        {
+            Transform targetTransform = panel != null ? panel.transform : transform;
+            targetTransform.localScale = Vector3.one;
+            if (canvasGroup != null)
+            {
+                canvasGroup.alpha = 1f;
+            }
+        }
     }
 
     private IEnumerator AnimateShow()
@@ -148,14 +171,18 @@ public class RewardPopup : MonoBehaviour
             animationCoroutine = null;
         }
 
-        if (panel != null)
+        if (canvasGroup != null)
+        {
+            canvasGroup.blocksRaycasts = false;
+            canvasGroup.interactable = false;
+        }
+
+        if (panel != null && panel != gameObject)
         {
             panel.SetActive(false);
         }
-        else
-        {
-            gameObject.SetActive(false);
-        }
+
+        gameObject.SetActive(false);
 
         Action cb = onClosedCallback;
         onClosedCallback = null;
