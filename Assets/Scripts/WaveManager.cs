@@ -123,6 +123,7 @@ public class WaveManager : MonoBehaviour
             // resume from (never mid-wave). Also fires on wave 1 of a brand
             // new run, so Continue works even if the player quits early.
             SaveManager.CaptureAndSave(waveNumber);
+            BridgeManager.SendLevelStarted(waveNumber);
 
             // Announce the wave
             if (banner != null) banner.Show(BannerText(w, waveIndex));
@@ -162,6 +163,8 @@ public class WaveManager : MonoBehaviour
                 if (GameOver) yield break;
                 yield return null;
             }
+
+            BridgeManager.SendLevelCompleted(waveNumber);
 
             yield return Wait(breakTime);
 

@@ -8,6 +8,6 @@ public static class DarkMode
     public static bool Enabled
     {
         get { return PlayerPrefs.GetInt(KEY, 0) == 1; }
-        set { PlayerPrefs.SetInt(KEY, value ? 1 : 0); PlayerPrefs.Save(); }
+        set { BridgeStorageSync.SetInt(KEY, value ? 1 : 0); }
     }
 }

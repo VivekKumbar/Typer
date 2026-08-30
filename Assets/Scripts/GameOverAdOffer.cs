@@ -1,84 +1,219 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-// Put on (or as a child within) HUD's gameOverPanel. Offers a rewarded-ad
-// coin bonus once the run has ended. Kept as its own file/component rather
-// than folded into HUD.cs so the ad-reward concern stays isolated, same
-// spirit as AdsManager itself hiding all LevelPlay specifics.
-//
-// Coin bonus was chosen over a "continue this run" revive as the default --
-// simpler and lower risk to game economy (a revive would need to re-arm
-// GameManager.IsGameOver, un-freeze Time.timeScale, and decide what state the
-// board/wave resumes in -- a bigger design call). To wire a revive
-// instead/in addition later: swap OnWatchAdClicked's onRewardGranted branch
-// to reset GameManager.IsGameOver, restore some health via
-// GameManager.HealFortress, and resume Time.timeScale, instead of/alongside
-// the coin grant below.
+/// <summary>
+/// Attached to the GameOverPanel. Handles the rewarded ad offer at the Game Over screen,
+/// including countdown timing (unscaled time safe), ad triggering via AdsManager,
+/// dynamic coin reward calculation, and launching the RewardPopup celebration UI.
+/// </summary>
+[DisallowMultipleComponent]
 public class GameOverAdOffer : MonoBehaviour
 {
-    [Header("Reward")]
-    [Tooltip("The coin bonus is this fraction of what was earned THIS RUN (GameManager.coinsEarnedThisRun), granted via Wallet.Add on top -- the run's own earnings are already banked by the time Game Over shows (GameManager.BankEarnings runs before OnGameOver fires), so this is purely additive, never a replacement.")]
-    [Range(0f, 2f)] public float bonusFraction = 0.5f;
+    [Header("1. Dynamic Reward Configuration")]
+    [Tooltip("The coin bonus fraction granted from this run's earnings (e.g. 0.5 for +50%, 1.0 for +100%). Editable in Unity Inspector.")]
+    [Range(0f, 5f)] public float bonusFraction = 0.5f;
 
-    [Header("UI")]
-    [Tooltip("The whole 'Watch Ad for +50% Coins' button root -- hidden if no rewarded ad is ready when Game Over shows, so the player never taps a dead button.")]
+    [Tooltip("Minimum coin bonus granted if no coins were earned during the run (e.g. dying on wave 1).")]
+    public int minimumBonusCoins = 50;
+
+    [Header("2. Countdown / Ad Trigger Timer")]
+    [Tooltip("Seconds to count down before triggering the ad (0 = show ad immediately on click). Uses unscaled time so it works while Game Over freezes Time.timeScale.")]
+    public float countdownSeconds = 0f;
+
+    [Header("3. UI References")]
+    [Tooltip("Root GameObject of the Watch Ad button.")]
     public GameObject watchAdButtonRoot;
+    [Tooltip("Button component the player clicks to watch the ad.")]
     public Button watchAdButton;
-    [Tooltip("Optional label -- set to the actual bonus fraction/amount once GameManager's earnings are known.")]
+    [Tooltip("Text label on the button.")]
     public TMP_Text watchAdLabel;
 
+    [Header("4. Reward Popup")]
+    [Tooltip("Reference to the RewardPopup UI component that displays the reward message upon watching the ad.")]
+    public RewardPopup rewardPopup;
+
     private bool rewardClaimed;
+    private bool isAdLoadingOrCountingDown;
+    private Coroutine countdownCoroutine;
+
+    void Awake()
+    {
+        if (rewardPopup == null)
+        {
+            rewardPopup = FindAnyObjectByType<RewardPopup>(FindObjectsInactive.Include);
+        }
+    }
 
     void Start()
     {
-        if (watchAdButton != null) watchAdButton.onClick.AddListener(OnWatchAdClicked);
+        if (watchAdButton != null)
+        {
+            watchAdButton.onClick.AddListener(OnWatchAdClicked);
+        }
     }
 
-    // OnEnable, not Start: this panel starts inactive and Start() only ever
-    // runs once (the first time it's activated) -- the "is a rewarded ad
-    // ready right now" check has to re-run EVERY time Game Over is shown,
-    // which only OnEnable does correctly here.
     void OnEnable()
     {
+        if (rewardPopup == null)
+        {
+            rewardPopup = FindAnyObjectByType<RewardPopup>(FindObjectsInactive.Include);
+        }
         rewardClaimed = false;
+        isAdLoadingOrCountingDown = false;
+        if (countdownCoroutine != null)
+        {
+            StopCoroutine(countdownCoroutine);
+            countdownCoroutine = null;
+        }
         RefreshButton();
     }
 
-    void RefreshButton()
-    {
-        int bonus = ComputeBonus();
-        if (watchAdLabel != null)
-            watchAdLabel.text = "Watch Ad for +" + Mathf.RoundToInt(bonusFraction * 100f) + "% Coins (" + bonus + ")";
-
-        bool canOffer = !rewardClaimed && bonus > 0 && AdsManager.Instance != null && AdsManager.Instance.IsRewardedReady();
-        if (watchAdButtonRoot != null) watchAdButtonRoot.SetActive(canOffer);
-        else if (watchAdButton != null) watchAdButton.gameObject.SetActive(canOffer);
-    }
-
-    int ComputeBonus()
+    /// <summary>
+    /// Computes the exact coin bonus amount based on this run's earnings and bonusFraction.
+    /// </summary>
+    public int ComputeBonus()
     {
         GameManager gm = GameManager.Instance;
-        return gm != null ? Mathf.RoundToInt(gm.coinsEarnedThisRun * bonusFraction) : 0;
+        int runCoins = gm != null ? gm.coinsEarnedThisRun : 0;
+        int calculated = Mathf.RoundToInt(runCoins * bonusFraction);
+        return Mathf.Max(calculated, minimumBonusCoins);
     }
 
-    void OnWatchAdClicked()
+    /// <summary>
+    /// Refreshes button label and visibility based on readiness and claim status.
+    /// </summary>
+    public void RefreshButton()
     {
-        if (rewardClaimed || AdsManager.Instance == null) return;
+        if (isAdLoadingOrCountingDown) return;
+
+        int bonus = ComputeBonus();
+        int percent = Mathf.RoundToInt(bonusFraction * 100f);
+
+        if (watchAdLabel != null)
+        {
+            watchAdLabel.text = $"Watch Ad for +{percent}% Coins (+{bonus})";
+        }
+
+        bool adReady = AdsManager.Instance != null && AdsManager.Instance.IsRewardedReady();
+#if UNITY_EDITOR
+        // Always allow testing in editor
+        adReady = true;
+#endif
+        bool canOffer = !rewardClaimed && bonus > 0 && adReady;
+
+        if (watchAdButtonRoot != null) watchAdButtonRoot.SetActive(canOffer);
+        else if (watchAdButton != null) watchAdButton.gameObject.SetActive(canOffer);
+
+        if (watchAdButton != null) watchAdButton.interactable = canOffer;
+    }
+
+    public void OnWatchAdClicked()
+    {
+        if (rewardClaimed || isAdLoadingOrCountingDown) return;
+
+        if (countdownSeconds > 0f)
+        {
+            countdownCoroutine = StartCoroutine(CountdownAndTriggerAd());
+        }
+        else
+        {
+            TriggerAd();
+        }
+    }
+
+    /// <summary>
+    /// Unscaled countdown coroutine ensuring timers work while Time.timeScale == 0 at Game Over.
+    /// </summary>
+    private IEnumerator CountdownAndTriggerAd()
+    {
+        isAdLoadingOrCountingDown = true;
+        if (watchAdButton != null) watchAdButton.interactable = false;
+
+        float remaining = countdownSeconds;
+        while (remaining > 0f)
+        {
+            if (watchAdLabel != null)
+            {
+                watchAdLabel.text = $"Loading ad in {Mathf.CeilToInt(remaining)}s...";
+            }
+            // CRITICAL: Must use unscaledDeltaTime because GameManager freezes Time.timeScale to 0 on Game Over
+            yield return new WaitForSecondsRealtime(1f);
+            remaining -= 1f;
+        }
+
+        if (watchAdLabel != null)
+        {
+            watchAdLabel.text = "Loading ad...";
+        }
+
+        TriggerAd();
+        countdownCoroutine = null;
+    }
+
+    private void TriggerAd()
+    {
+        isAdLoadingOrCountingDown = true;
+        if (watchAdButton != null) watchAdButton.interactable = false;
+
+        if (AdsManager.Instance == null)
+        {
+            Debug.LogWarning("[GameOverAdOffer] AdsManager.Instance is missing.");
+            HandleAdFailed();
+            return;
+        }
 
         AdsManager.Instance.ShowRewardedAd(
-            onRewardGranted: () =>
+            onRewardGranted: HandleAdRewarded,
+            onFailedOrSkipped: HandleAdFailed
+        );
+    }
+
+    private void HandleAdRewarded()
+    {
+        if (rewardClaimed) return;
+        rewardClaimed = true;
+        isAdLoadingOrCountingDown = false;
+
+        int bonus = ComputeBonus();
+        int percent = Mathf.RoundToInt(bonusFraction * 100f);
+
+        // 1. Grant the coins to persistent wallet
+        if (bonus > 0)
+        {
+            Wallet.Add(bonus);
+            Debug.Log($"[GameOverAdOffer] Granted {bonus} bonus coins to Wallet.");
+        }
+
+        // 2. Hide watch ad button
+        if (watchAdButtonRoot != null) watchAdButtonRoot.SetActive(false);
+        else if (watchAdButton != null) watchAdButton.gameObject.SetActive(false);
+
+        // 3. Display the Dynamic Reward Popup
+        if (rewardPopup == null)
+        {
+            rewardPopup = FindAnyObjectByType<RewardPopup>(FindObjectsInactive.Include);
+        }
+
+        if (rewardPopup != null)
+        {
+            rewardPopup.ShowReward(bonus, percent, "REWARD CLAIMED!", () =>
             {
-                if (rewardClaimed) return; // guard a double-fire
-                rewardClaimed = true;
-                int bonus = ComputeBonus();
-                if (bonus > 0) Wallet.Add(bonus);
-                RefreshButton(); // hides the button now that the reward's claimed
-            },
-            onFailedOrSkipped: () =>
-            {
-                // No partial reward -- just re-check readiness in case the SDK already started loading the next ad.
                 RefreshButton();
             });
+        }
+        else
+        {
+            Debug.LogWarning("[GameOverAdOffer] RewardPopup reference is not assigned in the Inspector.");
+            RefreshButton();
+        }
+    }
+
+    private void HandleAdFailed()
+    {
+        isAdLoadingOrCountingDown = false;
+        Debug.Log("[GameOverAdOffer] Rewarded ad was skipped or failed.");
+        RefreshButton();
     }
 }

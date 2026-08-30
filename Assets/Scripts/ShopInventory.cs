@@ -14,8 +14,7 @@ public static class ShopInventory
 
     static void SetOwned(ShopItem item)
     {
-        PlayerPrefs.SetInt("owned_" + item.id, 1);
-        PlayerPrefs.Save();
+        BridgeStorageSync.SetInt("owned_" + item.id, 1);
     }
 
     // ---- buying ----
@@ -32,8 +31,7 @@ public static class ShopInventory
     public static void Equip(ShopItem item)
     {
         if (item == null || !IsOwned(item)) return;
-        PlayerPrefs.SetString("equipped_" + item.slot, item.id);
-        PlayerPrefs.Save();
+        BridgeStorageSync.SetString("equipped_" + item.slot, item.id);
     }
 
     public static bool IsEquipped(ShopItem item)
