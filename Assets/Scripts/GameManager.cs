@@ -25,6 +25,13 @@ public class GameManager : MonoBehaviour
 
     public bool IsGameOver { get; private set; }
 
+    // DEBUG CONSOLE HOOK: set by DebugConsole's "godmode" command. Checked at
+    // the very top of DamageFortress, before shield/health logic runs, so
+    // when off (the default) this has zero effect on normal play. Static
+    // because DebugConsole may toggle it from a scene where GameManager
+    // itself doesn't exist yet (e.g. right before loading into GameScene).
+    public static bool DebugGodMode = false;
+
     // The UI subscribes to these so it auto-updates. No polling needed.
     public event Action<int, int> OnHealthChanged; // (current, max)
     public event Action<int> OnCoinsChanged;        // (total)
@@ -111,6 +118,7 @@ public class GameManager : MonoBehaviour
     public void DamageFortress(int amount, Vector3 hitPos)
     {
         if (IsGameOver) return;
+        if (DebugGodMode) return; // debug console "godmode" -- fortress takes no damage
 
         // Shield soaks damage first (if one is up)
         if (ShieldManager.Instance != null)

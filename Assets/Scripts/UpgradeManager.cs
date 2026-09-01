@@ -109,6 +109,29 @@ public class UpgradeManager : MonoBehaviour
 
     public bool IsMaxed(UpgradeDefinition def) => LevelOf(def) >= UpgradeDefinition.BossLevel;
 
+    // DEBUG CONSOLE HOOK: resolves an upgrade by its id string (e.g. "shield",
+    // "timesink") against the draft pool, so the console can accept a short
+    // typed/tapped id instead of needing an asset reference.
+    public UpgradeDefinition FindUpgradeById(string id)
+    {
+        if (string.IsNullOrEmpty(id) || pool == null || pool.upgrades == null) return null;
+        return pool.upgrades.Find(u => u != null && string.Equals(u.id, id, StringComparison.OrdinalIgnoreCase));
+    }
+
+    // DEBUG CONSOLE HOOK: forces an upgrade straight to the given level via
+    // the SAME level-tracking dict and OnUpgradeChanged event a real draft
+    // pick uses (see ApplyPick below) -- every subscriber (ShieldManager,
+    // TimeSinkManager, GameManager, ComboManager, ...) reacts exactly as it
+    // would to a real pick. Only the draft-UI "offer 3 cards, wait for a tap"
+    // part is bypassed, which is the whole point of a debug shortcut.
+    public void DebugSetLevel(UpgradeDefinition def, int level)
+    {
+        if (def == null) return;
+        int clamped = Mathf.Clamp(level, 0, UpgradeDefinition.BossLevel);
+        levels[def.id] = clamped;
+        OnUpgradeChanged?.Invoke(def, clamped);
+    }
+
     // Yielded by WaveManager between waves. Shows the draft, waits for a pick
     // (frame-based, so it works fine while timeScale is 0), applies it, then
     // returns. Coordinates timeScale the same way HitStop does: only freezes if
