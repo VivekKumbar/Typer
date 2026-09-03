@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -20,6 +19,8 @@ public class MainMenu : MonoBehaviour
     [Header("Scene")]
     [Tooltip("Exact name of your game scene (must be added to Build Settings).")]
     public string gameSceneName = "GameScene";
+    [Tooltip("The FTUE tutorial scene. New Game loads this instead, exactly once per player (see FtueState) -- must be added to Build Settings.")]
+    public string ftueSceneName = "FTUEScene";
 
     [Header("Loading UI (optional, but you asked for it)")]
     public GameObject loadingPanel;   // full-screen panel, disabled by default
@@ -57,212 +58,70 @@ public class MainMenu : MonoBehaviour
     public float interstitialCooldownAfterRewardedSeconds = 60f;
     const string ReturnCountKey = "TypeKeep_MainMenuReturnCount";
 
+    [Header("FTUE replay ('?' button)")]
+    [Tooltip("Optional. Loads the FTUE tutorial scene on demand, any time -- not gated by FtueState, so it works even after the player's already seen it once.")]
+    public Button ftueReplayButton;
+
     [Header("Watch Ad for Coins (Main Menu)")]
-    [Tooltip("Flat coin reward granted when the Main Menu rewarded ad is watched to completion. Editable here -- never hardcoded.")]
-    public int rewardCoins = 500;
-    [Tooltip("Real-world cooldown, in hours, before the Main Menu ad can be watched again after a reward is granted. Editable here -- never hardcoded. Separate from Game Over's ad offer, which is a one-shot-per-run bonus with no cooldown at all -- these are different mechanics (repeatable flat bonus vs. one-time proportional bonus), so they intentionally do NOT share a cooldown.")]
-    public float cooldownHours = 4f;
-    [Tooltip("The whole Watch Ad button root -- hidden while on cooldown or while no rewarded ad is loaded.")]
+    [Tooltip("Flat coin reward for watching a rewarded ad from the Main Menu (separate from Game Over's run-based +50% bonus).")]
+    public int watchAdCoinReward = 500;
+    [Tooltip("The whole Watch Ad button root -- hidden whenever no rewarded ad is ready, so the player never taps a dead button.")]
     public GameObject watchAdButtonRoot;
     public Button watchAdButton;
-    [Tooltip("Label on the button: shows 'WATCH AD (+N coins)' when available, or a live 'Next ad in Xh Ym' countdown during cooldown.")]
-    public TMP_Text watchAdButtonLabel;
-
-    // Stored as UTC ticks (not DateTime.ToString(), which is locale/format
-    // dependent) so the cooldown is unambiguous and survives app close/
-    // reopen correctly regardless of device locale or timezone changes.
-    const string LastMainMenuAdUtcTicksKey = "TypeKeep_LastMainMenuAdUtcTicks";
-
-    private bool isMainMenuAdInProgress;
-
-    // DEBUG CONSOLE HOOK: "resetadcooldown". Static (not tied to a live
-    // MainMenu instance) since the cooldown is plain PlayerPrefs state that
-    // can be cleared regardless of which scene the console is currently in.
-    public static void DebugResetAdCooldown()
-    {
-        PlayerPrefs.DeleteKey(LastMainMenuAdUtcTicksKey);
-        PlayerPrefs.Save();
-    }
-
-    // DEBUG CONSOLE HOOK: "forcereward". Routes through the exact same
-    // OnMainMenuAdRewardGranted() a real completed ad calls.
-    public void DebugForceReward() => OnMainMenuAdRewardGranted();
 
     void Start()
     {
         RefreshContinueButton();
         SfxPlayer.PlayMainMenu();
-        if (watchAdButton != null)
-        {
-            watchAdButton.onClick.RemoveListener(OnWatchAdClicked);
-            watchAdButton.onClick.AddListener(OnWatchAdClicked);
-        }
-        RefreshWatchAdButton();
+        if (ftueReplayButton != null) ftueReplayButton.onClick.AddListener(ReplayFtue);
+        // No ad SDK integrated yet on this branch (WebGL-first pass, ads come
+        // back before publishing) -- Watch Ad stays hidden and unwired rather
+        // than deleted, so re-enabling it later is just: add the listener
+        // back, call RefreshWatchAdButton() here, and restore the ad-ready
+        // check inside it.
+        if (watchAdButtonRoot != null) watchAdButtonRoot.SetActive(false);
+        else if (watchAdButton != null) watchAdButton.gameObject.SetActive(false);
         MaybeShowInterstitial();
     }
 
-    void OnEnable()
+    // Re-wire this to the eventual ad SDK's "rewarded ad ready" check, then
+    // call it from Start() (and after each ad closes) to drive the button's
+    // visibility again.
+    void RefreshWatchAdButton()
     {
-        // Re-check elapsed time whenever this scene/object is (re)enabled --
-        // e.g. the app was closed mid-cooldown and reopened -- not just via
-        // the live Update() tick below, so the button is correct immediately.
-        RefreshWatchAdButton();
+        bool ready = false;
+        if (watchAdButtonRoot != null) watchAdButtonRoot.SetActive(ready);
+        else if (watchAdButton != null) watchAdButton.gameObject.SetActive(ready);
     }
 
-    void Update()
-    {
-        if (isMainMenuAdInProgress) return;
-        if (Time.unscaledTime < nextAdTimerUpdate) return;
-        nextAdTimerUpdate = Time.unscaledTime + 1f; // live countdown, ticked once/sec (cheap, no need for per-frame)
-        RefreshWatchAdButton();
-    }
-
-    private float nextAdTimerUpdate;
-
-    // Remaining cooldown, or TimeSpan.Zero if none is active. Single place
-    // that reads the persisted timestamp, so IsWatchAdAvailable() and the
-    // countdown label can never disagree with each other.
-    TimeSpan MainMenuAdCooldownRemaining()
-    {
-        string ticksString = PlayerPrefs.GetString(LastMainMenuAdUtcTicksKey, string.Empty);
-        if (string.IsNullOrEmpty(ticksString) || !long.TryParse(ticksString, out long ticks))
-            return TimeSpan.Zero;
-
-        DateTime lastClaimUtc = new DateTime(ticks, DateTimeKind.Utc);
-        TimeSpan elapsed = DateTime.UtcNow - lastClaimUtc;
-        TimeSpan cooldown = TimeSpan.FromHours(cooldownHours);
-        return elapsed < cooldown ? cooldown - elapsed : TimeSpan.Zero;
-    }
-
-    // Single source of truth for both the button's interactable state and
-    // whether tapping it should actually do anything: cooldown elapsed AND a
-    // rewarded ad is genuinely loaded and ready to show. Only ever asks the
-    // real AdsManager -- no other ad system is consulted or can bypass this.
-    public bool IsWatchAdAvailable()
-    {
-        if (isMainMenuAdInProgress) return false;
-        if (MainMenuAdCooldownRemaining() > TimeSpan.Zero) return false;
-        return AdsManager.Instance != null && AdsManager.Instance.IsRewardedReady();
-    }
-
-    // Three button states: available, cooldown countdown, ad-in-progress.
-    public void RefreshWatchAdButton()
-    {
-        if (isMainMenuAdInProgress)
-        {
-            if (watchAdButton != null) watchAdButton.interactable = false;
-            return;
-        }
-
-        TimeSpan remaining = MainMenuAdCooldownRemaining();
-        bool onCooldown = remaining > TimeSpan.Zero;
-        bool available = IsWatchAdAvailable();
-
-        if (watchAdButtonRoot != null) watchAdButtonRoot.SetActive(true); // stays visible so the countdown is legible
-        if (watchAdButton != null) watchAdButton.interactable = available;
-
-        if (watchAdButtonLabel != null)
-        {
-            if (onCooldown)
-                watchAdButtonLabel.text = FormatCountdown(remaining);
-            else if (available)
-                watchAdButtonLabel.text = $"WATCH AD (+{rewardCoins} coins)";
-            else
-                watchAdButtonLabel.text = "Ad Loading..."; // cooldown elapsed but no rewarded ad loaded yet
-        }
-    }
-
-    static string FormatCountdown(TimeSpan remaining)
-    {
-        if (remaining.TotalHours >= 1) return $"Next ad in {(int)remaining.TotalHours}h {remaining.Minutes}m";
-        if (remaining.TotalMinutes >= 1) return $"Next ad in {(int)remaining.TotalMinutes}m";
-        return "Next ad in <1m";
-    }
-
-    // The ONLY entry point for the Main Menu Watch Ad button. Calls directly
-    // into AdsManager.ShowRewardedAd -- the single shared implementation
-    // GameOverAdOffer also uses -- with no other ad system able to intercept
-    // or bypass this call. (A duplicate "AdManager" class previously sat in
-    // front of this and unconditionally handled the click itself, which was
-    // the actual root cause of rewards being granted on early close -- that
-    // bypass has been removed. AdManager.cs is now fully unused; not deleted
-    // here since removing files wasn't asked for, but it should not be
-    // reintroduced into this call path again.)
+    // Not currently wired to the (hidden) Watch Ad button -- re-hook this in
+    // Start() once a real ad SDK replaces the ad-showing call below.
     void OnWatchAdClicked()
     {
-        if (!IsWatchAdAvailable()) return;
-
-        isMainMenuAdInProgress = true;
-        RefreshWatchAdButton();
-
-        // AdsManager (see its own header comment) resolves the documented
-        // LevelPlay reward/close ordering race internally via a short grace
-        // window -- onFailedOrSkipped here is only ever invoked once it's
-        // genuinely concluded no reward is coming, never just because the
-        // close event happened to arrive first.
-        AdsManager.Instance.ShowRewardedAd(
-            onRewardGranted: OnMainMenuAdRewardGranted,
-            onFailedOrSkipped: OnMainMenuAdClosedWithoutReward);
-    }
-
-    // Ad watched to completion -- per spec, the reward is simply granted with
-    // no popup ("no popup needed in this case" is literal).
-    void OnMainMenuAdRewardGranted()
-    {
-        isMainMenuAdInProgress = false;
-
-        Wallet.Add(rewardCoins);
-        PlayerPrefs.SetString(LastMainMenuAdUtcTicksKey, DateTime.UtcNow.Ticks.ToString());
-        PlayerPrefs.Save();
-
+        Debug.Log("[MainMenu] Watch Ad tapped, but no ad SDK is integrated yet for this build.");
         RefreshWatchAdButton();
     }
 
-    // Called once AdsManager has genuinely concluded the ad closed without a
-    // reward landing (see AdsManager's grace-window comment). By this point
-    // LevelPlay's native ad activity is already closed and gone -- there is
-    // no "resume a closed ad" API -- so this popup is an after-the-fact
-    // acknowledgement, not a live intercept: CONFIRM and CANCEL both just
-    // dismiss it and return to the button, unclaimed, no cooldown started,
-    // available to try again immediately. Reuses the shared ConfirmPopup
-    // (same instance New Game/Continue use).
-    void OnMainMenuAdClosedWithoutReward()
+    // Grants the Watch Ad reward -- called by OnWatchAdClicked once a real ad
+    // SDK's reward callback replaces the log above.
+    void GrantWatchAdReward()
     {
-        isMainMenuAdInProgress = false;
-
-        if (confirmPopup != null)
-        {
-            confirmPopup.Show(
-                "No Reward",
-                "You closed the ad before it finished, so no reward was given. The ad has already ended and can't be resumed -- tap Watch Ad to try again.",
-                confirmCallback: RefreshWatchAdButton,
-                cancelCallback: RefreshWatchAdButton);
-        }
-        else
-        {
-            RefreshWatchAdButton();
-        }
+        Wallet.Add(watchAdCoinReward);
     }
 
     // Counts every Main Menu load (New Game/Continue -> GameScene -> back to
-    // Main Menu all funnel back through this scene's Start) and shows an
-    // interstitial every Nth return -- persisted so the count survives app
-    // restarts, not just this play session.
+    // Main Menu all funnel back through this scene's Start) so the "every Nth
+    // return" cadence stays correct once interstitials come back -- the
+    // counter keeps running even while no ad SDK is wired up.
     void MaybeShowInterstitial()
     {
         int count = PlayerPrefs.GetInt(ReturnCountKey, 0) + 1;
         PlayerPrefs.SetInt(ReturnCountKey, count);
         PlayerPrefs.Save();
 
-        if (AdsManager.Instance == null || showInterstitialEveryNReturns <= 0) return;
-        if (count % showInterstitialEveryNReturns != 0) return;
-        if (!AdsManager.Instance.IsInterstitialReady()) return;
-
-        float sinceRewarded = Time.realtimeSinceStartup - AdsManager.Instance.LastRewardedClosedRealtime;
-        if (AdsManager.Instance.LastRewardedClosedRealtime >= 0f && sinceRewarded < interstitialCooldownAfterRewardedSeconds)
-            return; // just watched a rewarded ad -- skip this one to avoid fatigue
-
-        AdsManager.Instance.ShowInterstitial(onClosed: null);
+        // No ad SDK integrated yet -- nothing to show. Re-wire this once one
+        // is: check showInterstitialEveryNReturns / interstitialCooldownAfterRewardedSeconds
+        // against the new SDK's ready/last-rewarded state, same as before.
     }
 
     void RefreshContinueButton()
@@ -369,7 +228,7 @@ public class MainMenu : MonoBehaviour
     {
         SaveManager.IsContinuing = true;
         loadingVariant = LoadingBackgroundVariant.B; // default rule: Continue -> B
-        StartCoroutine(LoadGame());
+        StartCoroutine(LoadGame(gameSceneName));
     }
 
     // Hook the "NEW GAME" / "PLAY" button here. If a save exists, confirms
@@ -396,7 +255,16 @@ public class MainMenu : MonoBehaviour
         SaveManager.ClearSave();
         SaveManager.IsContinuing = false;
         loadingVariant = LoadingBackgroundVariant.A; // default rule: New Game -> A
-        StartCoroutine(LoadGame());
+        string target = FtueState.HasSeenFtue ? gameSceneName : ftueSceneName;
+        StartCoroutine(LoadGame(target));
+    }
+
+    // Hook the "?" button here. Manual replay -- unlike StartFreshGame, this
+    // never touches SaveManager, so an in-progress run's save is left alone
+    // (only actually starting a real game from inside the FTUE clears it).
+    public void ReplayFtue()
+    {
+        StartCoroutine(LoadGame(ftueSceneName));
     }
 
     public void Quit()
@@ -416,14 +284,14 @@ public class MainMenu : MonoBehaviour
         if (loadingBackgroundB != null) loadingBackgroundB.gameObject.SetActive(loadingVariant == LoadingBackgroundVariant.B);
     }
 
-    IEnumerator LoadGame()
+    IEnumerator LoadGame(string sceneName)
     {
         ApplyLoadingVariant();
         if (loadingPanel) loadingPanel.SetActive(true);
         if (loadingBar != null) loadingBar.SnapTo01(0f); // start visibly empty, no carry-over from a previous load
         float start = Time.unscaledTime;
 
-        AsyncOperation op = SceneManager.LoadSceneAsync(gameSceneName);
+        AsyncOperation op = SceneManager.LoadSceneAsync(sceneName);
         op.allowSceneActivation = false; // wait until we say go
 
         while (!op.isDone)

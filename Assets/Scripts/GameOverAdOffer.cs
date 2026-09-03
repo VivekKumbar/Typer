@@ -1,66 +1,42 @@
-using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
 /// <summary>
-/// Attached to the GameOverPanel. Handles the post-game rewarded ad offer,
-/// strictly enforcing that +100% double coin rewards are ONLY granted if the ad is fully watched.
+/// Attached to the GameOverPanel. Handles the rewarded ad offer at the Game Over screen,
+/// including countdown timing (unscaled time safe), ad triggering via AdsManager,
+/// dynamic coin reward calculation, and launching the RewardPopup celebration UI.
 /// </summary>
 [DisallowMultipleComponent]
 public class GameOverAdOffer : MonoBehaviour
 {
-    // =========================================================================
-    // 1. DYNAMIC AD PROMPT & FEEDBACK TEXT
-    // =========================================================================
-    [Header("Dynamic Text Configuration (Inspector Editable)")]
-    [Tooltip("The prompt text displayed on the reward screen.")]
-    [SerializeField]
-    private string adOfferText = "You will be rewarded with double coins if you watch an ad";
+    [Header("1. Dynamic Reward Configuration")]
+    [Tooltip("The coin bonus fraction granted from this run's earnings (e.g. 0.5 for +50%, 1.0 for +100%). Editable in Unity Inspector.")]
+    [Range(0f, 5f)] public float bonusFraction = 0.5f;
 
-    [Tooltip("The warning text displayed in the popup when the ad is closed or skipped early.")]
-    [SerializeField]
-    private string adSkippedWarningText = "You closed the ad early. You won't get the reward.";
+    [Tooltip("Minimum coin bonus granted if no coins were earned during the run (e.g. dying on wave 1).")]
+    public int minimumBonusCoins = 50;
 
-    // =========================================================================
-    // 2. UI REFERENCES
-    // =========================================================================
-    [Header("UI Text References")]
-    [Tooltip("TextMeshProUGUI element that displays the adOfferText.")]
-    [SerializeField]
-    private TextMeshProUGUI promptLabel;
+    [Header("2. Countdown / Ad Trigger Timer")]
+    [Tooltip("Seconds to count down before triggering the ad (0 = show ad immediately on click). Uses unscaled time so it works while Game Over freezes Time.timeScale.")]
+    public float countdownSeconds = 0f;
 
-    [Tooltip("Secondary TextMeshProUGUI element that displays the dynamic bonus amount (e.g. '+150 Coins!').")]
-    [SerializeField]
-    private TextMeshProUGUI bonusAmountLabel;
-
-    [Header("UI Controls")]
-    [Tooltip("Root GameObject of the Watch Ad button (optional).")]
+    [Header("3. UI References")]
+    [Tooltip("Root GameObject of the Watch Ad button.")]
     public GameObject watchAdButtonRoot;
     [Tooltip("Button component the player clicks to watch the ad.")]
     public Button watchAdButton;
     [Tooltip("Text label on the button.")]
     public TMP_Text watchAdLabel;
 
-    [Header("Popup System References")]
-    [Tooltip("Reference to the RewardPopup UI component that displays the reward celebration upon watching the ad.")]
+    [Header("4. Reward Popup")]
+    [Tooltip("Reference to the RewardPopup UI component that displays the reward message upon watching the ad.")]
     public RewardPopup rewardPopup;
 
-    [Tooltip("Reference to the AdWarningPopup shown when the ad is skipped, canceled, or failed.")]
-    public AdWarningPopup warningPopup;
-
-    // Optional direct GameObject fallback slots for the warning popup
-    [Header("Optional Direct Warning Popup Slots (Fallback)")]
-    [SerializeField] private GameObject warningPopupPanel;
-    [SerializeField] private TextMeshProUGUI warningPopupText;
-    [SerializeField] private Button warningPopupOkButton;
-
-    // =========================================================================
-    // 3. ANTI-EXPLOIT & STATE SAFETY FLAGS
-    // =========================================================================
-    private bool hasClaimedReward = false;
-    private bool isAdInProgress = false;
+    private bool rewardClaimed;
+    private bool isAdLoadingOrCountingDown;
+    private Coroutine countdownCoroutine;
 
     void Awake()
     {
@@ -68,24 +44,13 @@ public class GameOverAdOffer : MonoBehaviour
         {
             rewardPopup = FindAnyObjectByType<RewardPopup>(FindObjectsInactive.Include);
         }
-        if (warningPopup == null)
-        {
-            warningPopup = FindAnyObjectByType<AdWarningPopup>(FindObjectsInactive.Include);
-        }
     }
 
     void Start()
     {
         if (watchAdButton != null)
         {
-            watchAdButton.onClick.RemoveListener(OnWatchAdClicked);
             watchAdButton.onClick.AddListener(OnWatchAdClicked);
-        }
-
-        if (warningPopupOkButton != null)
-        {
-            warningPopupOkButton.onClick.RemoveListener(DismissDirectWarningPanel);
-            warningPopupOkButton.onClick.AddListener(DismissDirectWarningPanel);
         }
     }
 
@@ -95,212 +60,130 @@ public class GameOverAdOffer : MonoBehaviour
         {
             rewardPopup = FindAnyObjectByType<RewardPopup>(FindObjectsInactive.Include);
         }
-        if (warningPopup == null)
+        rewardClaimed = false;
+        isAdLoadingOrCountingDown = false;
+        if (countdownCoroutine != null)
         {
-            warningPopup = FindAnyObjectByType<AdWarningPopup>(FindObjectsInactive.Include);
+            StopCoroutine(countdownCoroutine);
+            countdownCoroutine = null;
         }
-
-        hasClaimedReward = false;
-        isAdInProgress = false;
-        if (warningPopupPanel != null) warningPopupPanel.SetActive(false);
         RefreshButton();
     }
 
     /// <summary>
-    /// Returns the coins collected in the current round.
-    /// </summary>
-    public int GetCoinsCollectedThisRound()
-    {
-        GameManager gm = GameManager.Instance;
-        return gm != null ? gm.coinsEarnedThisRun : 0;
-    }
-
-    /// <summary>
-    /// Computes the exact double coins bonus amount (+100% of round earnings).
+    /// Computes the exact coin bonus amount based on this run's earnings and bonusFraction.
     /// </summary>
     public int ComputeBonus()
     {
-        return GetCoinsCollectedThisRound();
+        GameManager gm = GameManager.Instance;
+        int runCoins = gm != null ? gm.coinsEarnedThisRun : 0;
+        int calculated = Mathf.RoundToInt(runCoins * bonusFraction);
+        return Mathf.Max(calculated, minimumBonusCoins);
     }
 
     /// <summary>
-    /// Refreshes prompt labels, bonus text, and button visibility based on readiness and claim status.
+    /// Refreshes button label and visibility based on readiness and claim status.
     /// </summary>
     public void RefreshButton()
     {
-        if (isAdInProgress) return;
+        if (isAdLoadingOrCountingDown) return;
 
         int bonus = ComputeBonus();
+        int percent = Mathf.RoundToInt(bonusFraction * 100f);
 
-        // 1. Bind the customizable prompt text
-        if (promptLabel != null)
-        {
-            promptLabel.text = adOfferText;
-        }
-
-        // 2. Bind the secondary bonus amount label
-        if (bonusAmountLabel != null)
-        {
-            bonusAmountLabel.text = $"+{bonus} Coins!";
-        }
-
-        // 3. Update button label
         if (watchAdLabel != null)
         {
-            watchAdLabel.text = $"Watch Ad for Double Coins (+{bonus})";
+            watchAdLabel.text = $"Watch Ad for +{percent}% Coins (+{bonus})";
         }
 
-        bool adReady = AdsManager.Instance != null && AdsManager.Instance.IsRewardedReady();
-#if UNITY_EDITOR
-        adReady = true;
-#endif
-        bool canOffer = !hasClaimedReward && bonus > 0 && adReady;
+        // No ad SDK integrated yet on this branch (WebGL-first pass, ads come
+        // back before publishing) -- forced false keeps the button hidden.
+        // Re-wire this to the eventual ad SDK's "rewarded ad ready" check.
+        bool adReady = false;
+        bool canOffer = !rewardClaimed && bonus > 0 && adReady;
 
         if (watchAdButtonRoot != null) watchAdButtonRoot.SetActive(canOffer);
         else if (watchAdButton != null) watchAdButton.gameObject.SetActive(canOffer);
 
-        if (watchAdButton != null) watchAdButton.interactable = canOffer && !isAdInProgress;
+        if (watchAdButton != null) watchAdButton.interactable = canOffer;
     }
 
     public void OnWatchAdClicked()
     {
-        if (hasClaimedReward || isAdInProgress) return;
-        TriggerAd();
-    }
+        if (rewardClaimed || isAdLoadingOrCountingDown) return;
 
-    private void TriggerAd()
-    {
-        isAdInProgress = true;
-        if (watchAdButton != null) watchAdButton.interactable = false;
-
-        if (AdsManager.Instance == null)
+        if (countdownSeconds > 0f)
         {
-            Debug.LogWarning("[GameOverAdOffer] AdsManager.Instance is missing.");
-            OnAdShowComplete(AdCompletionState.Failed);
-            return;
-        }
-
-        AdsManager.Instance.ShowRewardedAd(
-            onRewardGranted: () => OnAdShowComplete(AdCompletionState.Completed),
-            onFailedOrSkipped: () => OnAdShowComplete(AdCompletionState.Skipped)
-        );
-    }
-
-    /// <summary>
-    /// Grants the double coin reward. ONLY called upon full ad completion.
-    /// </summary>
-    public void ProcessReward()
-    {
-        int roundCoins = GetCoinsCollectedThisRound();
-        GrantAdReward(roundCoins);
-    }
-
-    // =========================================================================
-    // 4. >>> EXACT SDK COMPLETION CALLBACKS (STRICT ENFORCEMENT) <<<
-    // =========================================================================
-
-    /// <summary>
-    /// Unity Ads Show Completion Callback (IUnityAdsShowListener).
-    /// Strictly verifies that the ad was watched to completion before granting rewards.
-    /// </summary>
-    /// <param name="adUnitId">The Ad Unit ID (Placement ID) that was shown.</param>
-    /// <param name="showCompletionState">Completion state returned by the Unity Ads SDK.</param>
-    public void OnUnityAdsShowComplete(string adUnitId, UnityAdsShowCompletionState showCompletionState)
-    {
-        Debug.Log("Ad state: " + showCompletionState);
-        isAdInProgress = false;
-
-        // Strict IF check: ONLY give reward if showCompletionState is COMPLETED
-        if (showCompletionState == UnityAdsShowCompletionState.COMPLETED)
-        {
-            Debug.Log("Reward Granted!");
-            ProcessReward();
-        }
-        else if (showCompletionState == UnityAdsShowCompletionState.SKIPPED)
-        {
-            Debug.LogWarning($"[GameOverAdOffer] Unity Ads ({adUnitId}) SKIPPED. Player closed ad early. NO REWARD GIVEN.");
-            TriggerWarningPopup(adSkippedWarningText);
-            RefreshButton();
-        }
-        else // UNKNOWN, NOT_DEFINED, or failed
-        {
-            Debug.LogError($"[GameOverAdOffer] Unity Ads ({adUnitId}) ended with state: {showCompletionState}. NO REWARD GIVEN.");
-            TriggerWarningPopup("Ad did not complete. You won't get the reward.");
-            RefreshButton();
-        }
-    }
-
-    /// <summary>
-    /// Universal Ad SDK completion evaluation callback (LevelPlay, AdMob, AppLovin, Bridge, etc.).
-    /// </summary>
-    public void OnAdShowComplete(AdCompletionState state)
-    {
-        Debug.Log("Ad state: " + state);
-        isAdInProgress = false;
-
-        if (state == AdCompletionState.Completed)
-        {
-            Debug.Log("Reward Granted!");
-            ProcessReward();
-        }
-        else if (state == AdCompletionState.Skipped || state == AdCompletionState.Canceled)
-        {
-            Debug.LogWarning("[GameOverAdOffer] SDK Callback: Ad was closed or skipped early. Triggering warning popup. NO REWARD GIVEN.");
-            TriggerWarningPopup(adSkippedWarningText);
-            RefreshButton();
-        }
-        else if (state == AdCompletionState.Failed)
-        {
-            Debug.LogError("[GameOverAdOffer] SDK Callback: Ad failed to stream. Triggering warning popup. NO REWARD GIVEN.");
-            TriggerWarningPopup("Ad failed to load. You won't get the reward.");
-            RefreshButton();
+            countdownCoroutine = StartCoroutine(CountdownAndTriggerAd());
         }
         else
         {
-            Debug.LogWarning($"[GameOverAdOffer] SDK Callback: Unknown state ({state}). NO REWARD GIVEN.");
-            TriggerWarningPopup(adSkippedWarningText);
-            RefreshButton();
+            TriggerAd();
         }
     }
 
     /// <summary>
-    /// Legacy wrapper for backward compatibility.
+    /// Unscaled countdown coroutine ensuring timers work while Time.timeScale == 0 at Game Over.
     /// </summary>
-    public void OnAdWatchedSuccessfully()
+    private IEnumerator CountdownAndTriggerAd()
     {
-        GrantAdReward(GetCoinsCollectedThisRound());
+        isAdLoadingOrCountingDown = true;
+        if (watchAdButton != null) watchAdButton.interactable = false;
+
+        float remaining = countdownSeconds;
+        while (remaining > 0f)
+        {
+            if (watchAdLabel != null)
+            {
+                watchAdLabel.text = $"Loading ad in {Mathf.CeilToInt(remaining)}s...";
+            }
+            // CRITICAL: Must use unscaledDeltaTime because GameManager freezes Time.timeScale to 0 on Game Over
+            yield return new WaitForSecondsRealtime(1f);
+            remaining -= 1f;
+        }
+
+        if (watchAdLabel != null)
+        {
+            watchAdLabel.text = "Loading ad...";
+        }
+
+        TriggerAd();
+        countdownCoroutine = null;
     }
 
-    /// <summary>
-    /// Strict reward calculation (+100% round match) and anti-duplicate enforcement.
-    /// </summary>
-    public void GrantAdReward(int coinsCollected)
+    // Not currently reachable (RefreshButton() keeps the button hidden via
+    // adReady = false above), but kept intact so re-wiring is small: swap the
+    // log line below for a real ad SDK call into HandleAdRewarded/HandleAdFailed.
+    private void TriggerAd()
     {
-        if (hasClaimedReward)
+        isAdLoadingOrCountingDown = true;
+        if (watchAdButton != null) watchAdButton.interactable = false;
+
+        Debug.Log("[GameOverAdOffer] Watch Ad tapped, but no ad SDK is integrated yet for this build.");
+        HandleAdFailed();
+    }
+
+    private void HandleAdRewarded()
+    {
+        if (rewardClaimed) return;
+        rewardClaimed = true;
+        isAdLoadingOrCountingDown = false;
+
+        int bonus = ComputeBonus();
+        int percent = Mathf.RoundToInt(bonusFraction * 100f);
+
+        // 1. Grant the coins to persistent wallet
+        if (bonus > 0)
         {
-            Debug.LogWarning("[GameOverAdOffer] Reward already claimed for this round. Blocking duplicate grant.");
-            return;
+            Wallet.Add(bonus);
+            Debug.Log($"[GameOverAdOffer] Granted {bonus} bonus coins to Wallet.");
         }
 
-        hasClaimedReward = true;
-        isAdInProgress = false;
-
-        int bonusCoins = coinsCollected;
-
-        // 1. Grant the bonus coins (+100%) to persistent wallet
-        if (bonusCoins > 0)
-        {
-            Wallet.Add(bonusCoins);
-            Debug.Log($"[GameOverAdOffer] SUCCESS: Granted {bonusCoins} bonus coins (Double Coins) to Wallet. Total: {Wallet.Total}");
-        }
-
-        // 2. Hide and disable watch ad button
+        // 2. Hide watch ad button
         if (watchAdButtonRoot != null) watchAdButtonRoot.SetActive(false);
         else if (watchAdButton != null) watchAdButton.gameObject.SetActive(false);
 
-        if (watchAdButton != null) watchAdButton.interactable = false;
-
-        // 3. Display the celebration Reward Popup
+        // 3. Display the Dynamic Reward Popup
         if (rewardPopup == null)
         {
             rewardPopup = FindAnyObjectByType<RewardPopup>(FindObjectsInactive.Include);
@@ -308,55 +191,22 @@ public class GameOverAdOffer : MonoBehaviour
 
         if (rewardPopup != null)
         {
-            rewardPopup.gameObject.SetActive(true);
-            rewardPopup.Show(
-                title: "DOUBLE COINS!",
-                message: "You watched the entire ad and doubled your coins for this round!",
-                amountString: $"+{bonusCoins} COINS",
-                onClosed: () => RefreshButton()
-            );
+            rewardPopup.ShowReward(bonus, percent, "REWARD CLAIMED!", () =>
+            {
+                RefreshButton();
+            });
         }
         else
         {
+            Debug.LogWarning("[GameOverAdOffer] RewardPopup reference is not assigned in the Inspector.");
             RefreshButton();
         }
     }
 
-    /// <summary>
-    /// Triggers the warning popup when the player closes or skips the ad early.
-    /// </summary>
-    public void TriggerWarningPopup(string message)
+    private void HandleAdFailed()
     {
-        if (warningPopup == null)
-        {
-            warningPopup = FindAnyObjectByType<AdWarningPopup>(FindObjectsInactive.Include);
-        }
-
-        if (warningPopup != null)
-        {
-            warningPopup.gameObject.SetActive(true);
-            warningPopup.Show(message, () => RefreshButton());
-            return;
-        }
-
-        if (warningPopupPanel != null)
-        {
-            if (warningPopupText != null) warningPopupText.text = message;
-            warningPopupPanel.SetActive(true);
-            warningPopupPanel.transform.SetAsLastSibling();
-            return;
-        }
-
-        Debug.LogWarning($"[GameOverAdOffer] Warning Popup: '{message}' (No AdWarningPopup assigned).");
-    }
-
-    private void DismissDirectWarningPanel()
-    {
-        if (warningPopupPanel != null)
-        {
-            warningPopupPanel.SetActive(false);
-        }
+        isAdLoadingOrCountingDown = false;
+        Debug.Log("[GameOverAdOffer] Rewarded ad was skipped or failed.");
         RefreshButton();
     }
 }
-

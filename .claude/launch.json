@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "webgl-build",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["C:/unity projects/Typer/Typer/Typer/.claude/br_server.py", "8791", "D:/Unity Builds/Typer/TyperWebGL_NoAds"],
+      "port": 8791
+    },
+    {
+      "name": "webgl-plain",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8792", "--directory", "D:/Unity Builds/Typer/TyperWebGL_NoAds"],
+      "port": 8792
+    }
+  ]
+}

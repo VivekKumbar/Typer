@@ -21,10 +21,6 @@ public class ConsentPopup : MonoBehaviour
     public Button acceptButton;
     public Button manageButton;
 
-    [Header("Wiring")]
-    [Tooltip("AdsManager to initialize once consent is resolved (Accept or Manage). Assign the same instance living in this scene.")]
-    public AdsManager adsManager;
-
     public static bool HasShownBefore => PlayerPrefs.GetInt(ShownKey, 0) == 1;
     // Defaults to granted (personalized) only after Accept is pressed; a
     // player who's never answered has HasShownBefore == false, so this
@@ -40,8 +36,6 @@ public class ConsentPopup : MonoBehaviour
         if (HasShownBefore)
         {
             if (panel != null) panel.SetActive(false);
-            // AdsManager.Start() already handled init in this case (it checks
-            // HasShownBefore itself) -- nothing else to do here.
         }
         else
         {
@@ -49,12 +43,16 @@ public class ConsentPopup : MonoBehaviour
         }
     }
 
+    // No ad SDK integrated yet on this branch (WebGL-first pass, ads come
+    // back before publishing) -- this GameObject is disabled in the scene so
+    // the popup never shows right now, but still records the player's choice
+    // for whichever SDK gets wired in later. Re-add an AdsManager-equivalent
+    // field here and call its consent/init method once one exists.
     void Resolve(bool granted)
     {
         PlayerPrefs.SetInt(ShownKey, 1);
         PlayerPrefs.SetInt(GrantedKey, granted ? 1 : 0);
         PlayerPrefs.Save();
         if (panel != null) panel.SetActive(false);
-        if (adsManager != null) adsManager.InitializeWithConsent(granted);
     }
 }
