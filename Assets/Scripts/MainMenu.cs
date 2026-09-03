@@ -109,6 +109,17 @@ public class MainMenu : MonoBehaviour
         Wallet.Add(watchAdCoinReward);
     }
 
+    // DEBUG CONSOLE HOOK: "resetadcooldown". No-op on this branch -- the
+    // Watch Ad button has no live ad SDK or cooldown tracking wired up yet
+    // (see GrantWatchAdReward above), so there's no cooldown state to clear.
+    // Kept so the console command still compiles/runs; give it real cooldown
+    // state to clear once ads are wired back in.
+    public static void DebugResetAdCooldown() { }
+
+    // DEBUG CONSOLE HOOK: "forcereward". Routes through the same
+    // GrantWatchAdReward() a real completed ad would call.
+    public void DebugForceReward() => GrantWatchAdReward();
+
     // Counts every Main Menu load (New Game/Continue -> GameScene -> back to
     // Main Menu all funnel back through this scene's Start) so the "every Nth
     // return" cadence stays correct once interstitials come back -- the

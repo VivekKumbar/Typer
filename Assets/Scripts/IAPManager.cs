@@ -121,11 +121,10 @@ public class IAPManager : MonoBehaviour, IDetailedStoreListener
         else if (string.Equals(productId, ProductIdRemoveAds, StringComparison.Ordinal))
         {
             Debug.Log("[IAPManager] Ads removed: com.mygame.removeads");
-            // Disable ads in game
-            if (AdsManager.Instance != null)
-            {
-                AdsManager.Instance.adsEnabled = false;
-            }
+            // No ad SDK integrated yet on this branch (WebGL-first pass, ads
+            // come back before publishing) -- nothing to disable right now.
+            // The purchase is still recorded below so a real ad SDK can
+            // check NoAdsPurchased once it's wired back in.
             PlayerPrefs.SetInt("NoAdsPurchased", 1);
             PlayerPrefs.Save();
         }

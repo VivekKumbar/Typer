@@ -235,7 +235,10 @@ public class AdRewardManager : MonoBehaviour
         }
         else
         {
-            bool adReady = AdsManager.Instance != null && AdsManager.Instance.IsRewardedReady();
+            // No ad SDK integrated yet on this branch (WebGL-first pass, ads
+            // come back before publishing) -- forced false keeps the button
+            // non-interactable, matching GameOverAdOffer's same pattern.
+            bool adReady = false;
             if (watchAdButton != null) watchAdButton.interactable = adReady && !hasClaimedReward;
             if (buttonLabel != null) buttonLabel.text = $"Watch Ad (+{flatRewardCoins})";
         }
@@ -280,10 +283,10 @@ public class AdRewardManager : MonoBehaviour
         }
 
         // 3. Determine if the watch ad button should be displayed
-        bool adReady = AdsManager.Instance != null && AdsManager.Instance.IsRewardedReady();
-#if UNITY_EDITOR
-        adReady = true;
-#endif
+        // No ad SDK integrated yet on this branch (WebGL-first pass, ads
+        // come back before publishing) -- forced false keeps the button
+        // hidden, matching GameOverAdOffer's same pattern.
+        bool adReady = false;
         // Can only offer if not already claimed, round coins > 0, and ad is ready
         bool canOffer = !hasClaimedReward && bonusCoins > 0 && adReady;
 
@@ -327,17 +330,14 @@ public class AdRewardManager : MonoBehaviour
         isAdInProgress = true;
         if (watchAdButton != null) watchAdButton.interactable = false;
 
-        if (AdsManager.Instance == null)
-        {
-            Debug.LogWarning("[AdRewardManager] AdsManager.Instance missing.");
-            OnAdShowComplete(AdCompletionState.Failed);
-            return;
-        }
-
-        AdsManager.Instance.ShowRewardedAd(
-            onRewardGranted: () => OnAdShowComplete(AdCompletionState.Completed),
-            onFailedOrSkipped: () => OnAdShowComplete(AdCompletionState.Skipped)
-        );
+        // No ad SDK integrated yet on this branch (WebGL-first pass, ads
+        // come back before publishing) -- matches GameOverAdOffer's same
+        // pattern. Not currently reachable (UpdateRewardUI/UpdateCooldown-
+        // Countdown keep the button hidden via adReady = false above), but
+        // kept intact so re-wiring is small: swap the log line below for a
+        // real ad SDK call into OnAdShowComplete(Completed/Skipped).
+        Debug.Log("[AdRewardManager] Watch Ad tapped, but no ad SDK is integrated yet for this build.");
+        OnAdShowComplete(AdCompletionState.Failed);
     }
 
     /// <summary>

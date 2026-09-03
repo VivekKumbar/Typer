@@ -428,17 +428,13 @@ public class AdManager : MonoBehaviour
             OnUnityAdsShowComplete(currentAdUnitId, UnityAdsShowCompletionState.SKIPPED);
         }
 #else
-        if (AdsManager.Instance != null && AdsManager.Instance.IsRewardedReady())
-        {
-            AdsManager.Instance.ShowRewardedAd(
-                onRewardGranted: () => OnUnityAdsShowComplete(currentAdUnitId, UnityAdsShowCompletionState.COMPLETED),
-                onFailedOrSkipped: () => OnUnityAdsShowComplete(currentAdUnitId, UnityAdsShowCompletionState.SKIPPED)
-            );
-        }
-        else
-        {
-            OnUnityAdsShowComplete(currentAdUnitId, UnityAdsShowCompletionState.SKIPPED);
-        }
+        // No ad SDK integrated yet on this branch (WebGL-first pass, ads
+        // come back before publishing) -- matches AdRewardManager/
+        // GameOverAdOffer's same pattern. This #else covers every non-
+        // Editor build (including WebGL, since this file only branches on
+        // UNITY_EDITOR here, not UNITY_WEBGL) -- so it must compile even
+        // though it's currently unreachable from any wired-up scene.
+        OnUnityAdsShowComplete(currentAdUnitId, UnityAdsShowCompletionState.SKIPPED);
 #endif
     }
 
