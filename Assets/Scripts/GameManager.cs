@@ -10,6 +10,8 @@ public class GameManager : MonoBehaviour
     [Header("Fortress")]
     public int maxHealth = 100;
     public int currentHealth;
+    [Tooltip("When checked, DamageFortress() is a full no-op -- used by FTUEScene so the tutorial's tower can never take damage. Leave unchecked for the real GameScene.")]
+    public bool invulnerable = false;
 
     [Header("Economy")]
     public int coins = 0;             // spendable this run
@@ -110,7 +112,7 @@ public class GameManager : MonoBehaviour
 
     public void DamageFortress(int amount, Vector3 hitPos)
     {
-        if (IsGameOver) return;
+        if (IsGameOver || invulnerable) return;
 
         // Shield soaks damage first (if one is up)
         if (ShieldManager.Instance != null)

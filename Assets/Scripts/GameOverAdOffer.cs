@@ -96,11 +96,10 @@ public class GameOverAdOffer : MonoBehaviour
             watchAdLabel.text = $"Watch Ad for +{percent}% Coins (+{bonus})";
         }
 
-        bool adReady = AdsManager.Instance != null && AdsManager.Instance.IsRewardedReady();
-#if UNITY_EDITOR
-        // Always allow testing in editor
-        adReady = true;
-#endif
+        // No ad SDK integrated yet on this branch (WebGL-first pass, ads come
+        // back before publishing) -- forced false keeps the button hidden.
+        // Re-wire this to the eventual ad SDK's "rewarded ad ready" check.
+        bool adReady = false;
         bool canOffer = !rewardClaimed && bonus > 0 && adReady;
 
         if (watchAdButtonRoot != null) watchAdButtonRoot.SetActive(canOffer);
@@ -152,22 +151,16 @@ public class GameOverAdOffer : MonoBehaviour
         countdownCoroutine = null;
     }
 
+    // Not currently reachable (RefreshButton() keeps the button hidden via
+    // adReady = false above), but kept intact so re-wiring is small: swap the
+    // log line below for a real ad SDK call into HandleAdRewarded/HandleAdFailed.
     private void TriggerAd()
     {
         isAdLoadingOrCountingDown = true;
         if (watchAdButton != null) watchAdButton.interactable = false;
 
-        if (AdsManager.Instance == null)
-        {
-            Debug.LogWarning("[GameOverAdOffer] AdsManager.Instance is missing.");
-            HandleAdFailed();
-            return;
-        }
-
-        AdsManager.Instance.ShowRewardedAd(
-            onRewardGranted: HandleAdRewarded,
-            onFailedOrSkipped: HandleAdFailed
-        );
+        Debug.Log("[GameOverAdOffer] Watch Ad tapped, but no ad SDK is integrated yet for this build.");
+        HandleAdFailed();
     }
 
     private void HandleAdRewarded()

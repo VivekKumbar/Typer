@@ -13,6 +13,8 @@ public class Wave
     public float spawnInterval = 1.5f;
     [Tooltip("Extra speed added to every enemy this wave.")]
     public float speedBonus = 0f;
+    [Tooltip("Overrides WaveManager's global Break Time for the countdown shown at the START of this wave, before its enemies spawn (e.g. a longer countdown before a boss wave). -1 = use the global Break Time default.")]
+    public float breakTimeOverride = -1f;
 }
 
 public class WaveManager : MonoBehaviour
@@ -37,8 +39,10 @@ public class WaveManager : MonoBehaviour
     public float endlessSpeedBonusPerWave = 0.1f;
 
     [Header("Timing")]
-    public float announceTime = 1.8f;    // banner duration before spawning
-    public float breakTime = 1.0f;       // pause after a wave is cleared
+    [Tooltip("Seconds the wave banner stays up before enemies start spawning.")]
+    public float announceTime = 1.8f;
+    [Tooltip("Seconds counted down live on the banner (5, 4, 3, 2, 1...) at the START of each wave, right after the 'WAVE N' label and before enemies begin spawning -- the global default. An individual Wave entry's Break Time Override can lengthen/shorten this for that specific wave. Also used for endless-mode waves, which have no per-wave override of their own.")]
+    public float breakTime = 5f;
 
     [Header("Spawn area (top-down, XZ ground plane)")]
     public float minX = -4f;
@@ -125,9 +129,16 @@ public class WaveManager : MonoBehaviour
             SaveManager.CaptureAndSave(waveNumber);
             BridgeManager.SendLevelStarted(waveNumber);
 
-            // Announce the wave
+            // Announce the wave, then count down (5, 4, 3, 2, 1 ...) before
+            // spawning actually begins -- this IS the wave's start-of-wave
+            // delay (see breakTime/breakTimeOverride below), shown live on
+            // the banner rather than a silent wait.
             if (banner != null) banner.Show(BannerText(w, waveIndex));
             yield return Wait(announceTime);
+            if (GameOver) yield break;
+
+            float thisBreakTime = w.breakTimeOverride >= 0f ? w.breakTimeOverride : breakTime;
+            yield return Countdown(thisBreakTime);
             if (GameOver) yield break;
 
             // Big enemy: spawn once at the top of the wave so it has the whole
@@ -165,8 +176,6 @@ public class WaveManager : MonoBehaviour
             }
 
             BridgeManager.SendLevelCompleted(waveNumber);
-
-            yield return Wait(breakTime);
 
             // Between-wave upgrade draft: pauses, offers 3 cards, resumes on pick.
             if (UpgradeManager.Instance != null)
@@ -281,5 +290,19 @@ public class WaveManager : MonoBehaviour
             t += Time.deltaTime;
             yield return null;
         }
+    }
+
+    // Live "5, 4, 3, 2, 1..." countdown on the banner before a wave's enemies
+    // start spawning. Whole seconds only (rounded up), one number per second.
+    IEnumerator Countdown(float seconds)
+    {
+        int whole = Mathf.Max(1, Mathf.CeilToInt(seconds));
+        for (int i = whole; i >= 1; i--)
+        {
+            if (GameOver) yield break;
+            if (banner != null) banner.ShowRaw(i.ToString());
+            yield return Wait(1f);
+        }
+        if (banner != null) banner.Hide();
     }
 }

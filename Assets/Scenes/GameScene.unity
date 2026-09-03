@@ -287,6 +287,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
   maxHealth: 100
   currentHealth: 0
+  invulnerable: 0
   coins: 0
   coinsEarnedThisRun: 0
   shield: 0
@@ -372,7 +373,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 4294108902
   m_fontColor: {r: 0.9, g: 0.9, b: 0.95, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -385,7 +386,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -901,20 +902,23 @@ MonoBehaviour:
     enemyCount: 5
     spawnInterval: 2.5
     speedBonus: 0
+    breakTimeOverride: -1
   - label: Wave 2
     enemyCount: 10
     spawnInterval: 2
     speedBonus: 0
+    breakTimeOverride: -1
   - label: Wave 3
     enemyCount: 15
     spawnInterval: 1.5
     speedBonus: 0
+    breakTimeOverride: -1
   endlessStartCount: 3
   endlessCountPerWave: 2
   endlessSpawnInterval: 1
   endlessSpeedBonusPerWave: 0.1
   announceTime: 1.8
-  breakTime: 2
+  breakTime: 5
   minX: -4
   maxX: 4
   spawnZ: 12
@@ -2072,7 +2076,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: -1, z: 0, w: 0}
   m_LocalPosition: {x: 0, y: 0, z: 0.78}
-  m_LocalScale: {x: 0.8, y: 1, z: 2.15}
+  m_LocalScale: {x: 1, y: 1, z: 2.15}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 691208881}
@@ -4350,7 +4354,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -6630,7 +6634,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 4286640716
   m_fontColor: {r: 0.3, g: 0.95, b: 0.5, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -6643,7 +6647,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -9791,7 +9795,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 736.3404}
+  m_AnchoredPosition: {x: 66, y: 696}
   m_SizeDelta: {x: 500, y: 24}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1770845476
@@ -10792,7 +10796,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 4281588223
   m_fontColor: {r: 1, g: 0.85, b: 0.2, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -10805,7 +10809,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -11086,8 +11090,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4291217151
-  m_fontColor: {r: 1, g: 0.7783019, b: 0.7783019, a: 1}
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -11181,55 +11185,6 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 8552886858589312394, guid: 1f13cdfd0771ad34e830492fd450b28f, type: 3}
   m_PrefabInstance: {fileID: 1640897623}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &2113556424
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 2113556426}
-  - component: {fileID: 2113556425}
-  m_Layer: 0
-  m_Name: '[AdsManager]'
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &2113556425
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2113556424}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9e9d563f3953493ca9d4509aafa301c3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::AdsManager
-  appKey: 'fd0e55f85edd23f1fa0956299c4434be8dabc3de734b638aa694114d1f65d1cf '
-  rewardedAdUnitId: Rewarded_Android
-  interstitialAdUnitId: Interstitial_Android
-  adsEnabled: 1
-  testMode: 0
---- !u!4 &2113556426
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2113556424}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2123160485
 GameObject:
   m_ObjectHideFlags: 0
@@ -11309,4 +11264,3 @@ SceneRoots:
   - {fileID: 291686731}
   - {fileID: 174743783}
   - {fileID: 830615962}
-  - {fileID: 2113556426}

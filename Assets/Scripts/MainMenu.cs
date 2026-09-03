@@ -19,6 +19,8 @@ public class MainMenu : MonoBehaviour
     [Header("Scene")]
     [Tooltip("Exact name of your game scene (must be added to Build Settings).")]
     public string gameSceneName = "GameScene";
+    [Tooltip("The FTUE tutorial scene. New Game loads this instead, exactly once per player (see FtueState) -- must be added to Build Settings.")]
+    public string ftueSceneName = "FTUEScene";
 
     [Header("Loading UI (optional, but you asked for it)")]
     public GameObject loadingPanel;   // full-screen panel, disabled by default
@@ -56,6 +58,10 @@ public class MainMenu : MonoBehaviour
     public float interstitialCooldownAfterRewardedSeconds = 60f;
     const string ReturnCountKey = "TypeKeep_MainMenuReturnCount";
 
+    [Header("FTUE replay ('?' button)")]
+    [Tooltip("Optional. Loads the FTUE tutorial scene on demand, any time -- not gated by FtueState, so it works even after the player's already seen it once.")]
+    public Button ftueReplayButton;
+
     [Header("Watch Ad for Coins (Main Menu)")]
     [Tooltip("Flat coin reward for watching a rewarded ad from the Main Menu (separate from Game Over's run-based +50% bonus).")]
     public int watchAdCoinReward = 500;
@@ -67,46 +73,55 @@ public class MainMenu : MonoBehaviour
     {
         RefreshContinueButton();
         SfxPlayer.PlayMainMenu();
-        if (watchAdButton != null) watchAdButton.onClick.AddListener(OnWatchAdClicked);
-        RefreshWatchAdButton();
+        if (ftueReplayButton != null) ftueReplayButton.onClick.AddListener(ReplayFtue);
+        // No ad SDK integrated yet on this branch (WebGL-first pass, ads come
+        // back before publishing) -- Watch Ad stays hidden and unwired rather
+        // than deleted, so re-enabling it later is just: add the listener
+        // back, call RefreshWatchAdButton() here, and restore the ad-ready
+        // check inside it.
+        if (watchAdButtonRoot != null) watchAdButtonRoot.SetActive(false);
+        else if (watchAdButton != null) watchAdButton.gameObject.SetActive(false);
         MaybeShowInterstitial();
     }
 
+    // Re-wire this to the eventual ad SDK's "rewarded ad ready" check, then
+    // call it from Start() (and after each ad closes) to drive the button's
+    // visibility again.
     void RefreshWatchAdButton()
     {
-        bool ready = AdsManager.Instance != null && AdsManager.Instance.IsRewardedReady();
+        bool ready = false;
         if (watchAdButtonRoot != null) watchAdButtonRoot.SetActive(ready);
         else if (watchAdButton != null) watchAdButton.gameObject.SetActive(ready);
     }
 
+    // Not currently wired to the (hidden) Watch Ad button -- re-hook this in
+    // Start() once a real ad SDK replaces the ad-showing call below.
     void OnWatchAdClicked()
     {
-        if (AdsManager.Instance == null) return;
-        AdsManager.Instance.ShowRewardedAd(
-            onRewardGranted: () => Wallet.Add(watchAdCoinReward),
-            onFailedOrSkipped: () => { }); // no partial reward
-        RefreshWatchAdButton(); // re-check readiness now that this ad's been consumed
+        Debug.Log("[MainMenu] Watch Ad tapped, but no ad SDK is integrated yet for this build.");
+        RefreshWatchAdButton();
+    }
+
+    // Grants the Watch Ad reward -- called by OnWatchAdClicked once a real ad
+    // SDK's reward callback replaces the log above.
+    void GrantWatchAdReward()
+    {
+        Wallet.Add(watchAdCoinReward);
     }
 
     // Counts every Main Menu load (New Game/Continue -> GameScene -> back to
-    // Main Menu all funnel back through this scene's Start) and shows an
-    // interstitial every Nth return -- persisted so the count survives app
-    // restarts, not just this play session.
+    // Main Menu all funnel back through this scene's Start) so the "every Nth
+    // return" cadence stays correct once interstitials come back -- the
+    // counter keeps running even while no ad SDK is wired up.
     void MaybeShowInterstitial()
     {
         int count = PlayerPrefs.GetInt(ReturnCountKey, 0) + 1;
         PlayerPrefs.SetInt(ReturnCountKey, count);
         PlayerPrefs.Save();
 
-        if (AdsManager.Instance == null || showInterstitialEveryNReturns <= 0) return;
-        if (count % showInterstitialEveryNReturns != 0) return;
-        if (!AdsManager.Instance.IsInterstitialReady()) return;
-
-        float sinceRewarded = Time.realtimeSinceStartup - AdsManager.Instance.LastRewardedClosedRealtime;
-        if (AdsManager.Instance.LastRewardedClosedRealtime >= 0f && sinceRewarded < interstitialCooldownAfterRewardedSeconds)
-            return; // just watched a rewarded ad -- skip this one to avoid fatigue
-
-        AdsManager.Instance.ShowInterstitial(onClosed: null);
+        // No ad SDK integrated yet -- nothing to show. Re-wire this once one
+        // is: check showInterstitialEveryNReturns / interstitialCooldownAfterRewardedSeconds
+        // against the new SDK's ready/last-rewarded state, same as before.
     }
 
     void RefreshContinueButton()
@@ -213,7 +228,7 @@ public class MainMenu : MonoBehaviour
     {
         SaveManager.IsContinuing = true;
         loadingVariant = LoadingBackgroundVariant.B; // default rule: Continue -> B
-        StartCoroutine(LoadGame());
+        StartCoroutine(LoadGame(gameSceneName));
     }
 
     // Hook the "NEW GAME" / "PLAY" button here. If a save exists, confirms
@@ -240,7 +255,16 @@ public class MainMenu : MonoBehaviour
         SaveManager.ClearSave();
         SaveManager.IsContinuing = false;
         loadingVariant = LoadingBackgroundVariant.A; // default rule: New Game -> A
-        StartCoroutine(LoadGame());
+        string target = FtueState.HasSeenFtue ? gameSceneName : ftueSceneName;
+        StartCoroutine(LoadGame(target));
+    }
+
+    // Hook the "?" button here. Manual replay -- unlike StartFreshGame, this
+    // never touches SaveManager, so an in-progress run's save is left alone
+    // (only actually starting a real game from inside the FTUE clears it).
+    public void ReplayFtue()
+    {
+        StartCoroutine(LoadGame(ftueSceneName));
     }
 
     public void Quit()
@@ -260,14 +284,14 @@ public class MainMenu : MonoBehaviour
         if (loadingBackgroundB != null) loadingBackgroundB.gameObject.SetActive(loadingVariant == LoadingBackgroundVariant.B);
     }
 
-    IEnumerator LoadGame()
+    IEnumerator LoadGame(string sceneName)
     {
         ApplyLoadingVariant();
         if (loadingPanel) loadingPanel.SetActive(true);
         if (loadingBar != null) loadingBar.SnapTo01(0f); // start visibly empty, no carry-over from a previous load
         float start = Time.unscaledTime;
 
-        AsyncOperation op = SceneManager.LoadSceneAsync(gameSceneName);
+        AsyncOperation op = SceneManager.LoadSceneAsync(sceneName);
         op.allowSceneActivation = false; // wait until we say go
 
         while (!op.isDone)
