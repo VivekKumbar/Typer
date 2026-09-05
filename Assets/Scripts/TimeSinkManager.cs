@@ -83,6 +83,19 @@ public class TimeSinkManager : MonoBehaviour
         OnChargeChanged?.Invoke(Charge / chargeMax);
     }
 
+    // DEBUG CONSOLE HOOK: instantly fills the charge meter to ready, firing
+    // the same events AddCharge's normal fill path would. OnChargeChanged/
+    // OnChargeReady can only be invoked from inside this class, hence this
+    // small public wrapper rather than the console setting Charge directly.
+    public void DebugFillCharge()
+    {
+        if (IsActive) return; // already mid-effect -- nothing to fill
+        Charge = chargeMax;
+        IsReady = true;
+        OnChargeChanged?.Invoke(1f);
+        OnChargeReady?.Invoke();
+    }
+
     // Hooked to the Time Sink button.
     public void Activate()
     {

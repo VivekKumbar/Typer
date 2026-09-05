@@ -82,9 +82,24 @@ public class DayNightCycle : MonoBehaviour
     public void ApplyForWave(int waveNumber1Based)
     {
         IsNight = IsNightWave(waveNumber1Based);
+        ApplyCurrentPhase();
+    }
 
-        // Same path DarkModeToggle uses: SetDarkMode both flips DarkMode.Enabled
-        // and re-applies the scene's lighting/volumes.
+    // DEBUG CONSOLE HOOK: forces an immediate day/night flip, bypassing the
+    // normal per-wave pattern entirely (the pattern still applies again
+    // normally at the start of the next wave via ApplyForWave above -- this
+    // is a one-shot override for testing, not a permanent pattern change).
+    public void DebugToggleDayNight()
+    {
+        IsNight = !IsNight;
+        ApplyCurrentPhase();
+    }
+
+    // Shared by ApplyForWave and DebugToggleDayNight -- applies whatever
+    // IsNight is currently set to. Same path DarkModeToggle uses: SetDarkMode
+    // both flips DarkMode.Enabled and re-applies the scene's lighting/volumes.
+    void ApplyCurrentPhase()
+    {
         if (darkModeController != null) darkModeController.SetDarkMode(IsNight);
         else DarkMode.Enabled = IsNight; // still persist the flag even with no controller in-scene
 

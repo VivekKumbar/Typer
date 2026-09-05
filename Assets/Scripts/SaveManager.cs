@@ -37,9 +37,8 @@ public static class SaveManager
     public static void SaveRun(RunSaveData data)
     {
         if (data == null) return;
-        PlayerPrefs.SetString(DataKey, JsonUtility.ToJson(data));
-        PlayerPrefs.SetInt(WaveKey, data.waveNumber);
-        PlayerPrefs.Save();
+        BridgeStorageSync.SetString(DataKey, JsonUtility.ToJson(data));
+        BridgeStorageSync.SetInt(WaveKey, data.waveNumber);
     }
 
     public static RunSaveData LoadRun()
@@ -52,9 +51,8 @@ public static class SaveManager
 
     public static void ClearSave()
     {
-        PlayerPrefs.DeleteKey(DataKey);
-        PlayerPrefs.DeleteKey(WaveKey);
-        PlayerPrefs.Save();
+        BridgeStorageSync.DeleteKey(DataKey);
+        BridgeStorageSync.DeleteKey(WaveKey);
     }
 
     // Gathers current state from every relevant singleton and writes it.

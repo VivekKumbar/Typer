@@ -69,11 +69,14 @@ public class SplashScreen : MonoBehaviour, IPointerClickHandler
         // Time.unscaledDeltaTime spikes (e.g. a hitch right after the fade-in),
         // the bar still can't visibly jump -- only the target moves; the
         // displayed value eases toward it.
+        bool preloadFinished = false;
+        BridgeStorageSync.Preload(() => preloadFinished = true);
+
         float t = 0f;
-        while (t < minDisplayDuration)
+        while (t < minDisplayDuration || !preloadFinished)
         {
             t += Time.unscaledDeltaTime; // unscaled: the splash isn't gameplay, shouldn't depend on Time.timeScale
-            if (loadingBar != null) loadingBar.SetTargetProgress01(t / minDisplayDuration);
+            if (loadingBar != null) loadingBar.SetTargetProgress01(Mathf.Clamp01(t / minDisplayDuration));
             yield return null;
         }
         if (loadingBar != null) loadingBar.SetTargetProgress01(1f);
@@ -98,6 +101,9 @@ public class SplashScreen : MonoBehaviour, IPointerClickHandler
         if (proceeding) yield break; // tap during the auto-advance's own Proceed(), or a double-tap -- ignore, don't double-load
         proceeding = true;
         canSkip = false;
+
+        // Notify platform that the initial loading phase is complete
+        BridgeManager.SendGameReady();
 
         yield return FadeTo(0f, fadeOutDuration);
         SceneManager.LoadScene(nextSceneName);

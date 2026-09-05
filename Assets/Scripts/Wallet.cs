@@ -16,8 +16,7 @@ public static class Wallet
         get { return PlayerPrefs.GetInt(KEY, 0); }
         private set
         {
-            PlayerPrefs.SetInt(KEY, Mathf.Max(0, value));
-            PlayerPrefs.Save();
+            BridgeStorageSync.SetInt(KEY, Mathf.Max(0, value));
             OnChanged?.Invoke(Total);
         }
     }
