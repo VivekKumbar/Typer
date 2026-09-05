@@ -29,23 +29,4 @@ public class WaveBanner : MonoBehaviour
         text.gameObject.SetActive(false);
         co = null;
     }
-
-    // Sets the banner text and keeps it up with NO auto-hide timer -- used by
-    // WaveManager's countdown, which drives the show/hide timing itself
-    // (frame-by-frame, so it can bail early on GameOver). Cancels any pending
-    // auto-hide from Show() so a countdown started right after a Show() call
-    // doesn't get hidden mid-count.
-    public void ShowRaw(string message)
-    {
-        if (text == null) return;
-        if (co != null) { StopCoroutine(co); co = null; }
-        text.text = message;
-        text.gameObject.SetActive(true);
-    }
-
-    public void Hide()
-    {
-        if (co != null) { StopCoroutine(co); co = null; }
-        if (text != null) text.gameObject.SetActive(false);
-    }
 }

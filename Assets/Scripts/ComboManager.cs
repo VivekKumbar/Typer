@@ -161,20 +161,6 @@ public class ComboManager : MonoBehaviour
         // Overload is NOT drained on a miss � only the combo resets.
     }
 
-    // DEBUG CONSOLE HOOK: instantly fills Overload to ready, firing the same
-    // events RegisterHit's normal fill path would (OnOverloadChanged/
-    // OnOverloadReady can only be invoked from inside this class, hence this
-    // small public wrapper rather than the console touching the fields
-    // directly and silently leaving the UI/subscribers out of sync).
-    public void DebugFillOverload()
-    {
-        float effectiveMax = EffectiveOverloadMax();
-        overload = effectiveMax;
-        overloadReady = true;
-        OnOverloadChanged?.Invoke(1f);
-        OnOverloadReady?.Invoke();
-    }
-
     public void TriggerOverload()
     {
         if (!overloadReady) return;

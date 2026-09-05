@@ -28,12 +28,6 @@ public class Enemy : MonoBehaviour
     public int minLetters = 3;
     public int maxLetters = 5;
 
-    [Header("FTUE only")]
-    [Tooltip("When checked, the NEXT letter the player needs to type pulses/glows instead of just being untyped-colored -- used by FTUEScene to draw the eye to it. Leave unchecked for normal gameplay.")]
-    public bool highlightNextLetter = false;
-    [Tooltip("Pulse cycle speed for the glowing next letter.")]
-    public float nextLetterPulseSpeed = 4f;
-
     [Header("Hit-stop")]
     [Tooltip("Words longer than this trigger the bigger hit-stop freeze + shake on kill.")]
     [Range(1, 15)] public int bigWordLength = 5;
@@ -123,11 +117,6 @@ public class Enemy : MonoBehaviour
 
     void Update()
     {
-        // Repaints every frame ONLY for the FTUE's pulsing next-letter glow --
-        // normal gameplay never sets highlightNextLetter, so this is a no-op
-        // for every enemy outside FTUEScene.
-        if (highlightNextLetter && !IsDefeated) RefreshLabel();
-
         if (IsDefeated || target == null) return;
 
         Vector3 dir = target.position - transform.position;
@@ -200,25 +189,8 @@ public class Enemy : MonoBehaviour
         if (label == null) return;
         string src = string.IsNullOrEmpty(displayWord) ? Word : displayWord;
         string typed = src.Substring(0, TypedCount);
-
-        if (highlightNextLetter && TypedCount < src.Length)
-        {
-            // Pulses the NEXT letter's brightness between a base gold and a
-            // near-white peak, on top of the normal typed/untyped coloring.
-            string nextChar = src.Substring(TypedCount, 1);
-            string untypedRest = src.Substring(TypedCount + 1);
-            float pulse = (Mathf.Sin(Time.time * nextLetterPulseSpeed) + 1f) * 0.5f; // 0..1
-            Color glow = Color.Lerp(new Color(1f, 0.82f, 0.2f), Color.white, pulse);
-            string hex = ColorUtility.ToHtmlStringRGB(glow);
-            label.text = "<color=#46E36B>" + typed + "</color>"
-                       + "<color=#" + hex + ">" + nextChar + "</color>"
-                       + untypedRest;
-        }
-        else
-        {
-            string rest = src.Substring(TypedCount);
-            label.text = "<color=#46E36B>" + typed + "</color>" + rest;
-        }
+        string rest = src.Substring(TypedCount);
+        label.text = "<color=#46E36B>" + typed + "</color>" + rest;
     }
 
     void Pop()

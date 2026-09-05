@@ -10,8 +10,6 @@ public class GameManager : MonoBehaviour
     [Header("Fortress")]
     public int maxHealth = 100;
     public int currentHealth;
-    [Tooltip("When checked, DamageFortress() is a full no-op -- used by FTUEScene so the tutorial's tower can never take damage. Leave unchecked for the real GameScene.")]
-    public bool invulnerable = false;
 
     [Header("Economy")]
     public int coins = 0;             // spendable this run
@@ -26,12 +24,6 @@ public class GameManager : MonoBehaviour
     public UpgradeDefinition repairUpgrade;
 
     public bool IsGameOver { get; private set; }
-
-    // DEBUG CONSOLE HOOK: "godmode". Static because DebugConsole may toggle
-    // it from a scene where GameManager itself doesn't exist yet (e.g. right
-    // before loading into GameScene). When off (the default) this has zero
-    // effect on normal play.
-    public static bool DebugGodMode = false;
 
     // The UI subscribes to these so it auto-updates. No polling needed.
     public event Action<int, int> OnHealthChanged; // (current, max)
@@ -118,8 +110,7 @@ public class GameManager : MonoBehaviour
 
     public void DamageFortress(int amount, Vector3 hitPos)
     {
-        if (IsGameOver || invulnerable) return;
-        if (DebugGodMode) return; // debug console "godmode" -- fortress takes no damage
+        if (IsGameOver) return;
 
         // Shield soaks damage first (if one is up)
         if (ShieldManager.Instance != null)
@@ -143,7 +134,6 @@ public class GameManager : MonoBehaviour
             IsGameOver = true;
             BankEarnings();
             SaveManager.ClearSave(); // run is over — nothing left to continue
-            BridgeManager.SendLevelFailed(WaveManager.Instance != null ? WaveManager.Instance.CurrentWaveNumber : 1);
             OnGameOver?.Invoke();
             Time.timeScale = 0f; // freeze the game
         }

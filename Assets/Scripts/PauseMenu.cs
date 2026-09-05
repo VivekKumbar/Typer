@@ -25,7 +25,6 @@ public class PauseMenu : MonoBehaviour
         IsPaused = true;
         Time.timeScale = 0f;
         if (pausePanel) pausePanel.SetActive(true);
-        BridgeManager.SendLevelPaused();
     }
 
     public void Resume()
@@ -33,6 +32,5 @@ public class PauseMenu : MonoBehaviour
         IsPaused = false;
         Time.timeScale = 1f;
         if (pausePanel) pausePanel.SetActive(false);
-        BridgeManager.SendLevelResumed();
     }
 }

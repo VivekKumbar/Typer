@@ -13,8 +13,6 @@ public class Wave
     public float spawnInterval = 1.5f;
     [Tooltip("Extra speed added to every enemy this wave.")]
     public float speedBonus = 0f;
-    [Tooltip("Overrides WaveManager's global Break Time for the countdown shown at the START of this wave, before its enemies spawn (e.g. a longer countdown before a boss wave). -1 = use the global Break Time default.")]
-    public float breakTimeOverride = -1f;
 }
 
 public class WaveManager : MonoBehaviour
@@ -39,10 +37,8 @@ public class WaveManager : MonoBehaviour
     public float endlessSpeedBonusPerWave = 0.1f;
 
     [Header("Timing")]
-    [Tooltip("Seconds the wave banner stays up before enemies start spawning.")]
-    public float announceTime = 1.8f;
-    [Tooltip("Seconds counted down live on the banner (5, 4, 3, 2, 1...) at the START of each wave, right after the 'WAVE N' label and before enemies begin spawning -- the global default. An individual Wave entry's Break Time Override can lengthen/shorten this for that specific wave. Also used for endless-mode waves, which have no per-wave override of their own.")]
-    public float breakTime = 5f;
+    public float announceTime = 1.8f;    // banner duration before spawning
+    public float breakTime = 1.0f;       // pause after a wave is cleared
 
     [Header("Spawn area (top-down, XZ ground plane)")]
     public float minX = -4f;
@@ -85,43 +81,6 @@ public class WaveManager : MonoBehaviour
 
     bool GameOver => GameManager.Instance != null && GameManager.Instance.IsGameOver;
 
-    // DEBUG CONSOLE HOOKS -- checked inside RunWaves() below. Wave progression
-    // otherwise lives entirely in that one private coroutine with no external
-    // entry point, so these two small flags are the minimal way to let the
-    // console short-circuit the CURRENT wave's remaining spawns/wait and
-    // optionally redirect which wave comes next, without restructuring the
-    // coroutine's normal flow (autosave, draft, day/night, etc. all still run
-    // exactly as they would for a real wave transition).
-    private bool debugSkipRequested;
-    private int? debugJumpToWaveIndex;
-
-    // "skipwave": clears the field via the real Enemy.Defeat() path (same as
-    // killall) and abandons the rest of THIS wave's spawns/wait, letting the
-    // coroutine fall through to its normal end-of-wave flow (draft, waveIndex++).
-    public void DebugSkipWave()
-    {
-        DebugKillAllEnemies();
-        debugSkipRequested = true;
-    }
-
-    // "setwave N": jumps straight to wave N (1-based) by abandoning the
-    // current wave the same way DebugSkipWave does, then overriding waveIndex
-    // for the coroutine's next iteration.
-    public void DebugSetWave(int waveNumber1Based)
-    {
-        debugJumpToWaveIndex = Mathf.Max(0, waveNumber1Based - 1);
-        DebugSkipWave();
-    }
-
-    // Shared by DebugSkipWave and the console's "killall" command -- the real
-    // Enemy.Defeat() path (full death juice, coins via the normal reward
-    // logic), not a fake instant-clear.
-    public static void DebugKillAllEnemies()
-    {
-        foreach (Enemy e in new System.Collections.Generic.List<Enemy>(Enemy.Active))
-            if (e != null && !e.IsDefeated) e.Defeat();
-    }
-
     void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
@@ -151,13 +110,6 @@ public class WaveManager : MonoBehaviour
         while (true)
         {
             if (GameOver) yield break;
-
-            if (debugJumpToWaveIndex.HasValue)
-            {
-                waveIndex = debugJumpToWaveIndex.Value;
-                debugJumpToWaveIndex = null;
-            }
-
             Wave w = GetWave(waveIndex);
             int waveNumber = waveIndex + 1;
 
@@ -171,18 +123,10 @@ public class WaveManager : MonoBehaviour
             // resume from (never mid-wave). Also fires on wave 1 of a brand
             // new run, so Continue works even if the player quits early.
             SaveManager.CaptureAndSave(waveNumber);
-            BridgeManager.SendLevelStarted(waveNumber);
 
-            // Announce the wave, then count down (5, 4, 3, 2, 1 ...) before
-            // spawning actually begins -- this IS the wave's start-of-wave
-            // delay (see breakTime/breakTimeOverride below), shown live on
-            // the banner rather than a silent wait.
+            // Announce the wave
             if (banner != null) banner.Show(BannerText(w, waveIndex));
             yield return Wait(announceTime);
-            if (GameOver) yield break;
-
-            float thisBreakTime = w.breakTimeOverride >= 0f ? w.breakTimeOverride : breakTime;
-            yield return Countdown(thisBreakTime);
             if (GameOver) yield break;
 
             // Big enemy: spawn once at the top of the wave so it has the whole
@@ -208,11 +152,9 @@ public class WaveManager : MonoBehaviour
             for (int i = 0; i < enemyCount; i++)
             {
                 if (GameOver) yield break;
-                if (debugSkipRequested) break; // "skipwave"/"setwave" -- abandon this wave's remaining spawns
                 if (enemyPrefabs != null && enemyPrefabs.Length > 0) SpawnOne(w.speedBonus);
                 yield return Wait(w.spawnInterval);
             }
-            debugSkipRequested = false; // consumed -- doesn't leak into the next wave
 
             // Wait until the field is clear before starting the next wave
             while (Enemy.Active.Count > 0)
@@ -221,7 +163,7 @@ public class WaveManager : MonoBehaviour
                 yield return null;
             }
 
-            BridgeManager.SendLevelCompleted(waveNumber);
+            yield return Wait(breakTime);
 
             // Between-wave upgrade draft: pauses, offers 3 cards, resumes on pick.
             if (UpgradeManager.Instance != null)
@@ -336,19 +278,5 @@ public class WaveManager : MonoBehaviour
             t += Time.deltaTime;
             yield return null;
         }
-    }
-
-    // Live "5, 4, 3, 2, 1..." countdown on the banner before a wave's enemies
-    // start spawning. Whole seconds only (rounded up), one number per second.
-    IEnumerator Countdown(float seconds)
-    {
-        int whole = Mathf.Max(1, Mathf.CeilToInt(seconds));
-        for (int i = whole; i >= 1; i--)
-        {
-            if (GameOver) yield break;
-            if (banner != null) banner.ShowRaw(i.ToString());
-            yield return Wait(1f);
-        }
-        if (banner != null) banner.Hide();
     }
 }

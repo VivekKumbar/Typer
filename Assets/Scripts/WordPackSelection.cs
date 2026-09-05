@@ -23,7 +23,8 @@ public static class WordPackSelection
 
     static void SaveSelected(List<string> ids)
     {
-        BridgeStorageSync.SetString(SelectedKey, string.Join(",", ids));
+        PlayerPrefs.SetString(SelectedKey, string.Join(",", ids));
+        PlayerPrefs.Save();
     }
 
     public static bool IsSelected(ShopItem item)

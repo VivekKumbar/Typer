@@ -20,7 +20,8 @@ public static class GameSettings
         get { return PlayerPrefs.GetInt(SfxKey, 1) == 1; }
         set
         {
-            BridgeStorageSync.SetInt(SfxKey, value ? 1 : 0);
+            PlayerPrefs.SetInt(SfxKey, value ? 1 : 0);
+            PlayerPrefs.Save();
             OnSfxChanged?.Invoke(value);
         }
     }
@@ -30,7 +31,8 @@ public static class GameSettings
         get { return PlayerPrefs.GetInt(MusicKey, 1) == 1; }
         set
         {
-            BridgeStorageSync.SetInt(MusicKey, value ? 1 : 0);
+            PlayerPrefs.SetInt(MusicKey, value ? 1 : 0);
+            PlayerPrefs.Save();
             OnMusicChanged?.Invoke(value);
         }
     }
@@ -40,7 +42,8 @@ public static class GameSettings
         get { return PlayerPrefs.GetInt(VibrationKey, 1) == 1; }
         set
         {
-            BridgeStorageSync.SetInt(VibrationKey, value ? 1 : 0);
+            PlayerPrefs.SetInt(VibrationKey, value ? 1 : 0);
+            PlayerPrefs.Save();
             OnVibrationChanged?.Invoke(value);
         }
     }

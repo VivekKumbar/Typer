@@ -23,19 +23,19 @@ public static class StatsManager
     public static int EnemiesDestroyed
     {
         get { return PlayerPrefs.GetInt(KEY_ENEMIES_DESTROYED, 0); }
-        private set { BridgeStorageSync.SetInt(KEY_ENEMIES_DESTROYED, value); }
+        private set { PlayerPrefs.SetInt(KEY_ENEMIES_DESTROYED, value); }
     }
 
     public static int LettersTyped
     {
         get { return PlayerPrefs.GetInt(KEY_LETTERS_TYPED, 0); }
-        private set { BridgeStorageSync.SetInt(KEY_LETTERS_TYPED, value); }
+        private set { PlayerPrefs.SetInt(KEY_LETTERS_TYPED, value); }
     }
 
     public static int CorrectLetters
     {
         get { return PlayerPrefs.GetInt(KEY_CORRECT_LETTERS, 0); }
-        private set { BridgeStorageSync.SetInt(KEY_CORRECT_LETTERS, value); }
+        private set { PlayerPrefs.SetInt(KEY_CORRECT_LETTERS, value); }
     }
 
     public static float LifetimeAccuracy => LettersTyped > 0 ? (float)CorrectLetters / LettersTyped * 100f : 0f;
@@ -43,38 +43,38 @@ public static class StatsManager
     public static int TotalCoinsCollected
     {
         get { return PlayerPrefs.GetInt(KEY_TOTAL_COINS, 0); }
-        private set { BridgeStorageSync.SetInt(KEY_TOTAL_COINS, value); }
+        private set { PlayerPrefs.SetInt(KEY_TOTAL_COINS, value); }
     }
 
     public static int RunsPlayed
     {
         get { return PlayerPrefs.GetInt(KEY_RUNS_PLAYED, 0); }
-        private set { BridgeStorageSync.SetInt(KEY_RUNS_PLAYED, value); }
+        private set { PlayerPrefs.SetInt(KEY_RUNS_PLAYED, value); }
     }
 
     // ---- personal bests (only ever overwritten with a higher value) ----
     public static int HighestWave
     {
         get { return PlayerPrefs.GetInt(KEY_HIGHEST_WAVE, 0); }
-        private set { BridgeStorageSync.SetInt(KEY_HIGHEST_WAVE, value); }
+        private set { PlayerPrefs.SetInt(KEY_HIGHEST_WAVE, value); }
     }
 
     public static int HighestCombo
     {
         get { return PlayerPrefs.GetInt(KEY_HIGHEST_COMBO, 0); }
-        private set { BridgeStorageSync.SetInt(KEY_HIGHEST_COMBO, value); }
+        private set { PlayerPrefs.SetInt(KEY_HIGHEST_COMBO, value); }
     }
 
     public static int MostCoinsInRun
     {
         get { return PlayerPrefs.GetInt(KEY_MOST_COINS_IN_RUN, 0); }
-        private set { BridgeStorageSync.SetInt(KEY_MOST_COINS_IN_RUN, value); }
+        private set { PlayerPrefs.SetInt(KEY_MOST_COINS_IN_RUN, value); }
     }
 
     public static float BestRunAccuracy
     {
         get { return PlayerPrefs.GetFloat(KEY_BEST_RUN_ACCURACY, 0f); }
-        private set { BridgeStorageSync.SetFloat(KEY_BEST_RUN_ACCURACY, value); }
+        private set { PlayerPrefs.SetFloat(KEY_BEST_RUN_ACCURACY, value); }
     }
 
     // ---- per-run tracking (not persisted — reset at the end of each run) ----
@@ -130,23 +130,20 @@ public static class StatsManager
         runCorrectLetters = 0;
 
         Commit();
-
-        // Submit to Playgama Bridge leaderboards
-        BridgeLeaderboardManager.SubmitRunStats(HighestWave, TotalCoinsCollected, HighestCombo);
     }
 
     // Debug: wipes every stat back to zero.
     public static void ResetStats()
     {
-        BridgeStorageSync.DeleteKey(KEY_ENEMIES_DESTROYED);
-        BridgeStorageSync.DeleteKey(KEY_LETTERS_TYPED);
-        BridgeStorageSync.DeleteKey(KEY_CORRECT_LETTERS);
-        BridgeStorageSync.DeleteKey(KEY_TOTAL_COINS);
-        BridgeStorageSync.DeleteKey(KEY_RUNS_PLAYED);
-        BridgeStorageSync.DeleteKey(KEY_HIGHEST_WAVE);
-        BridgeStorageSync.DeleteKey(KEY_HIGHEST_COMBO);
-        BridgeStorageSync.DeleteKey(KEY_MOST_COINS_IN_RUN);
-        BridgeStorageSync.DeleteKey(KEY_BEST_RUN_ACCURACY);
+        PlayerPrefs.DeleteKey(KEY_ENEMIES_DESTROYED);
+        PlayerPrefs.DeleteKey(KEY_LETTERS_TYPED);
+        PlayerPrefs.DeleteKey(KEY_CORRECT_LETTERS);
+        PlayerPrefs.DeleteKey(KEY_TOTAL_COINS);
+        PlayerPrefs.DeleteKey(KEY_RUNS_PLAYED);
+        PlayerPrefs.DeleteKey(KEY_HIGHEST_WAVE);
+        PlayerPrefs.DeleteKey(KEY_HIGHEST_COMBO);
+        PlayerPrefs.DeleteKey(KEY_MOST_COINS_IN_RUN);
+        PlayerPrefs.DeleteKey(KEY_BEST_RUN_ACCURACY);
         runLettersTyped = 0;
         runCorrectLetters = 0;
         Commit();
@@ -154,6 +151,7 @@ public static class StatsManager
 
     static void Commit()
     {
+        PlayerPrefs.Save();
         OnStatsChanged?.Invoke();
     }
 }
