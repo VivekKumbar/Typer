@@ -6,16 +6,16 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/SplashScene.unity
+    path: Assets/_Project/Scenes/SplashScene.unity
     guid: 7d9a735cfcd81534fa6012de2c0ecced
   - enabled: 1
-    path: Assets/Scenes/MainMenu.unity
+    path: Assets/_Project/Scenes/MainMenu.unity
     guid: be515dcb225a2f54faf24ca9923bdd10
   - enabled: 1
-    path: Assets/Scenes/FTUEScene.unity
+    path: Assets/_Project/Scenes/FTUEScene.unity
     guid: 1e3cccc07bbdcef4cb220611ef8dbe18
   - enabled: 1
-    path: Assets/Scenes/GameScene.unity
+    path: Assets/_Project/Scenes/GameScene.unity
     guid: 99c9720ab356a0642a771bea13969a05
   m_configObjects:
     com.unity.dt.app-ui: {fileID: 11400000, guid: 1b1c20d82303e4b5781c3ef50ac1449f, type: 2}
