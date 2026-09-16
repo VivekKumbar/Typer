@@ -285,7 +285,10 @@ public class Enemy : MonoBehaviour
             }
 
             if (ComboManager.Instance != null && ComboManager.Instance.CurrentWordPerfect)
+            {
                 PopupManager.ShowPerfect(transform.position);
+                StatsManager.RecordPerfectWord(); // feeds WordsTypedPerfectly-based achievements
+            }
         }
 
         // Play the death animation + dissolve, then clean up
