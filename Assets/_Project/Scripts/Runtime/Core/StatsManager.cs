@@ -10,6 +10,7 @@ public static class StatsManager
     const string KEY_CORRECT_LETTERS = "Stats_CorrectLetters";
     const string KEY_TOTAL_COINS = "Stats_TotalCoinsCollected";
     const string KEY_RUNS_PLAYED = "Stats_RunsPlayed";
+    const string KEY_WORDS_TYPED_PERFECTLY = "Stats_WordsTypedPerfectly";
 
     const string KEY_HIGHEST_WAVE = "Stats_HighestWave";
     const string KEY_HIGHEST_COMBO = "Stats_HighestCombo";
@@ -50,6 +51,15 @@ public static class StatsManager
     {
         get { return PlayerPrefs.GetInt(KEY_RUNS_PLAYED, 0); }
         private set { BridgeStorageSync.SetInt(KEY_RUNS_PLAYED, value); }
+    }
+
+    // Lifetime count of words typed with zero mistakes (ComboManager.CurrentWordPerfect
+    // was true at the moment the word was completed) -- used by the "Perfectionist"-style
+    // achievements. Fed from Enemy.Die() alongside the existing PERFECT! popup check.
+    public static int WordsTypedPerfectly
+    {
+        get { return PlayerPrefs.GetInt(KEY_WORDS_TYPED_PERFECTLY, 0); }
+        private set { BridgeStorageSync.SetInt(KEY_WORDS_TYPED_PERFECTLY, value); }
     }
 
     // ---- personal bests (only ever overwritten with a higher value) ----
@@ -107,6 +117,12 @@ public static class StatsManager
         Commit();
     }
 
+    public static void RecordPerfectWord()
+    {
+        WordsTypedPerfectly++;
+        Commit();
+    }
+
     public static void RecordCoins(int amount)
     {
         if (amount <= 0) return;
@@ -143,6 +159,7 @@ public static class StatsManager
         BridgeStorageSync.DeleteKey(KEY_CORRECT_LETTERS);
         BridgeStorageSync.DeleteKey(KEY_TOTAL_COINS);
         BridgeStorageSync.DeleteKey(KEY_RUNS_PLAYED);
+        BridgeStorageSync.DeleteKey(KEY_WORDS_TYPED_PERFECTLY);
         BridgeStorageSync.DeleteKey(KEY_HIGHEST_WAVE);
         BridgeStorageSync.DeleteKey(KEY_HIGHEST_COMBO);
         BridgeStorageSync.DeleteKey(KEY_MOST_COINS_IN_RUN);
