@@ -15,7 +15,7 @@
         "com.unity.nuget.newtonsoft-json": "3.0.2",
         "com.unity.test-framework": "1.1.31"
       },
-      "hash": "c21bf496bca87d54e75bad048563c3adb1782081"
+      "hash": "2fcc17957823f2494b7b1f7ade92c0fb56f4adb1"
     },
     "com.playgama.bridge": {
       "version": "https://github.com/playgama/bridge-unity.git",
