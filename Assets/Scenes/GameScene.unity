@@ -11165,18 +11165,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 75857dedc7434819bb8afbf92c8a4553, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameOverAdOffer
-  adOfferText: You will be rewarded with double coins if you watch an ad
-  adSkippedWarningText: You closed the ad early. You won't get the reward.
-  promptLabel: {fileID: 0}
-  bonusAmountLabel: {fileID: 0}
+  bonusFraction: 0.5
+  minimumBonusCoins: 50
+  countdownSeconds: 0
   watchAdButtonRoot: {fileID: 1955700301}
   watchAdButton: {fileID: 1955700303}
   watchAdLabel: {fileID: 1955700308}
   rewardPopup: {fileID: 1080062786}
-  warningPopup: {fileID: 584822853}
-  warningPopupPanel: {fileID: 0}
-  warningPopupText: {fileID: 0}
-  warningPopupOkButton: {fileID: 0}
 --- !u!1 &1989037892
 GameObject:
   m_ObjectHideFlags: 0
