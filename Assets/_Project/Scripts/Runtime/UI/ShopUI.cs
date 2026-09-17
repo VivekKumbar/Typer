@@ -41,6 +41,7 @@ public class ShopUI : MonoBehaviour
     public LevelCarousel levelCarousel;
 
     private readonly List<ShopItemUI> spawnedCards = new List<ShopItemUI>();
+    private readonly List<Image> categoryButtonImages = new List<Image>();
     private int currentCategory = 0;
 
     public int WordPackMaxActive => wordBank != null ? wordBank.maxActivePacks : 3;
@@ -68,6 +69,7 @@ public class ShopUI : MonoBehaviour
     void BuildCategories()
     {
         foreach (Transform c in categoryListRoot) Destroy(c.gameObject);
+        categoryButtonImages.Clear();
         if (catalog == null) return;
 
         for (int i = 0; i < catalog.categories.Count; i++)
@@ -75,20 +77,54 @@ public class ShopUI : MonoBehaviour
             ShopCategory cat = catalog.categories[i];
             Button btn = Instantiate(categoryButtonPrefab, categoryListRoot);
 
+            // Fully-baked per-category button art (icon + label already drawn
+            // into the sprite) takes over the whole button and hides the
+            // generic label/icon; falls back to the old text+icon look for
+            // any category that doesn't have custom art assigned.
+            bool hasCustomArt = cat.buttonNormalSprite != null && cat.buttonActiveSprite != null;
+            Image btnImage = btn.GetComponent<Image>();
             TMP_Text label = btn.GetComponentInChildren<TMP_Text>();
-            if (label) label.text = cat.categoryName;
+            Transform iconT = btn.transform.Find("Icon");
 
-            Image icon = btn.transform.Find("Icon") ? btn.transform.Find("Icon").GetComponent<Image>() : null;
-            if (icon && cat.categoryIcon) icon.sprite = cat.categoryIcon;
+            if (hasCustomArt)
+            {
+                if (btnImage) btnImage.sprite = cat.buttonNormalSprite;
+                if (label) label.gameObject.SetActive(false);
+                if (iconT) iconT.gameObject.SetActive(false);
+            }
+            else
+            {
+                if (label) label.text = cat.categoryName;
+                Image icon = iconT ? iconT.GetComponent<Image>() : null;
+                if (icon && cat.categoryIcon) icon.sprite = cat.categoryIcon;
+            }
+
+            categoryButtonImages.Add(btnImage);
 
             int index = i;
             btn.onClick.AddListener(() => ShowCategory(index));
         }
     }
 
+    // Swaps each category button's baked art between its normal/active
+    // sprite based on which category is currently shown. No-op for
+    // categories without custom art (hasCustomArt was false at spawn time,
+    // so their sprite was never touched here).
+    void RefreshCategoryButtonArt()
+    {
+        for (int i = 0; i < categoryButtonImages.Count && i < catalog.categories.Count; i++)
+        {
+            ShopCategory cat = catalog.categories[i];
+            if (cat.buttonNormalSprite == null || cat.buttonActiveSprite == null) continue;
+            Image img = categoryButtonImages[i];
+            if (img) img.sprite = (i == currentCategory) ? cat.buttonActiveSprite : cat.buttonNormalSprite;
+        }
+    }
+
     public void ShowCategory(int index)
     {
         currentCategory = index;
+        RefreshCategoryButtonArt();
 
         foreach (ShopItemUI card in spawnedCards) if (card) Destroy(card.gameObject);
         spawnedCards.Clear();

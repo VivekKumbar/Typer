@@ -8,8 +8,9 @@ using TMPro;
 public class ShopItemUI : MonoBehaviour
 {
     [Header("Refs")]
+    [Tooltip("The item's own art (turret/enemy/etc), shown centered over the card's static backdrop.")]
     public Image iconImage;
-    [Tooltip("The large card background/preview image — a DIFFERENT Image component from iconImage's small icon. Falls back to item.icon if the item has no previewImage assigned.")]
+    [Tooltip("The card's background/backdrop — a DIFFERENT Image component from iconImage. Only overridden when an item explicitly sets previewImage; otherwise the backdrop baked into the prefab is left alone (it's shared chrome, not per-item art).")]
     public Image previewImage;
     public TMP_Text nameText;
     public TMP_Text priceText;
@@ -27,8 +28,12 @@ public class ShopItemUI : MonoBehaviour
         item = data;
         shop = owner;
 
-        if (iconImage) iconImage.sprite = item.icon;
-        if (previewImage) previewImage.sprite = item.previewImage != null ? item.previewImage : item.icon;
+        if (iconImage)
+        {
+            iconImage.sprite = item.icon;
+            iconImage.color = item.icon != null ? Color.white : new Color(1, 1, 1, 0);
+        }
+        if (previewImage && item.previewImage != null) previewImage.sprite = item.previewImage;
         if (nameText)  nameText.text = item.displayName;
 
         Refresh();

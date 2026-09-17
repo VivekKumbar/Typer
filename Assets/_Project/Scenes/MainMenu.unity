@@ -579,7 +579,6 @@ RectTransform:
   - {fileID: 2142799238}
   - {fileID: 1260725717}
   - {fileID: 1761053457}
-  - {fileID: 2033365098}
   - {fileID: 223155526}
   - {fileID: 471770481}
   - {fileID: 607423717}
@@ -590,6 +589,7 @@ RectTransform:
   - {fileID: 1950214972}
   - {fileID: 1714888645}
   - {fileID: 393654005}
+  - {fileID: 2033365098}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -3514,6 +3514,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 242647091}
     m_Modifications:
+    - target: {fileID: 1060333870986843660, guid: c6fb320c2e3736041a3fdfab59ef57b8, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 32d61bf3b2085d34984b8f8b78750903, type: 3}
+    - target: {fileID: 3004521853548463158, guid: c6fb320c2e3736041a3fdfab59ef57b8, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 8bb490cb002969c48830abbb965afbd3, type: 3}
     - target: {fileID: 3191235308254697370, guid: c6fb320c2e3736041a3fdfab59ef57b8, type: 3}
       propertyPath: m_Name
       value: ShopPanel

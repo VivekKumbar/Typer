@@ -19,3 +19,5 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 62acfe9498e381f4c8fa499b738ca7a0, type: 2}
   - {fileID: 11400000, guid: 5ff6c3ad38ae0a84b83843ff8ab207bb, type: 2}
   - {fileID: 11400000, guid: fa859476e21a02b4b81ab4c42795214c, type: 2}
+  buttonNormalSprite: {fileID: 21300000, guid: a3169f7e8b2482245a4b648c475d8d6c, type: 3}
+  buttonActiveSprite: {fileID: 21300000, guid: 9636fc0de0d23924694416c9e9ee940d, type: 3}

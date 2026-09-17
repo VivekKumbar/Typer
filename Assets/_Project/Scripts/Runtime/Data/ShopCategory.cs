@@ -10,4 +10,10 @@ public class ShopCategory : ScriptableObject
     public Sprite categoryIcon;
     [Tooltip("Items shown in this section.")]
     public List<ShopItem> items = new List<ShopItem>();
+
+    [Header("Category button art (optional, overrides categoryIcon + the generic button background)")]
+    [Tooltip("Full button graphic (icon + label already baked in) shown when this category is NOT selected.")]
+    public Sprite buttonNormalSprite;
+    [Tooltip("Full button graphic shown when this category IS selected.")]
+    public Sprite buttonActiveSprite;
 }
