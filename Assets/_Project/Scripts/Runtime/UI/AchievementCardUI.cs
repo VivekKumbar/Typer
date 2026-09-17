@@ -23,10 +23,16 @@ public class AchievementCardUI : MonoBehaviour
     [Tooltip("Shown only in the Claimed state, alongside the greyed-out button — lets the player tell 'already collected' apart from 'not done yet' at a glance.")]
     public GameObject claimedCheckmark;
 
-    [Header("Claim button colors (three states)")]
+    [Header("Claim button colors (three states) — fallback if no sprites are assigned below")]
     public Color readyColor = new Color(0.25f, 0.75f, 0.3f);  // ReadyToClaim — green
     public Color claimedColor = new Color(0.4f, 0.4f, 0.4f);  // Claimed — grey
     public Color lockedColor = new Color(0.4f, 0.4f, 0.4f);   // NotReady — grey
+
+    [Header("Claim button art (three states) — optional, overrides the colors above")]
+    [Tooltip("Each sprite already has its own baked-in label (CLAIM/CLAIM/CLAIMED), so claimLabel is hidden automatically when these are assigned.")]
+    public Sprite readySprite;
+    public Sprite lockedSprite;
+    public Sprite claimedSprite;
 
     private AchievementData data;
     private AchievementsPanel panel;
@@ -67,24 +73,32 @@ public class AchievementCardUI : MonoBehaviour
         AchievementManager.AchievementState state = AchievementManager.GetState(data.id);
         if (claimedCheckmark) claimedCheckmark.SetActive(state == AchievementManager.AchievementState.Claimed);
 
+        bool useSprites = readySprite != null && lockedSprite != null && claimedSprite != null;
+        if (claimLabel) claimLabel.gameObject.SetActive(!useSprites);
+
         switch (state)
         {
             case AchievementManager.AchievementState.ReadyToClaim:
                 if (claimLabel) claimLabel.text = "CLAIM";
                 if (claimButton) claimButton.interactable = true;
                 if (claimButtonImage) claimButtonImage.color = readyColor;
+                if (useSprites && claimButtonImage) claimButtonImage.sprite = readySprite;
                 break;
             case AchievementManager.AchievementState.Claimed:
                 if (claimLabel) claimLabel.text = "CLAIMED";
                 if (claimButton) claimButton.interactable = false;
                 if (claimButtonImage) claimButtonImage.color = claimedColor;
+                if (useSprites && claimButtonImage) claimButtonImage.sprite = claimedSprite;
                 break;
             default: // NotReady
                 if (claimLabel) claimLabel.text = "CLAIM";
                 if (claimButton) claimButton.interactable = false;
                 if (claimButtonImage) claimButtonImage.color = lockedColor;
+                if (useSprites && claimButtonImage) claimButtonImage.sprite = lockedSprite;
                 break;
         }
+
+        if (useSprites && claimButtonImage) claimButtonImage.color = Color.white;
     }
 
     void OnClaimClicked()
