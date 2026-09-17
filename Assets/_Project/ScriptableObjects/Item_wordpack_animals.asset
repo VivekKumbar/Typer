@@ -15,7 +15,7 @@ MonoBehaviour:
   id: ANIMALS
   displayName: ANIMALS
   description: Discover wild creatures from around.
-  icon: {fileID: 21300000, guid: 2b9db3776ed94d842948579a0370e38a, type: 3}
+  icon: {fileID: 21300000, guid: af1e79e39ff5040409b61729b8eb5205, type: 3}
   previewImage: {fileID: 0}
   price: 150
   kind: 3

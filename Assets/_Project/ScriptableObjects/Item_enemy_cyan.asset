@@ -15,7 +15,7 @@ MonoBehaviour:
   id: enemy_cyan
   displayName: Cyan Enemy Skin
   description: 
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 058acfc62d58b3245a1aaab0d5f012d2, type: 3}
   previewImage: {fileID: 0}
   price: 500
   kind: 0

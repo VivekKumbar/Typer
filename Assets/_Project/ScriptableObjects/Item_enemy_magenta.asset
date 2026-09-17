@@ -15,7 +15,7 @@ MonoBehaviour:
   id: enemy_magenta
   displayName: Magenta Enemy Skin
   description: 
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 7177c0467270cd14bb3faea4284fec6c, type: 3}
   previewImage: {fileID: 0}
   price: 500
   kind: 0

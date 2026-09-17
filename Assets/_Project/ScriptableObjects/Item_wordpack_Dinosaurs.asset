@@ -15,7 +15,7 @@ MonoBehaviour:
   id: DINOSAURS
   displayName: DINOSAURS
   description: Discover ancient creatures from prehistoric times.
-  icon: {fileID: 21300000, guid: 4c079e6b4e5c7134bb0b617d4b09c794, type: 3}
+  icon: {fileID: 21300000, guid: af1e79e39ff5040409b61729b8eb5205, type: 3}
   previewImage: {fileID: 0}
   price: 150
   kind: 3

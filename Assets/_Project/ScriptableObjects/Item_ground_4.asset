@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Swamp
   description: PLACEHOLDER - replace me. Assign a real ground Material as the payload,
     a real icon sprite, and a real price before shipping.
-  icon: {fileID: 21300000, guid: 6851e4935e23629479346d8c90eb7916, type: 3}
+  icon: {fileID: 21300000, guid: 3bbc97802d88edb4bb3a1528ebeb51f8, type: 3}
   previewImage: {fileID: 21300000, guid: 6851e4935e23629479346d8c90eb7916, type: 3}
   price: 100
   kind: 0
