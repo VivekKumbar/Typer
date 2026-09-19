@@ -11,8 +11,9 @@ using TMPro;
 // - Hook the "CONTINUE" button's OnClick to ContinueGame() (shows a "Continuing
 //   from Wave X" confirm popup, then proceeds)
 // - Hook a Quit button (optional) to Quit()
-// Both confirm flows share ONE ConfirmPopup instance (confirmPopup below) —
-// it's just Show()'n with different text/callbacks each time, not duplicated.
+// Continue uses the shared ConfirmPopup instance (confirmPopup below). New Game
+// uses its own art-styled instance (newGameConfirmPopup) so restyling it
+// doesn't change the Continue popup; it falls back to the shared one if unset.
 // It loads the game scene asynchronously and shows a loading bar.
 public class MainMenu : MonoBehaviour
 {
@@ -42,10 +43,14 @@ public class MainMenu : MonoBehaviour
     [Header("Continue / New Game")]
     [Tooltip("The whole Continue button — shown only when a save exists.")]
     public GameObject continueButtonRoot;
-    [Tooltip("Label on the Continue button, set to 'CONTINUE - WAVE X'.")]
+    [Tooltip("The small subtext line under 'CONTINUE' on the Continue button (the 'CONTINUE' word itself is baked into the button art). Filled from Continue Subtext Format.")]
     public TMP_Text continueLabel;
+    [Tooltip("{0} = the saved wave number (SaveManager.GetSavedWave()). e.g. 'FROM WAVE {0}'.")]
+    public string continueSubtextFormat = "FROM WAVE {0}";
     [Tooltip("Single shared popup used to confirm BOTH New Game (erase warning) and Continue (resume confirmation). Leave empty to skip confirmation entirely (not recommended) and act immediately.")]
     public ConfirmPopup confirmPopup;
+    [Tooltip("Optional separate, art-styled popup used ONLY for the New Game erase warning. If empty, New Game falls back to the shared Confirm Popup above (Continue always uses the shared one).")]
+    public ConfirmPopup newGameConfirmPopup;
     [Tooltip("The full upgrade pool — used to resolve the Continue popup's saved upgrade ids to their icon/name for the build-preview row. Assign the same UpgradePool asset UpgradeManager uses in GameScene.")]
     public UpgradePool upgradePool;
     [Tooltip("The shop catalog — used to resolve the Continue popup's saved word-pack ids AND ground-skin id to their ShopItems (icon/name/previewImage). Assign the same ShopCatalog WordBank/GroundSkinApplier use in GameScene.")]
@@ -140,7 +145,7 @@ public class MainMenu : MonoBehaviour
         bool hasSave = SaveManager.HasSave();
         if (continueButtonRoot != null) continueButtonRoot.SetActive(hasSave);
         if (hasSave && continueLabel != null)
-            continueLabel.text = "CONTINUE - WAVE " + SaveManager.GetSavedWave();
+            continueLabel.text = string.Format(continueSubtextFormat, SaveManager.GetSavedWave());
     }
 
     // Hook the "CONTINUE" button here. Button should already be hidden/
@@ -247,10 +252,11 @@ public class MainMenu : MonoBehaviour
     // no point confirming "start a new game" when there's nothing to lose.
     public void PlayGame()
     {
-        if (SaveManager.HasSave() && confirmPopup != null)
+        ConfirmPopup newGamePopup = newGameConfirmPopup != null ? newGameConfirmPopup : confirmPopup;
+        if (SaveManager.HasSave() && newGamePopup != null)
         {
             int wave = SaveManager.GetSavedWave();
-            confirmPopup.Show(
+            newGamePopup.Show(
                 "Start New Game?",
                 "Your current progress at Wave " + wave + " will be lost. Are you sure you want to start a new game?",
                 StartFreshGame);

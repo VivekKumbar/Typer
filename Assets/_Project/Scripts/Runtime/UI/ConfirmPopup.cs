@@ -9,10 +9,11 @@ using TMPro;
 // whatever text/callbacks the calling flow needs; onCancel is optional since
 // most callers just want the popup to close with no further action. Same
 // simple show/hide pattern as the shop's Not Enough Coins popup, just with
-// confirm/cancel actions attached instead of a single OK button. One instance
-// of this in the scene is meant to be shared by every confirm flow (New Game,
-// Continue, ...) — don't create a separate popup per flow, just call Show()
-// again with different text/callbacks.
+// confirm/cancel actions attached instead of a single OK button. By default
+// one instance in the scene is shared by every confirm flow — just call Show()
+// again with different text/callbacks. The Main Menu scene has a second,
+// art-styled instance used only for New Game (MainMenu.newGameConfirmPopup);
+// its Default Dialog Background Sprite is its own frame art, so Show() keeps it.
 //
 // Continue also wants a small build-preview row (icon + level per unlocked
 // upgrade) under the message, a second row showing which word packs are
@@ -51,12 +52,16 @@ public class ConfirmPopup : MonoBehaviour
 
     private Action onConfirm;
     private Action onCancel;
+    private bool shown;
 
     void Start()
     {
         if (confirmButton != null) confirmButton.onClick.AddListener(OnConfirmClicked);
         if (cancelButton != null) cancelButton.onClick.AddListener(OnCancelClicked);
-        if (panel != null) panel.SetActive(false);
+        // The panel is this object, so the FIRST Show() activates it and runs
+        // Start a frame later -- only hide it here if nothing has shown it yet,
+        // otherwise the very first popup would open and instantly vanish.
+        if (panel != null && !shown) panel.SetActive(false);
     }
 
     public void Show(string title, string message, Action confirmCallback, Action cancelCallback = null)
@@ -89,6 +94,7 @@ public class ConfirmPopup : MonoBehaviour
         if (dialogBackground != null)
             dialogBackground.sprite = groundSkinBackground != null ? groundSkinBackground : defaultDialogBackgroundSprite;
 
+        shown = true;
         if (panel != null) panel.SetActive(true);
     }
 
