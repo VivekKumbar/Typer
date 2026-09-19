@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -5,6 +7,31 @@ using TMPro;
 // Populates the Profile panel from StatsManager. Put this on the ProfilePanel root.
 public class ProfilePanelUI : MonoBehaviour
 {
+    public enum RankMetric { HighestWave, LifetimeAccuracy }
+
+    // One rung of the rank ladder: the player earns Rank Name once the chosen
+    // metric (see Rank Metric) reaches Min Requirement. The highest rung reached wins.
+    [Serializable]
+    public class RankTier
+    {
+        [Tooltip("Title shown on the rank card, e.g. TYPIST.")]
+        public string rankName = "ROOKIE";
+        [Tooltip("Minimum value of the Rank Metric (a wave number, or an accuracy percentage) needed to earn this rank.")]
+        public float minRequirement;
+    }
+
+    [Header("Rank")]
+    [Tooltip("What the rank is derived from: the best wave reached, or lifetime accuracy (%).")]
+    public RankMetric rankMetric = RankMetric.HighestWave;
+    [Tooltip("Rank ladder, in any order. The tier with the highest Min Requirement that the player has reached is shown. Keep one tier at 0 so everyone has a rank.")]
+    public List<RankTier> rankTiers = new List<RankTier>
+    {
+        new RankTier { rankName = "ROOKIE", minRequirement = 0f },
+        new RankTier { rankName = "TYPIST", minRequirement = 5f },
+        new RankTier { rankName = "WORDSMITH", minRequirement = 15f },
+        new RankTier { rankName = "KEYMASTER", minRequirement = 30f },
+    };
+
     [Header("Layout (for the forced rebuild on open — nested ContentSizeFitters\ndon't always resolve correctly the first frame a panel is activated)")]
     public RectTransform content;
     public RectTransform recordsSection;
@@ -53,7 +80,7 @@ public class ProfilePanelUI : MonoBehaviour
 
     public void Refresh()
     {
-        if (rankText) rankText.text = RankFor(StatsManager.HighestWave);
+        if (rankText) rankText.text = CurrentRank();
         if (rankSubtitleText) rankSubtitleText.text = "Best run: Wave " + StatsManager.HighestWave;
 
         if (highestWaveText) highestWaveText.text = StatsManager.HighestWave.ToString();
@@ -68,12 +95,28 @@ public class ProfilePanelUI : MonoBehaviour
         if (runsPlayedText) runsPlayedText.text = StatsManager.RunsPlayed.ToString();
     }
 
-    // Skill title derived from highest wave reached. Tune the thresholds freely.
-    static string RankFor(int highestWave)
+    // Skill title derived from the live stats and the Inspector-editable rank ladder.
+    public string CurrentRank()
     {
-        if (highestWave >= 30) return "KEYMASTER";
-        if (highestWave >= 15) return "WORDSMITH";
-        if (highestWave >= 5) return "TYPIST";
-        return "ROOKIE";
+        float value = rankMetric == RankMetric.LifetimeAccuracy ? StatsManager.LifetimeAccuracy : StatsManager.HighestWave;
+        return RankFor(value);
+    }
+
+    // Highest tier whose Min Requirement has been reached; if none has (or the list is empty),
+    // falls back to the lowest tier so a rank is always shown.
+    string RankFor(float value)
+    {
+        RankTier best = null, lowest = null;
+        if (rankTiers != null)
+        {
+            foreach (RankTier tier in rankTiers)
+            {
+                if (tier == null) continue;
+                if (lowest == null || tier.minRequirement < lowest.minRequirement) lowest = tier;
+                if (value >= tier.minRequirement && (best == null || tier.minRequirement > best.minRequirement)) best = tier;
+            }
+        }
+        if (best != null) return best.rankName;
+        return lowest != null ? lowest.rankName : "ROOKIE";
     }
 }

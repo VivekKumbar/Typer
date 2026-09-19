@@ -45,7 +45,7 @@ public class ConfirmPopup : MonoBehaviour
     public Sprite placeholderPackIcon;
 
     [Header("Ground Skin background (optional — Continue only)")]
-    [Tooltip("The Dialog's own background Image -- swapped to the SAVED run's locked-in Ground Skin for Continue.")]
+    [Tooltip("The Image swapped to the SAVED run's locked-in Ground Skin for Continue. On the art-framed Continue popup this is a dedicated inset Image behind the text (not the frame itself); it is hidden when Default Dialog Background Sprite is empty and no ground skin is passed.")]
     public Image dialogBackground;
     [Tooltip("The normal popup panel art -- what Dialog Background resets to for every popup OTHER than Continue (New Game, ...). Assign the same sprite Dialog Background normally shows (e.g. Carausel_1_normal). Same fallback-sprite pattern as Placeholder Pack Icon above.")]
     public Sprite defaultDialogBackgroundSprite;
@@ -92,7 +92,12 @@ public class ConfirmPopup : MonoBehaviour
         RebuildAbilityPreview(abilityPreview);
         RebuildWordPackPreview(wordPackPreview);
         if (dialogBackground != null)
+        {
             dialogBackground.sprite = groundSkinBackground != null ? groundSkinBackground : defaultDialogBackgroundSprite;
+            // A dedicated preview Image (Continue popup) leaves Default Dialog Background Sprite empty:
+            // an Image with no sprite would draw a white quad, so it stays hidden until a ground skin is passed.
+            dialogBackground.enabled = dialogBackground.sprite != null;
+        }
 
         shown = true;
         if (panel != null) panel.SetActive(true);

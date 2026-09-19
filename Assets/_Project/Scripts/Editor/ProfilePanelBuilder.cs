@@ -12,6 +12,11 @@ using UImage = UnityEngine.UI.Image;
 // and wires every ProfilePanelUI field. Re-run any time from the menu below —
 // it removes a previous ProfilePanel/Button_Profile first, so it's safe to repeat
 // while iterating on layout.
+//
+// NOTE: this builds the original PLAIN-colour panel from code. The Profile panel
+// has since been restyled with art (Assets/_Project/Prefabs/UI/MainMenu/ProfilePanel.prefab,
+// sprites in Art/Textures/Profile) -- re-running this tool would replace that
+// restyle with the plain version. Don't run it unless you want to start over.
 public static class ProfilePanelBuilder
 {
     // Design tokens from Docs/TypeKeep_UI_DesignSystem.md
