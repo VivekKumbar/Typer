@@ -20,6 +20,11 @@ public static class StatsManager
     // Fired after every recorded stat change, so the Profile screen can refresh live.
     public static event Action OnStatsChanged;
 
+    // Fired once per correct keystroke, from the SAME call (RecordCorrectLetter)
+    // that already feeds accuracy -- GameManager's WPM counter listens to this
+    // instead of keeping its own duplicate hit detection.
+    public static event Action OnCorrectLetterRecorded;
+
     // ---- lifetime (cumulative) ----
     public static int EnemiesDestroyed
     {
@@ -102,6 +107,7 @@ public static class StatsManager
         runLettersTyped++;
         runCorrectLetters++;
         Commit();
+        OnCorrectLetterRecorded?.Invoke();
     }
 
     public static void RecordMissedLetter()

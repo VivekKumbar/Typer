@@ -18,6 +18,14 @@ public class GameManager : MonoBehaviour
     public int coinsEarnedThisRun = 0; // total earned this run (for banking)
     private bool earningsBanked = false;
 
+    [Header("WPM (per run) — shown ONLY on the Game Over panel")]
+    [Tooltip("Accumulated seconds of genuine typing time this run. Only ticks while IsTypingWindowOpen AND Time.timeScale > 0 -- pause, upgrade draft, wave announce/countdown, boss warning, game over all stop it. Saved/restored with the run, same as coins.")]
+    public float activeGameplaySeconds = 0f;
+    [Tooltip("Correct keystrokes this run (fed by StatsManager's existing correct-letter path), counted only while IsTypingWindowOpen.")]
+    public int correctCharactersThisRun = 0;
+    [Tooltip("Below this much active time the WPM is meaningless (a run that ends almost instantly) -- Game Over shows N/A instead of a huge number.")]
+    public float minSecondsForWpm = 5f;
+
     [Header("Shield")]
     public int shield = 0;      // absorbs damage before health
 
@@ -51,6 +59,8 @@ public class GameManager : MonoBehaviour
             shield = Mathf.Max(0, save.gmShield);
             coins = Mathf.Max(0, save.coins);
             coinsEarnedThisRun = Mathf.Max(0, save.coinsEarnedThisRun);
+            activeGameplaySeconds = Mathf.Max(0f, save.activeGameplaySeconds);      // Continue resumes the same WPM run
+            correctCharactersThisRun = Mathf.Max(0, save.correctCharactersThisRun); // (old saves lack these -> 0)
             RunContext.RestoreFromSave(save); // word packs: exactly what was locked in when saved
         }
         else
@@ -68,12 +78,62 @@ public class GameManager : MonoBehaviour
 
         if (UpgradeManager.Instance != null)
             UpgradeManager.Instance.OnUpgradeChanged += HandleUpgradeChanged;
+
+        StatsManager.OnCorrectLetterRecorded += HandleCorrectLetter;
     }
 
     void OnDestroy()
     {
         if (UpgradeManager.Instance != null)
             UpgradeManager.Instance.OnUpgradeChanged -= HandleUpgradeChanged;
+
+        StatsManager.OnCorrectLetterRecorded -= HandleCorrectLetter;
+    }
+
+    // ---- WPM ----------------------------------------------------------------
+
+    // True only while the player can genuinely be typing: not game over, not
+    // paused, not in the between-wave upgrade draft, and WaveManager is in its
+    // live phase (not the wave banner / countdown / boss warning). Deliberately
+    // does NOT look at Time.timeScale -- a kill's HitStop zeroes timeScale for
+    // a few frames BEFORE the killing letter is recorded, so gating keystrokes
+    // on it would drop the last letter of every word. (The clock below adds
+    // its own timeScale check on top.)
+    public bool IsTypingWindowOpen
+    {
+        get
+        {
+            if (IsGameOver) return false;
+            if (PauseMenu.Instance != null && PauseMenu.Instance.IsPaused) return false;
+            if (UpgradeManager.Instance != null && UpgradeManager.Instance.IsDraftOpen) return false;
+            if (WaveManager.Instance != null && !WaveManager.Instance.IsWaveActive) return false;
+            return true;
+        }
+    }
+
+    // Accumulating clock, NOT a start/end timestamp: pausing just stops it
+    // adding, resuming carries on from the same total. Unscaled delta so a
+    // future slow-mo can't undercount real typing time; clamped so a tab
+    // that was hidden (WebGL) can't dump one giant frame into the total.
+    void Update()
+    {
+        if (Time.timeScale <= 0f || !IsTypingWindowOpen) return;
+        activeGameplaySeconds += Mathf.Min(Time.unscaledDeltaTime, Time.maximumDeltaTime);
+    }
+
+    void HandleCorrectLetter()
+    {
+        if (IsTypingWindowOpen) correctCharactersThisRun++;
+    }
+
+    // Standard WPM: (chars / 5) / minutes. False (=> show "N/A") when there's
+    // too little active time for the number to mean anything.
+    public bool TryGetWpm(out float wpm)
+    {
+        wpm = 0f;
+        if (activeGameplaySeconds < minSecondsForWpm) return false;
+        wpm = (correctCharactersThisRun / 5f) / (activeGameplaySeconds / 60f);
+        return true;
     }
 
     void HandleUpgradeChanged(UpgradeDefinition def, int newLevel)

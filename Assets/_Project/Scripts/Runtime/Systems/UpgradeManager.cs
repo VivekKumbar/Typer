@@ -136,6 +136,10 @@ public class UpgradeManager : MonoBehaviour
     // (frame-based, so it works fine while timeScale is 0), applies it, then
     // returns. Coordinates timeScale the same way HitStop does: only freezes if
     // nothing already has, and only unfreezes if it's still the one holding it.
+    // True while the draft panel is open (waiting on a pick). Read by
+    // GameManager's WPM clock so draft time never counts as typing time.
+    public bool IsDraftOpen { get; private set; }
+
     public IEnumerator RunDraft()
     {
         if (!enableDraft || pool == null) yield break;
@@ -151,12 +155,14 @@ public class UpgradeManager : MonoBehaviour
         }
 
         picked = null;
+        IsDraftOpen = true;
         if (draftUI != null) draftUI.Show(offered, def => picked = def);
 
         while (picked == null)
             yield return null;
 
         if (draftUI != null) draftUI.Hide();
+        IsDraftOpen = false;
 
         ApplyPick(picked);
 

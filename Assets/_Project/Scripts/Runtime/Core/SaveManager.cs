@@ -80,6 +80,9 @@ public static class SaveManager
             coins = gm.coins,
             coinsEarnedThisRun = gm.coinsEarnedThisRun,
 
+            activeGameplaySeconds = gm.activeGameplaySeconds,
+            correctCharactersThisRun = gm.correctCharactersThisRun,
+
             combo = ComboManager.Instance != null ? ComboManager.Instance.combo : 0,
             highestComboThisRun = ComboManager.Instance != null ? ComboManager.Instance.HighestComboThisRun : 0,
             overload = ComboManager.Instance != null ? ComboManager.Instance.overload : 0f,

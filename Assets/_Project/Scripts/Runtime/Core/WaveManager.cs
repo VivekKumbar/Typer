@@ -85,6 +85,14 @@ public class WaveManager : MonoBehaviour
 
     bool GameOver => GameManager.Instance != null && GameManager.Instance.IsGameOver;
 
+    // True only while a wave is genuinely live (enemies spawning / on the
+    // field), i.e. the player can type. False during the wave banner, the
+    // start-of-wave countdown (breakTime), the boss "PREPARE YOURSELF"
+    // warning, and the gap before the upgrade draft. Read by GameManager's
+    // WPM clock (IsTypingWindowOpen).
+    private bool waveActive = false;
+    public bool IsWaveActive => waveActive;
+
     // DEBUG CONSOLE HOOKS -- checked inside RunWaves() below. Wave progression
     // otherwise lives entirely in that one private coroutine with no external
     // entry point, so these two small flags are the minimal way to let the
@@ -151,6 +159,7 @@ public class WaveManager : MonoBehaviour
         while (true)
         {
             if (GameOver) yield break;
+            waveActive = false; // announce / countdown / boss warning ahead -- not typeable
 
             if (debugJumpToWaveIndex.HasValue)
             {
@@ -199,6 +208,8 @@ public class WaveManager : MonoBehaviour
                 SpawnBigEnemy();
             }
 
+            waveActive = true; // banner, countdown and boss warning are over -- the player can type now
+
             // Spawn this wave's enemies (Night can scale how many; a big-enemy
             // wave also thins the normal spawns to make room for the horde)
             float countMult = DayNightCycle.Instance != null ? DayNightCycle.Instance.CurrentProfile.enemyCountMultiplier : 1f;
@@ -221,6 +232,7 @@ public class WaveManager : MonoBehaviour
                 yield return null;
             }
 
+            waveActive = false; // field is clear -- nothing left to type until the next wave goes live
             BridgeManager.SendLevelCompleted(waveNumber);
 
             // Between-wave upgrade draft: pauses, offers 3 cards, resumes on pick.

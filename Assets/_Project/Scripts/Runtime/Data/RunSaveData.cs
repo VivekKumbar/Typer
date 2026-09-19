@@ -23,6 +23,10 @@ public class RunSaveData
     public int coins;                 // spendable this run
     public int coinsEarnedThisRun;
 
+    [Header("WPM (this run) — resumed on Continue, same as coins")]
+    public float activeGameplaySeconds;   // accumulated genuine-typing seconds (see GameManager.IsTypingWindowOpen)
+    public int correctCharactersThisRun;
+
     [Header("Combo / overload (nice-to-have)")]
     public int combo;
     public int highestComboThisRun;
