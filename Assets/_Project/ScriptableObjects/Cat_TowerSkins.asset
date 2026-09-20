@@ -13,12 +13,13 @@ MonoBehaviour:
   m_Name: Cat_TowerSkins
   m_EditorClassIdentifier: Assembly-CSharp::ShopCategory
   categoryName: Tower Skins
-  categoryIcon: {fileID: 0}
+  categoryIcon: {fileID: 21300000, guid: 5b76a33c14f181b4eab07d081f4ac5e3, type: 3}
   items:
   - {fileID: 11400000, guid: 44617ce8eeed2ef4098d321343a7dd1d, type: 2}
   - {fileID: 11400000, guid: 55782d462e8df404cb1d9731fb06ff42, type: 2}
   - {fileID: 11400000, guid: 1a58e04acf230dd4ca9f62351d2f9ed3, type: 2}
   - {fileID: 11400000, guid: 761a8b0f8f27a3b4abe569a2cf96bc23, type: 2}
   - {fileID: 11400000, guid: b1331cd201cb3a84f97223552bdb3f54, type: 2}
-  buttonNormalSprite: {fileID: 21300000, guid: 80ac1f5734766044fad10a7f6b267c81, type: 3}
-  buttonActiveSprite: {fileID: 21300000, guid: 785d5914f95334e47ba116797a48107b, type: 3}
+  buttonNormalSprite: {fileID: 21300000, guid: 48852a524525a9a46b449856d414eeda, type: 3}
+  buttonActiveSprite: {fileID: 21300000, guid: a94e4e8ee5195a3448f58e4d37a1de69, type: 3}
+  nativeLabelOverArt: 1

@@ -47,7 +47,16 @@ public class AchievementCardUI : MonoBehaviour
         if (nameText) nameText.text = data.displayName;
         if (descriptionText) descriptionText.text = data.description;
         if (coinRewardText) coinRewardText.text = "+" + data.coinReward;
-        if (iconImage) iconImage.sprite = panel != null ? panel.GetIcon(data.iconName) : null;
+        if (iconImage)
+        {
+            Sprite icon = panel != null ? panel.GetIcon(data.iconName) : null;
+            if (icon == null && panel != null) icon = panel.placeholderIcon;
+            iconImage.sprite = icon;
+            // The Icon Image is authored fully transparent; make it visible only when there's a sprite
+            // (an Image with no sprite would otherwise draw a plain white box).
+            iconImage.color = icon != null ? Color.white : new Color(1f, 1f, 1f, 0f);
+            iconImage.preserveAspect = true;
+        }
 
         Refresh();
 

@@ -13,11 +13,12 @@ MonoBehaviour:
   m_Name: Cat_GroundSkins
   m_EditorClassIdentifier: Assembly-CSharp::ShopCategory
   categoryName: Ground Skins
-  categoryIcon: {fileID: 0}
+  categoryIcon: {fileID: 21300000, guid: b851a8a2cd839d54e8593adafedd7927, type: 3}
   items:
   - {fileID: 11400000, guid: 06050918ad8344e4ba8f66e6c3aed6cf, type: 2}
   - {fileID: 11400000, guid: 62acfe9498e381f4c8fa499b738ca7a0, type: 2}
   - {fileID: 11400000, guid: 5ff6c3ad38ae0a84b83843ff8ab207bb, type: 2}
   - {fileID: 11400000, guid: fa859476e21a02b4b81ab4c42795214c, type: 2}
-  buttonNormalSprite: {fileID: 21300000, guid: a3169f7e8b2482245a4b648c475d8d6c, type: 3}
-  buttonActiveSprite: {fileID: 21300000, guid: 9636fc0de0d23924694416c9e9ee940d, type: 3}
+  buttonNormalSprite: {fileID: 21300000, guid: 48852a524525a9a46b449856d414eeda, type: 3}
+  buttonActiveSprite: {fileID: 21300000, guid: a94e4e8ee5195a3448f58e4d37a1de69, type: 3}
+  nativeLabelOverArt: 1

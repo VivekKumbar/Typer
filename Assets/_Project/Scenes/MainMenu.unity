@@ -3033,7 +3033,20 @@ MonoBehaviour:
   bank: {fileID: 11400000, guid: 2f63013ffd99c414b80a300e813f5914, type: 2}
   listRoot: {fileID: 62152668}
   cardPrefab: {fileID: 4174058584037444759, guid: 3a8fb89ee1ecb8b4ca1e08f7e3c60d45, type: 3}
-  icons: []
+  icons:
+  - iconName: icon_sword
+    icon: {fileID: 21300000, guid: a5fc30f71fb854fbdb6fa55c19d87d2b, type: 3}
+  - iconName: icon_wave
+    icon: {fileID: 21300000, guid: 86b740c6d02e94427a606f6db0e4756d, type: 3}
+  - iconName: icon_combo
+    icon: {fileID: 21300000, guid: 03b44f63b09ac47cd8a378a710b5ac63, type: 3}
+  - iconName: icon_coin
+    icon: {fileID: 21300000, guid: b2c956cfb47c640ea80fb559ed2f55f7, type: 3}
+  - iconName: icon_star
+    icon: {fileID: 21300000, guid: db618c4ee1674489baabc808d10ca8a7, type: 3}
+  - iconName: icon_trophy
+    icon: {fileID: 21300000, guid: ccf71d03bc03d4361aed0e1f5bf8a678, type: 3}
+  placeholderIcon: {fileID: 21300000, guid: f68a7d3fdaa404cbaad694d85b55856a, type: 3}
 --- !u!114 &1714888643
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4393,22 +4406,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 242647091}
     m_Modifications:
-    - target: {fileID: 1060333870986843660, guid: c6fb320c2e3736041a3fdfab59ef57b8, type: 3}
-      propertyPath: m_Sprite
-      value: 
-      objectReference: {fileID: 21300000, guid: 32d61bf3b2085d34984b8f8b78750903, type: 3}
-    - target: {fileID: 1060333870986843660, guid: c6fb320c2e3736041a3fdfab59ef57b8, type: 3}
-      propertyPath: m_Color.a
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 3004521853548463158, guid: c6fb320c2e3736041a3fdfab59ef57b8, type: 3}
-      propertyPath: m_Sprite
-      value: 
-      objectReference: {fileID: 21300000, guid: 8bb490cb002969c48830abbb965afbd3, type: 3}
-    - target: {fileID: 3004521853548463158, guid: c6fb320c2e3736041a3fdfab59ef57b8, type: 3}
-      propertyPath: m_Color.a
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 3191235308254697370, guid: c6fb320c2e3736041a3fdfab59ef57b8, type: 3}
       propertyPath: m_Name
       value: ShopPanel

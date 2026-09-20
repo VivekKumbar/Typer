@@ -89,8 +89,22 @@ public class ShopUI : MonoBehaviour
             if (hasCustomArt)
             {
                 if (btnImage) btnImage.sprite = cat.buttonNormalSprite;
-                if (label) label.gameObject.SetActive(false);
-                if (iconT) iconT.gameObject.SetActive(false);
+                if (cat.nativeLabelOverArt)
+                {
+                    // Blank frame art: keep the real TMP label + icon on top of it.
+                    if (label) label.text = cat.categoryName;
+                    Image nativeIcon = iconT ? iconT.GetComponent<Image>() : null;
+                    if (nativeIcon)
+                    {
+                        nativeIcon.sprite = cat.categoryIcon;
+                        nativeIcon.color = cat.categoryIcon != null ? Color.white : new Color(1, 1, 1, 0);
+                    }
+                }
+                else
+                {
+                    if (label) label.gameObject.SetActive(false);
+                    if (iconT) iconT.gameObject.SetActive(false);
+                }
             }
             else
             {

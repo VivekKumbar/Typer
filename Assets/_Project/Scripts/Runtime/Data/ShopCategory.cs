@@ -16,4 +16,6 @@ public class ShopCategory : ScriptableObject
     public Sprite buttonNormalSprite;
     [Tooltip("Full button graphic shown when this category IS selected.")]
     public Sprite buttonActiveSprite;
+    [Tooltip("Off (default): the button sprites have the icon + label baked in, so the button's own label/icon are hidden. On: the sprites are BLANK frames -- the button shows its real TMP label (Category Name) and Category Icon on top.")]
+    public bool nativeLabelOverArt;
 }

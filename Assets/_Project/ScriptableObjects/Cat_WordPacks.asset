@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Cat_WordPacks
   m_EditorClassIdentifier: Assembly-CSharp::ShopCategory
   categoryName: Word Packs
-  categoryIcon: {fileID: 0}
+  categoryIcon: {fileID: 21300000, guid: 34edc2dfad8542042a99d969edacfd94, type: 3}
   items:
   - {fileID: 11400000, guid: fa2a90797153b3a44a14193b70c7b663, type: 2}
   - {fileID: 11400000, guid: 7723c9f5de0470e408d3ba4f57063b29, type: 2}
@@ -25,5 +25,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 479bfeee0966fa446a431f6400dddadc, type: 2}
   - {fileID: 11400000, guid: 038f36dcfeaa9d545a57fdd0696d9714, type: 2}
   - {fileID: 11400000, guid: 01936b460290b6b47bf99f802f12e7dd, type: 2}
-  buttonNormalSprite: {fileID: 21300000, guid: 89393afe7bf810348835d13dc465ced1, type: 3}
-  buttonActiveSprite: {fileID: 21300000, guid: 73a0c67deb61f984badf59f06b215175, type: 3}
+  buttonNormalSprite: {fileID: 21300000, guid: 48852a524525a9a46b449856d414eeda, type: 3}
+  buttonActiveSprite: {fileID: 21300000, guid: a94e4e8ee5195a3448f58e4d37a1de69, type: 3}
+  nativeLabelOverArt: 1

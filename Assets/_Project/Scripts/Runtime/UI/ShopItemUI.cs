@@ -20,6 +20,14 @@ public class ShopItemUI : MonoBehaviour
     [Tooltip("Word Packs only: shown when this pack is in the active selection (separate from equippedBadge, which single-equip kinds use).")]
     public GameObject selectedBadge;
 
+    [Header("Visual-only extras (optional)")]
+    [Tooltip("Container holding the coin icon + Price text. Hidden once the item is owned (there's no price to show).")]
+    public GameObject priceGroup;
+    [Tooltip("Word Packs only: padlock overlay shown while the pack is NOT owned (the 'Locked' look).")]
+    public GameObject lockedOverlay;
+    [Tooltip("Word Packs only: tint applied to the icon while the pack is NOT owned.")]
+    public Color lockedIconTint = new Color(0.42f, 0.44f, 0.5f, 1f);
+
     private ShopItem item;
     private ShopUI shop;
 
@@ -53,8 +61,11 @@ public class ShopItemUI : MonoBehaviour
             bool selected = WordPackSelection.IsSelected(item);
 
             if (priceText) priceText.text = owned ? "" : item.price.ToString();
+            if (priceGroup) priceGroup.SetActive(!owned);
             if (equippedBadge) equippedBadge.SetActive(false); // not used for word packs
             if (selectedBadge) selectedBadge.SetActive(selected);
+            if (lockedOverlay) lockedOverlay.SetActive(!owned);
+            if (iconImage && item.icon != null) iconImage.color = owned ? Color.white : lockedIconTint;
 
             if (actionLabel)
             {
@@ -72,6 +83,8 @@ public class ShopItemUI : MonoBehaviour
         bool equipped = ShopInventory.IsEquipped(item);
 
         if (priceText) priceText.text = owned ? "" : item.price.ToString();
+        if (priceGroup) priceGroup.SetActive(!owned);
+        if (lockedOverlay) lockedOverlay.SetActive(false); // locked look is word packs only
         if (equippedBadge) equippedBadge.SetActive(equipped);
         if (selectedBadge) selectedBadge.SetActive(false); // not used outside word packs
 

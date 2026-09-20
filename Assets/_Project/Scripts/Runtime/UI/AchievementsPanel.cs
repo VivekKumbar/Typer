@@ -29,6 +29,8 @@ public class AchievementsPanel : MonoBehaviour
     [Header("Icons")]
     [Tooltip("Maps each CSV row's iconName to a real Sprite -- I'll drag my own art in here. Placeholder/empty entries are fine until then.")]
     public List<AchievementIconEntry> icons = new List<AchievementIconEntry>();
+    [Tooltip("Shown in the icon socket for any achievement whose iconName has no entry (or no sprite) in the list above. Temporary stand-in until real per-achievement art is assigned. Leave empty to show an empty socket instead.")]
+    public Sprite placeholderIcon;
 
     private readonly List<AchievementCardUI> spawnedCards = new List<AchievementCardUI>();
 
