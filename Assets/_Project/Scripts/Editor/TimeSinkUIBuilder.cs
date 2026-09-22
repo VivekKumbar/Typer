@@ -7,18 +7,26 @@ using UnityEditor.SceneManagement;
 using TMPro;
 using UImage = UnityEngine.UI.Image;
 
-// Builds/rebuilds the Time Sink HUD (duration bar + charge bar + button) in the
-// currently open GameScene, and the TimeSinkManager that drives them. Reuses the
-// existing ShieldBar/OverLoadBar/OverLoadButton/RepairButton for style and
-// position reference, so it matches the game's HUD instead of introducing a new
-// look. Re-run any time from the menu below — it's idempotent.
+// Builds/rebuilds the Time Sink HUD (ONE bar + button) in the currently open
+// GameScene, and the TimeSinkManager that drives them. Reuses the existing
+// OverLoadBar/OverLoadButton for style reference, so it matches the game's
+// HUD instead of introducing a new look. Re-run any time from the menu
+// below — it's idempotent.
+//
+// NOTE: the gameplay HUD restyle (GameplayHUDBuilder) now owns the actual
+// bottom-row position/size/art for TimeSinkButton + its bar — run this
+// FIRST if you need to recreate TimeSinkManager/TimeSinkHUD from scratch,
+// then GameplayHUDBuilder to lay it out. This builder only used to place
+// TWO bars (a duration bar stacked below ShieldBar at the top of the screen,
+// separate from the charge bar down at the button); that's what made Time
+// Sink read as broken -- charging happened at one button, but the moment it
+// activated a second, unrelated-looking bar popped up somewhere else
+// entirely. TimeSinkHUD now drives a single bar that shows charge while
+// charging and remaining duration while active, so this builder creates
+// only one.
 public static class TimeSinkUIBuilder
 {
     static readonly Color TealFill = Hex("#5DCAA5");
-
-    const float GapBelowShieldBar = 16f;
-    const float DurationBarHeight = 24f;
-    const float DurationBarWidth = 500f;
 
     [MenuItem("TypeKeep/Build Time Sink UI")]
     public static void Build()
@@ -27,19 +35,16 @@ public static class TimeSinkUIBuilder
         if (canvasGO == null) { Debug.LogError("[TimeSinkUIBuilder] No 'Canvas' found. Open GameScene.unity first."); return; }
         Transform canvas = canvasGO.transform;
 
-        Transform shieldBar = canvas.Find("ShieldBar");
-        Transform shieldButton = canvas.Find("ShieldButton");
-        Transform overloadBar = canvas.Find("OverLoadBar");
-        Transform overloadButton = canvas.Find("OverLoadButton");
-        Transform repairButton = canvas.Find("RepairButton");
-        if (shieldBar == null || shieldButton == null || overloadBar == null || overloadButton == null || repairButton == null)
+        Transform overloadBar = canvas.Find("OverLoadBar") ?? canvas.Find("OverloadUI/OverLoadBar");
+        Transform overloadButton = canvas.Find("OverLoadButton") ?? canvas.Find("OverloadUI/OverLoadButton");
+        if (overloadBar == null || overloadButton == null)
         {
-            Debug.LogError("[TimeSinkUIBuilder] Expected ShieldBar/ShieldButton/OverLoadBar/OverLoadButton/RepairButton to already exist in Canvas — this builder reuses their style and position.");
+            Debug.LogError("[TimeSinkUIBuilder] Expected OverLoadBar/OverLoadButton to already exist in Canvas — this builder reuses their style.");
             return;
         }
 
         // ---- idempotent cleanup ----
-        DestroyIfExists(canvas, "TimeSinkDurationBar");
+        DestroyIfExists(canvas, "TimeSinkDurationBar"); // old two-bar layout, no longer used
         DestroyIfExists(canvas, "TimeSinkBar");
         DestroyIfExists(canvas, "TimeSinkButton");
         var existingHud = canvasGO.GetComponent<TimeSinkHUD>();
@@ -59,39 +64,25 @@ public static class TimeSinkUIBuilder
         }
 
         // ---- style/position references pulled live, not hardcoded ----
-        RectTransform shieldBarRT = shieldBar.GetComponent<RectTransform>();
-        RectTransform shieldButtonRT = shieldButton.GetComponent<RectTransform>();
         RectTransform overloadBarRT = overloadBar.GetComponent<RectTransform>();
         RectTransform overloadButtonRT = overloadButton.GetComponent<RectTransform>();
-        RectTransform repairRT = repairButton.GetComponent<RectTransform>();
 
         UImage overloadBg = overloadBar.Find("Background").GetComponent<UImage>();
         UImage overloadFillSrc = overloadBar.Find("Fill Area/Fill").GetComponent<UImage>();
         UImage overloadBtnImg = overloadButton.GetComponent<UImage>();
         TextMeshProUGUI overloadBtnLabel = overloadButton.Find("Text (TMP)").GetComponent<TextMeshProUGUI>();
 
-        // ---- TOP: duration bar — top-center anchor, stacked below ShieldBar ----
-        float durationY = shieldBarRT.anchoredPosition.y - shieldBarRT.sizeDelta.y / 2f - GapBelowShieldBar - DurationBarHeight / 2f;
-        Slider durationSlider = MakeBar("TimeSinkDurationBar", canvas,
-            anchorTop: true, x: shieldBarRT.anchoredPosition.x, y: durationY,
-            width: DurationBarWidth, height: DurationBarHeight,
-            bgSprite: overloadBg.sprite, bgColor: overloadBg.color,
-            fillSprite: overloadFillSrc.sprite, fillColor: TealFill);
-        durationSlider.gameObject.SetActive(false); // TimeSinkHUD toggles this; starts hidden
+        Transform parent = overloadBar.parent; // TimeSinkUI-equivalent wrapper, mirrors Overload's
 
-        // ---- BOTTOM: charge bar + button — mirrors Overload's slot, on the left (Repair's) column ----
-        float colX = repairRT.anchoredPosition.x;
-        float buttonY = shieldButtonRT.anchoredPosition.y;   // mirrors ShieldButton's slot
-        float barY = overloadButtonRT.anchoredPosition.y;    // mirrors OverLoadButton's slot
-
-        Slider chargeSlider = MakeBar("TimeSinkBar", canvas,
-            anchorTop: false, x: colX, y: barY,
+        Slider bar = MakeBar("TimeSinkBar", parent,
+            x: overloadBarRT.anchoredPosition.x, y: overloadBarRT.anchoredPosition.y,
             width: overloadBarRT.sizeDelta.x, height: overloadBarRT.sizeDelta.y,
             bgSprite: overloadBg.sprite, bgColor: overloadBg.color,
             fillSprite: overloadFillSrc.sprite, fillColor: TealFill);
 
-        Button activateButton = MakeButton("TimeSinkButton", canvas,
-            x: colX, y: buttonY, width: overloadButtonRT.sizeDelta.x, height: overloadButtonRT.sizeDelta.y,
+        Button activateButton = MakeButton("TimeSinkButton", parent,
+            x: overloadButtonRT.anchoredPosition.x, y: overloadButtonRT.anchoredPosition.y,
+            width: overloadButtonRT.sizeDelta.x, height: overloadButtonRT.sizeDelta.y,
             sprite: overloadBtnImg.sprite, font: overloadBtnLabel.font, fontSize: overloadBtnLabel.fontSize,
             textColor: overloadBtnLabel.color, label: "TIME SINK", out TextMeshProUGUI buttonLabel);
 
@@ -104,16 +95,14 @@ public static class TimeSinkUIBuilder
 
         // ---- TimeSinkHUD on Canvas (alongside HUD/ComboHUD/WaveBanner) ----
         TimeSinkHUD hud = canvasGO.AddComponent<TimeSinkHUD>();
-        hud.durationBarRoot = durationSlider.gameObject;
-        hud.durationBar = durationSlider;
-        hud.chargeBar = chargeSlider;
+        hud.bar = bar;
         hud.activateButton = activateButton;
         hud.buttonLabel = buttonLabel;
         hud.readyHighlight = readyHighlight;
 
         EditorUtility.SetDirty(canvasGO);
         EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
-        Debug.Log("[TimeSinkUIBuilder] Time Sink HUD built and wired.");
+        Debug.Log("[TimeSinkUIBuilder] Time Sink HUD built and wired (single bar). Run GameplayHUDBuilder to position it in the bottom ability row.");
     }
 
     // ---- helpers ----
@@ -140,11 +129,11 @@ public static class TimeSinkUIBuilder
     // Builds a Slider with Background + Fill Area/Fill children, no handle
     // (matching the existing bars), non-interactable with raycasting off so it
     // can never be dragged.
-    static Slider MakeBar(string name, Transform parent, bool anchorTop, float x, float y, float width, float height,
+    static Slider MakeBar(string name, Transform parent, float x, float y, float width, float height,
         Sprite bgSprite, Color bgColor, Sprite fillSprite, Color fillColor)
     {
         RectTransform root = MakeRT(name, parent);
-        root.anchorMin = anchorTop ? new Vector2(0.5f, 1f) : new Vector2(0.5f, 0.5f);
+        root.anchorMin = new Vector2(0.5f, 0.5f);
         root.anchorMax = root.anchorMin;
         root.pivot = new Vector2(0.5f, 0.5f);
         root.sizeDelta = new Vector2(width, height);

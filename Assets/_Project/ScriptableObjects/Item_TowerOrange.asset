@@ -15,7 +15,7 @@ MonoBehaviour:
   id: tower_blue
   displayName: Blue Turret
   description: 
-  icon: {fileID: 21300000, guid: 9799b60c8da78744eac6e6b57c6f54d3, type: 3}
+  icon: {fileID: 21300000, guid: 8dea29013e34f294b94c20f00f8f9534, type: 3}
   previewImage: {fileID: 0}
   price: 500
   kind: 0

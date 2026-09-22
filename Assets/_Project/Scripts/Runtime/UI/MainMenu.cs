@@ -78,6 +78,7 @@ public class MainMenu : MonoBehaviour
     {
         RefreshContinueButton();
         SfxPlayer.PlayMainMenu();
+        MusicManager.PlayMenuMusic(); // makes sure the menu track is playing (returns from a run already restarted it in RestartButton.GoToMenu)
         if (ftueReplayButton != null) ftueReplayButton.onClick.AddListener(ReplayFtue);
         // No ad SDK integrated yet on this branch (WebGL-first pass, ads come
         // back before publishing) -- Watch Ad stays hidden and unwired rather
@@ -244,6 +245,7 @@ public class MainMenu : MonoBehaviour
     {
         SaveManager.IsContinuing = true;
         loadingVariant = LoadingBackgroundVariant.B; // default rule: Continue -> B
+        MusicManager.PlayGameplayMusic();
         StartCoroutine(LoadGame(gameSceneName));
     }
 
@@ -273,6 +275,7 @@ public class MainMenu : MonoBehaviour
         SaveManager.IsContinuing = false;
         loadingVariant = LoadingBackgroundVariant.A; // default rule: New Game -> A
         string target = FtueState.HasSeenFtue ? gameSceneName : ftueSceneName;
+        MusicManager.PlayGameplayMusic(); // game scene or FTUE: both are "gameplay"
         StartCoroutine(LoadGame(target));
     }
 
@@ -281,6 +284,7 @@ public class MainMenu : MonoBehaviour
     // (only actually starting a real game from inside the FTUE clears it).
     public void ReplayFtue()
     {
+        MusicManager.PlayGameplayMusic();
         StartCoroutine(LoadGame(ftueSceneName));
     }
 

@@ -25,6 +25,7 @@ public class RestartButton : MonoBehaviour
             GameManager.Instance.SaveProgressIfActive(); // autosave so Continue picks this run back up
         }
         Time.timeScale = 1f;
+        MusicManager.PlayMenuMusic(true); // Game Over -> Main Menu AND Pause -> Main Menu both land here: menu track always restarts from 0:00
         SceneManager.LoadScene(menuSceneName);
     }
 }

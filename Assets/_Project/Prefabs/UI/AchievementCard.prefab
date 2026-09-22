@@ -1167,6 +1167,7 @@ GameObject:
   - component: {fileID: 1712348871811947904}
   - component: {fileID: 2246030791772637813}
   - component: {fileID: 7357757807842379936}
+  - component: {fileID: 8700542939927179949}
   m_Layer: 5
   m_Name: ClaimButton
   m_TagString: Untagged
@@ -1276,6 +1277,18 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &8700542939927179949
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7326058781749452969}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 39faa5b3c5ad86241ad97e6a08e7110c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonClickSfx
 --- !u!1 &7733993650171931818
 GameObject:
   m_ObjectHideFlags: 0

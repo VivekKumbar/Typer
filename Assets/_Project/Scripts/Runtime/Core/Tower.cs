@@ -77,6 +77,7 @@ public class Tower : MonoBehaviour
 
         Bullet b = Instantiate(bulletPrefab, spawn.position, spawn.rotation);
         b.SetTarget(enemy);
+        SfxPlayer.PlayBulletFire(); // once per shot, the moment the bullet spawns
 
         if (muzzleFlash != null)
             Instantiate(muzzleFlash, spawn.position, spawn.rotation);

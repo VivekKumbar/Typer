@@ -41,7 +41,14 @@ public class ComboHUD : MonoBehaviour
 
     void UpdateCombo(int combo, float mult)
     {
-        if (comboText) comboText.text = combo > 1 ? ("Combo " + combo + "  \u2014  " + mult.ToString("0.#") + "\u00D7 coins") : "";
+        // Plain ASCII "-"/"x", not "\u2014"/"\u00D7": the project's TMP font asset
+        // (LiberationSans SDF) reports both characters present via HasCharacter()
+        // and its characterLookupTable, but its baked atlas has no actual glyph
+        // for either -- TMP lays the whole string out correctly (characterCount,
+        // isVisible, etc. all report normal) but silently renders nothing from
+        // the em-dash onward, so "Combo 35  \u2014  4\u00D7 coins" displayed as just
+        // "Combo 35" with the rest invisible. ASCII is guaranteed present in any font.
+        if (comboText) comboText.text = combo > 1 ? ("Combo " + combo + " - " + mult.ToString("0.#") + "x coins") : "";
     }
 
     void UpdateOverload(float fill)

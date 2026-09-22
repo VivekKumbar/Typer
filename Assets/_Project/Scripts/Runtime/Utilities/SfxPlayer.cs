@@ -25,10 +25,12 @@ public class SfxPlayer : MonoBehaviour
     public AudioClip buttonClickSound;
     [Tooltip("Plays when the run ends (fortress health hits 0), alongside the Game Over panel appearing.")]
     public AudioClip gameOverSound;
+    [Tooltip("Plays once per shot, at the moment the turret spawns a bullet (see Tower.Shoot).")]
+    public AudioClip bulletFireSound;
 
     private AudioSource src;
     private AudioClip typeClip, killClip, hitClip;
-    private AudioClip wrongKeyFallback, gameStartFallback, mainMenuFallback, buttonClickFallback, gameOverFallback;
+    private AudioClip wrongKeyFallback, gameStartFallback, mainMenuFallback, buttonClickFallback, gameOverFallback, bulletFireFallback;
 
     void Awake()
     {
@@ -48,6 +50,7 @@ public class SfxPlayer : MonoBehaviour
         mainMenuFallback = MakeSweep(660f, 990f, 0.5f, 0.22f);   // soft rising chime
         buttonClickFallback = MakeTone(1200f, 0.04f, 0.18f);     // tiny high tick
         gameOverFallback = MakeSweep(500f, 150f, 0.6f, 0.35f);   // falling dirge
+        bulletFireFallback = MakeSweep(1500f, 500f, 0.10f, 0.18f); // short falling "pew"
     }
 
     public static void PlayType() { if (Instance && GameSettings.SfxEnabled) Instance.src.PlayOneShot(Instance.typeClip); }
@@ -93,6 +96,12 @@ public class SfxPlayer : MonoBehaviour
     {
         if (!Instance || !GameSettings.SfxEnabled) return;
         Instance.src.PlayOneShot(Instance.gameOverSound != null ? Instance.gameOverSound : Instance.gameOverFallback);
+    }
+
+    public static void PlayBulletFire()
+    {
+        if (!Instance || !GameSettings.SfxEnabled) return;
+        Instance.src.PlayOneShot(Instance.bulletFireSound != null ? Instance.bulletFireSound : Instance.bulletFireFallback);
     }
 
     static AudioClip MakeTone(float freq, float duration, float volume)

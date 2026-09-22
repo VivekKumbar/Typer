@@ -19,6 +19,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 62acfe9498e381f4c8fa499b738ca7a0, type: 2}
   - {fileID: 11400000, guid: 5ff6c3ad38ae0a84b83843ff8ab207bb, type: 2}
   - {fileID: 11400000, guid: fa859476e21a02b4b81ab4c42795214c, type: 2}
-  buttonNormalSprite: {fileID: 21300000, guid: 48852a524525a9a46b449856d414eeda, type: 3}
-  buttonActiveSprite: {fileID: 21300000, guid: a94e4e8ee5195a3448f58e4d37a1de69, type: 3}
-  nativeLabelOverArt: 1
+  buttonNormalSprite: {fileID: 21300000, guid: 4bddd5c9ef8fbf64eb4dfc99348d838d, type: 3}
+  buttonActiveSprite: {fileID: 21300000, guid: 23d331cc3ca48304b8d5374d52b31412, type: 3}
+  nativeLabelOverArt: 0

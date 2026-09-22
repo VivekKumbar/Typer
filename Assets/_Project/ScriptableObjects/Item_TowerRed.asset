@@ -15,8 +15,8 @@ MonoBehaviour:
   id: tower_red
   displayName: Red Turret
   description: 
-  icon: {fileID: 21300000, guid: e71fa703218c88b4c9b72346050d2490, type: 3}
-  previewImage: {fileID: 21300000, guid: e71fa703218c88b4c9b72346050d2490, type: 3}
+  icon: {fileID: 21300000, guid: dd21be6a4ad95864896d56f418a1276e, type: 3}
+  previewImage: {fileID: 0}
   price: 500
   kind: 0
   slot: TowerSkin

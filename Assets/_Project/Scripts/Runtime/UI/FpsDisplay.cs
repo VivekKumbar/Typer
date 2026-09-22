@@ -5,6 +5,8 @@ using UnityEngine;
 public class FpsDisplay : MonoBehaviour
 {
     [Header("Settings")]
+    [Tooltip("Off by default -- this is a dev-only overlay. Its 500px-wide OnGUI label at the TopLeft default corner was overlapping the Pause button and crowding the health bar next to it. Flip on only when you actually need to profile.")]
+    public bool showOverlay = false;
     [Tooltip("How often the number updates, in seconds.")]
     public float refreshRate = 0.5f;
     [Tooltip("Screen corner.")]
@@ -34,6 +36,8 @@ public class FpsDisplay : MonoBehaviour
 
     void OnGUI()
     {
+        if (!showOverlay) return;
+
         if (style == null)
         {
             style = new GUIStyle(GUI.skin.label);

@@ -18,16 +18,37 @@ public class ReadyStateHighlight : MonoBehaviour
     Image bg;
     Color normalBg;
     Color normalText;
+    bool captured;
 
     void Awake()
     {
         bg = GetComponent<Image>();
+        // Deliberately NOT captured here: this ran before TMP_Text (on a
+        // sibling/child GameObject with its own, order-unspecified Awake) had
+        // necessarily finished initializing, so label.color could read back
+        // Unity's default Color(0,0,0,0) instead of the authored value --
+        // label text silently went fully transparent forever (SetReady(false)
+        // "restores" that captured transparency) any time this ran before the
+        // label's own init, which is neither guaranteed nor obvious from here.
+        // Capturing lazily on first use in Start()/SetReady() instead, after
+        // every Awake in the scene (including the label's) has already run.
+    }
+
+    void Start() { EnsureCaptured(); }
+
+    void EnsureCaptured()
+    {
+        if (captured) return;
+        if (bg == null) bg = GetComponent<Image>(); // defensive: SetReady() can be called by another script's own Start() before this component's Awake() has necessarily run
+        if (bg == null) return; // still missing (component destroyed?) -- try again next call rather than throw
+        captured = true;
         normalBg = bg.color;
         normalText = label ? label.color : Color.white;
     }
 
     public void SetReady(bool ready)
     {
+        EnsureCaptured();
         if (bg) bg.color = ready ? ReadyBg : normalBg;
         if (label) label.color = ready ? ReadyText : normalText;
     }

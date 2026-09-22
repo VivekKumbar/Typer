@@ -71,6 +71,7 @@ public class LevelCard : MonoBehaviour
         if (setDarkMode) DarkMode.Enabled = forceDarkMode;
         PlayerPrefs.SetInt(modeKey, modeId);
         PlayerPrefs.Save();
+        MusicManager.PlayGameplayMusic();
         // Loading handled by your MainMenu loader if you route through it;
         // otherwise load directly:
         SceneManager.LoadScene(sceneToLoad);
