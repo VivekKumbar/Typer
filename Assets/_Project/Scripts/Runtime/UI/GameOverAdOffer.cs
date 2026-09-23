@@ -12,8 +12,8 @@ using TMPro;
 public class GameOverAdOffer : MonoBehaviour
 {
     [Header("1. Dynamic Reward Configuration")]
-    [Tooltip("The coin bonus fraction granted from this run's earnings (e.g. 0.5 for +50%, 1.0 for +100%). Editable in Unity Inspector.")]
-    [Range(0f, 5f)] public float bonusFraction = 0.5f;
+    [Tooltip("The coin bonus fraction granted from this run's earnings (e.g. 0.5 for +50%, 1.0 for +100% / Double Coins). Editable in Unity Inspector.")]
+    [Range(0f, 5f)] public float bonusFraction = 1.0f;
 
     [Tooltip("Minimum coin bonus granted if no coins were earned during the run (e.g. dying on wave 1).")]
     public int minimumBonusCoins = 50;
@@ -93,13 +93,19 @@ public class GameOverAdOffer : MonoBehaviour
 
         if (watchAdLabel != null)
         {
-            watchAdLabel.text = $"Watch Ad for +{percent}% Coins (+{bonus})";
+            GameManager gm = GameManager.Instance;
+            int runCoins = gm != null ? gm.coinsEarnedThisRun : 0;
+            if (runCoins > 0)
+            {
+                watchAdLabel.text = $"Watch an AD for double the coins (+{bonus})";
+            }
+            else
+            {
+                watchAdLabel.text = $"Watch an AD for bonus coins (+{bonus})";
+            }
         }
 
-        // No ad SDK integrated yet on this branch (WebGL-first pass, ads come
-        // back before publishing) -- forced false keeps the button hidden.
-        // Re-wire this to the eventual ad SDK's "rewarded ad ready" check.
-        bool adReady = false;
+        bool adReady = PlayGamaAds.Instance != null && PlayGamaAds.Instance.IsRewardedSupported();
         bool canOffer = !rewardClaimed && bonus > 0 && adReady;
 
         if (watchAdButtonRoot != null) watchAdButtonRoot.SetActive(canOffer);
@@ -151,16 +157,31 @@ public class GameOverAdOffer : MonoBehaviour
         countdownCoroutine = null;
     }
 
-    // Not currently reachable (RefreshButton() keeps the button hidden via
-    // adReady = false above), but kept intact so re-wiring is small: swap the
-    // log line below for a real ad SDK call into HandleAdRewarded/HandleAdFailed.
     private void TriggerAd()
     {
         isAdLoadingOrCountingDown = true;
         if (watchAdButton != null) watchAdButton.interactable = false;
 
-        Debug.Log("[GameOverAdOffer] Watch Ad tapped, but no ad SDK is integrated yet for this build.");
-        HandleAdFailed();
+        Debug.Log("[GameOverAdOffer] Showing Rewarded Ad via PlayGamaAds for Double Coins...");
+        if (PlayGamaAds.Instance != null)
+        {
+            PlayGamaAds.Instance.ShowRewarded(success =>
+            {
+                if (success)
+                {
+                    HandleAdRewarded();
+                }
+                else
+                {
+                    HandleAdFailed();
+                }
+            });
+        }
+        else
+        {
+            Debug.LogWarning("[GameOverAdOffer] PlayGamaAds.Instance is null! Could not show rewarded ad.");
+            HandleAdFailed();
+        }
     }
 
     private void HandleAdRewarded()
@@ -176,14 +197,21 @@ public class GameOverAdOffer : MonoBehaviour
         if (bonus > 0)
         {
             Wallet.Add(bonus);
-            Debug.Log($"[GameOverAdOffer] Granted {bonus} bonus coins to Wallet.");
+            Debug.Log($"[GameOverAdOffer] Rewarded ad completed! Granted {bonus} double coins to Wallet. Total: {Wallet.Total}");
         }
 
         // 2. Hide watch ad button
         if (watchAdButtonRoot != null) watchAdButtonRoot.SetActive(false);
         else if (watchAdButton != null) watchAdButton.gameObject.SetActive(false);
 
-        // 3. Display the Dynamic Reward Popup
+        // 3. Update GameOver coins stat display if visible
+        HUD hud = FindAnyObjectByType<HUD>(FindObjectsInactive.Include);
+        if (hud != null && hud.gameOverCoinsText != null && GameManager.Instance != null)
+        {
+            hud.gameOverCoinsText.text = (GameManager.Instance.coinsEarnedThisRun + bonus).ToString();
+        }
+
+        // 4. Display the Dynamic Reward Popup
         if (rewardPopup == null)
         {
             rewardPopup = FindAnyObjectByType<RewardPopup>(FindObjectsInactive.Include);
@@ -191,7 +219,7 @@ public class GameOverAdOffer : MonoBehaviour
 
         if (rewardPopup != null)
         {
-            rewardPopup.ShowReward(bonus, percent, "REWARD CLAIMED!", () =>
+            rewardPopup.ShowReward(bonus, percent, "DOUBLE COINS CLAIMED!", () =>
             {
                 RefreshButton();
             });
@@ -206,7 +234,7 @@ public class GameOverAdOffer : MonoBehaviour
     private void HandleAdFailed()
     {
         isAdLoadingOrCountingDown = false;
-        Debug.Log("[GameOverAdOffer] Rewarded ad was skipped or failed.");
+        Debug.Log("[GameOverAdOffer] Rewarded ad was skipped, closed early, or failed.");
         RefreshButton();
     }
 }

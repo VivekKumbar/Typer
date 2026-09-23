@@ -698,8 +698,36 @@ public class AdManager : MonoBehaviour
     public bool CheckMainMenuAdCooldown(out TimeSpan remainingTime) => IsMainMenuAdOnCooldown(out remainingTime);
     public bool CheckMainMenuAdCooldown() => IsMainMenuAdOnCooldown(out _);
     public bool IsRewardedReady() => adsEnabled && !isAdShowing;
-    public bool IsInterstitialReady() => adsEnabled;
-    public void ShowInterstitial(Action onClosed) => onClosed?.Invoke();
+    public bool IsInterstitialReady()
+    {
+#if UNITY_WEBGL
+        return adsEnabled && com.playgama.Bridge.advertisement != null && com.playgama.Bridge.advertisement.isInterstitialSupported;
+#else
+        return adsEnabled;
+#endif
+    }
+
+    public void ShowInterstitial(Action onClosed)
+    {
+#if UNITY_WEBGL
+        if (com.playgama.Bridge.advertisement != null && com.playgama.Bridge.advertisement.isInterstitialSupported)
+        {
+            Action<Playgama.Modules.Advertisement.InterstitialState> handler = null;
+            handler = state =>
+            {
+                if (state == Playgama.Modules.Advertisement.InterstitialState.Closed || state == Playgama.Modules.Advertisement.InterstitialState.Failed)
+                {
+                    com.playgama.Bridge.advertisement.interstitialStateChanged -= handler;
+                    onClosed?.Invoke();
+                }
+            };
+            com.playgama.Bridge.advertisement.interstitialStateChanged += handler;
+            com.playgama.Bridge.advertisement.ShowInterstitial();
+            return;
+        }
+#endif
+        onClosed?.Invoke();
+    }
 
     public void ShowRewardedAd(Action onRewardGranted, Action onFailedOrSkipped, string placement = null)
     {

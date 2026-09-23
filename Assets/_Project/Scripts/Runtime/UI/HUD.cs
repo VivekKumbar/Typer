@@ -7,16 +7,18 @@ using TMPro;
 public class HUD : MonoBehaviour
 {
     public Slider healthBar;
+    [Tooltip("Optional LoadingBarUI for smooth health animation.")]
+    public LoadingBarUI healthLoadingBar;
     [Tooltip("Optional 'cur/max' label over the health bar (e.g. '100/100'). Kept in sync wherever healthBar itself is.")]
     public TMP_Text healthText;
     public GameObject gameOverPanel;
 
     [Header("Game Over stats (filled once, when the panel opens)")]
-    [Tooltip("e.g. 'WAVE 5'. Optional -- not shown in the current Game Over layout (no third stat row), kept filled for whenever it's wired to something again.")]
+    [Tooltip("e.g. 'WAVE 5'. Optional.")]
     public TMP_Text gameOverWaveText;
-    [Tooltip("Just the number (e.g. '120') -- the 'COINS' word is a separate static label in the Game Over popup's stat row art, not part of this string.")]
+    [Tooltip("e.g. 'COINS 120'. Optional.")]
     public TMP_Text gameOverCoinsText;
-    [Tooltip("Just the number (e.g. '42'), or 'N/A' if the run ended almost instantly -- the 'WPM' word is a separate static label in the popup's stat row art. This is the ONLY place WPM is shown anywhere in the game.")]
+    [Tooltip("e.g. 'WPM 42' (or 'WPM N/A' if the run ended almost instantly). This is the ONLY place WPM is shown anywhere in the game.")]
     public TMP_Text gameOverWpmText;
 
     void Start()
@@ -26,10 +28,15 @@ public class HUD : MonoBehaviour
         gm.OnGameOver += ShowGameOver;
         if (gameOverPanel) gameOverPanel.SetActive(false);
 
+        if (healthLoadingBar == null && healthBar != null)
+            healthLoadingBar = healthBar.GetComponent<LoadingBarUI>();
+
         // Pull the current value right now, in case GameManager already fired
-        // its startup event before this HUD subscribed. This makes the bar
-        // start full and only ever go DOWN.
-        UpdateHealth(gm.currentHealth, gm.maxHealth);
+        // its startup event before this HUD subscribed. Snap to current health.
+        float frac = gm.maxHealth > 0 ? (float)gm.currentHealth / gm.maxHealth : 1f;
+        if (healthLoadingBar != null) healthLoadingBar.SnapTo01(frac);
+        else if (healthBar != null) { healthBar.minValue = 0f; healthBar.maxValue = 1f; healthBar.value = frac; }
+        if (healthText) healthText.text = gm.currentHealth + "/" + gm.maxHealth;
     }
 
     void OnDestroy()
@@ -42,7 +49,17 @@ public class HUD : MonoBehaviour
 
     void UpdateHealth(int cur, int max)
     {
-        if (healthBar) { healthBar.maxValue = max; healthBar.value = cur; }
+        float frac = max > 0 ? (float)cur / max : 0f;
+        if (healthLoadingBar != null)
+        {
+            healthLoadingBar.SetTargetProgress01(frac);
+        }
+        else if (healthBar != null)
+        {
+            healthBar.minValue = 0f;
+            healthBar.maxValue = 1f;
+            healthBar.value = frac;
+        }
         if (healthText) healthText.text = cur + "/" + max;
     }
 

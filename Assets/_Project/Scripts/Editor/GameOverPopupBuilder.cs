@@ -5,22 +5,19 @@ using UnityEditor.SceneManagement;
 using TMPro;
 using UImage = UnityEngine.UI.Image;
 
-// Restyles GameScene's existing GameOverPanel to the crest-card reference
-// (Docs reference: gameover.png + Layer 2-6; Layer 7 deliberately unused --
-// there is no third "highest wave" row in this design). Reuses every existing
-// GameObject/component (RestartButton, MainMenu buttons + their onClick
-// wiring, GameOverAdOffer, StatCoins/StatWpm TMP objects HUD.cs already
-// fills) exactly as wired -- this only adds art and repositions/resizes
-// RectTransforms. No restart/menu logic changes here. Idempotent: safe to re-run.
+// Assembles GameScene's GameOverPanel to match the exact crest-card reference
+// (Textures: gameover.png, stat_row_coins.png, stat_row_wpm.png, button_gold.png,
+// button_blue.png, icon_restart.png, icon_house.png) already in the project.
+// Idempotent: safe to re-run.
 public static class GameOverPopupBuilder
 {
     const string ArtDir = "Assets/_Project/Art/Textures/HUD/GameOver/";
 
     const float CardWidth = 680f;
-    const float CardHeight = 1020f; // matches gameover_panel.png's own 1024:1536 aspect
+    const float CardHeight = 1020f; // matches gameover.png's 1024:1536 aspect
 
-    const float RowWidth = 480f;
-    const float RowHeight = 120f;
+    const float RowWidth = 360f;
+    const float RowHeight = 90f;
 
     [MenuItem("TypeKeep/Build Game Over Popup")]
     public static void Build()
@@ -30,22 +27,35 @@ public static class GameOverPopupBuilder
         Transform panel = canvasGO.transform.Find("GameOverPanel");
         if (panel == null) { Debug.LogError("[GameOverPopupBuilder] No 'GameOverPanel' under Canvas."); return; }
 
+        // Clean up redundant banners if any
+        Transform oldBanner = panel.Find("TitleBanner");
+        if (oldBanner != null) Object.DestroyImmediate(oldBanner.gameObject);
+
+        // Hide bare GAMEOVER text (gameover.png already has the 3D stone text baked into the ribbon)
+        Transform title = panel.Find("GAMEOVER");
+        if (title != null) title.gameObject.SetActive(false);
+
+        // Hide StatWave and WatchAdButton so the crest card remains clean and matches reference
+        Transform wave = panel.Find("StatWave");
+        if (wave != null) wave.gameObject.SetActive(false);
+
+        Transform adBtn = panel.Find("WatchAdButton");
+        if (adBtn != null) adBtn.gameObject.SetActive(false);
+
         Transform card = BuildCard(panel);
-        BuildTitle(panel, card);
         BuildStatRow(panel, "StatCoins", "CoinsRow", "stat_row_coins", "COINS",
-            new Color(1f, 0.85f, 0.35f), 120f);
+            new Color(1f, 0.88f, 0.22f), 105f);
         BuildStatRow(panel, "StatWpm", "WpmRow", "stat_row_wpm", "WPM",
-            new Color(0.45f, 0.85f, 1f), -20f);
-        HideUnusedWaveStat(panel);
-        BuildButton(panel, "RestartButton", "button_gold", "icon_restart", "PLAY AGAIN", -160f);
-        BuildButton(panel, "MainMenu", "button_blue", "icon_house", "MAIN MENU", -290f);
+            new Color(0.20f, 0.82f, 1f), -5f);
+        BuildButton(panel, "RestartButton", "button_gold", "icon_restart", "PLAY AGAIN",
+            new Color(0.20f, 0.13f, 0.03f), new Color(0.20f, 0.13f, 0.03f), -115f, 82f);
+        BuildButton(panel, "MainMenu", "button_blue", "icon_house", "MAIN MENU",
+            new Color(0.95f, 0.98f, 1f), Color.white, -220f, 80f);
 
         EditorUtility.SetDirty(canvasGO);
         EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
-        Debug.Log("[GameOverPopupBuilder] Game Over popup restyled.");
+        Debug.Log("[GameOverPopupBuilder] Game Over popup built to match exact reference art.");
     }
-
-    // ================= card frame =================
 
     static Transform BuildCard(Transform panel)
     {
@@ -55,13 +65,13 @@ public static class GameOverPopupBuilder
             var go = new GameObject("Card", typeof(RectTransform));
             card = go.transform;
             card.SetParent(panel, false);
-            card.SetAsFirstSibling(); // behind GAMEOVER/rows/buttons, which are all direct panel children
+            card.SetAsFirstSibling();
             var img = go.AddComponent<UImage>();
             img.raycastTarget = false;
         }
         var img2 = card.GetComponent<UImage>();
-        img2.sprite = Load<Sprite>("gameover_panel");
-        img2.type = UImage.Type.Simple; // native-res art at a size close to native -- no 9-slice border needed
+        img2.sprite = Load<Sprite>("gameover");
+        img2.type = UImage.Type.Simple;
         img2.color = Color.white;
         var rt = card.GetComponent<RectTransform>();
         rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
@@ -70,59 +80,6 @@ public static class GameOverPopupBuilder
         return card;
     }
 
-    // ================= title =================
-
-    static void BuildTitle(Transform panel, Transform card)
-    {
-        Transform banner = panel.Find("TitleBanner");
-        if (banner == null)
-        {
-            var go = new GameObject("TitleBanner", typeof(RectTransform));
-            banner = go.transform;
-            banner.SetParent(panel, false);
-            var img = go.AddComponent<UImage>();
-            img.raycastTarget = false;
-        }
-        banner.SetSiblingIndex(card.GetSiblingIndex() + 1); // just above the card, below everything else
-        var bannerImg = banner.GetComponent<UImage>();
-        bannerImg.sprite = Load<Sprite>("gameover_title_banner");
-        bannerImg.preserveAspect = true;
-        var bannerRT = banner.GetComponent<RectTransform>();
-        bannerRT.anchorMin = bannerRT.anchorMax = new Vector2(0.5f, 0.5f);
-        bannerRT.anchoredPosition = new Vector2(0f, 320f);
-        bannerRT.sizeDelta = new Vector2(520f, 336f);
-
-        // GAMEOVER already exists as a bare TMP_Text at the panel's old layout
-        // position -- move it onto the banner instead of creating a new object,
-        // so anything else referencing it (none currently, but keeps the same
-        // pattern as the ability HUD passes) stays valid.
-        Transform title = panel.Find("GAMEOVER");
-        title.SetParent(panel, false);
-        title.SetSiblingIndex(banner.GetSiblingIndex() + 1);
-        var titleRT = title.GetComponent<RectTransform>();
-        titleRT.anchorMin = titleRT.anchorMax = new Vector2(0.5f, 0.5f);
-        titleRT.anchoredPosition = new Vector2(0f, 320f);
-        titleRT.sizeDelta = new Vector2(480f, 140f);
-
-        var titleTmp = title.GetComponent<TMP_Text>();
-        titleTmp.text = "GAME OVER";
-        titleTmp.alignment = TextAlignmentOptions.Center;
-        titleTmp.fontStyle = FontStyles.Bold;
-        titleTmp.color = Color.white;
-        titleTmp.enableAutoSizing = true;
-        titleTmp.fontSizeMin = 30f;
-        titleTmp.fontSizeMax = 56f;
-        titleTmp.enableWordWrapping = false;
-        titleTmp.overflowMode = TextOverflowModes.Overflow;
-    }
-
-    // ================= stat rows (Coins / WPM) =================
-
-    // valueLabel is the EXISTING bare TMP_Text (StatCoins/StatWpm) HUD.cs already
-    // fills with just the number (see HUD.FillGameOverStats) -- reused as-is,
-    // just repositioned onto the new row art, with a new static "COINS"/"WPM"
-    // label added above it. The row's icon (crown/clock) is already baked into
-    // stat_row_coins.png/stat_row_wpm.png, so no separate icon image is needed.
     static void BuildStatRow(Transform panel, string valueObjectName, string rowName, string rowSprite,
         string labelText, Color valueColor, float y)
     {
@@ -137,31 +94,33 @@ public static class GameOverPopupBuilder
         }
         var rowImg = row.GetComponent<UImage>();
         rowImg.sprite = Load<Sprite>(rowSprite);
-        rowImg.preserveAspect = false; // rows share one height for a clean stacked column; the art tolerates a slight stretch fine at this size
+        rowImg.preserveAspect = false;
         var rowRT = row.GetComponent<RectTransform>();
         rowRT.anchorMin = rowRT.anchorMax = new Vector2(0.5f, 0.5f);
         rowRT.anchoredPosition = new Vector2(0f, y);
         rowRT.sizeDelta = new Vector2(RowWidth, RowHeight);
 
-        // Value: the existing StatCoins/StatWpm object, reparented onto the row.
-        // Idempotent: a re-run finds it already reparented under the row.
         Transform value = row.Find(valueObjectName) ?? panel.Find(valueObjectName);
-        if (value.parent != row) value.SetParent(row, false);
-        var valueRT = value.GetComponent<RectTransform>();
-        valueRT.anchorMin = new Vector2(0.30f, 0.02f);
-        valueRT.anchorMax = new Vector2(0.95f, 0.48f); // lower half of the row's text area, right of the baked icon
-        valueRT.offsetMin = Vector2.zero; valueRT.offsetMax = Vector2.zero;
-        var valueTmp = value.GetComponent<TMP_Text>();
-        valueTmp.alignment = TextAlignmentOptions.Left;
-        valueTmp.fontStyle = FontStyles.Bold;
-        valueTmp.color = valueColor;
-        valueTmp.enableAutoSizing = true;
-        valueTmp.fontSizeMin = 20f;
-        valueTmp.fontSizeMax = 40f;
-        valueTmp.enableWordWrapping = false;
-        valueTmp.overflowMode = TextOverflowModes.Overflow;
+        if (value != null)
+        {
+            if (value.parent != row) value.SetParent(row, false);
+            value.gameObject.SetActive(true);
+            var valueRT = value.GetComponent<RectTransform>();
+            valueRT.anchorMin = new Vector2(0.34f, 0.06f);
+            valueRT.anchorMax = new Vector2(0.95f, 0.52f);
+            valueRT.offsetMin = Vector2.zero;
+            valueRT.offsetMax = Vector2.zero;
+            var valueTmp = value.GetComponent<TMP_Text>();
+            valueTmp.alignment = TextAlignmentOptions.Left;
+            valueTmp.fontStyle = FontStyles.Bold;
+            valueTmp.color = valueColor;
+            valueTmp.enableAutoSizing = true;
+            valueTmp.fontSizeMin = 22f;
+            valueTmp.fontSizeMax = 38f;
+            valueTmp.enableWordWrapping = false;
+            valueTmp.overflowMode = TextOverflowModes.Overflow;
+        }
 
-        // Label: static "COINS"/"WPM", new object, upper half of the same text area.
         Transform label = row.Find(rowName + "Label");
         if (label == null)
         {
@@ -170,38 +129,30 @@ public static class GameOverPopupBuilder
             label.SetParent(row, false);
             var tmp = go.AddComponent<TextMeshProUGUI>();
             tmp.raycastTarget = false;
-            tmp.font = valueTmp.font; // project's existing font, same as everything else
         }
         var labelRT = label.GetComponent<RectTransform>();
-        labelRT.anchorMin = new Vector2(0.30f, 0.52f);
-        labelRT.anchorMax = new Vector2(0.95f, 0.95f);
-        labelRT.offsetMin = Vector2.zero; labelRT.offsetMax = Vector2.zero;
+        labelRT.anchorMin = new Vector2(0.34f, 0.52f);
+        labelRT.anchorMax = new Vector2(0.95f, 0.92f);
+        labelRT.offsetMin = Vector2.zero;
+        labelRT.offsetMax = Vector2.zero;
         var labelTmp = label.GetComponent<TMP_Text>();
         labelTmp.text = labelText;
         labelTmp.alignment = TextAlignmentOptions.Left;
         labelTmp.fontStyle = FontStyles.Bold;
-        labelTmp.color = new Color(0.85f, 0.82f, 0.78f); // light warm gray, matches the reference's label tone (distinct from the bold value color below it)
+        labelTmp.color = new Color(0.92f, 0.89f, 0.83f);
         labelTmp.enableAutoSizing = true;
-        labelTmp.fontSizeMin = 14f;
-        labelTmp.fontSizeMax = 24f;
+        labelTmp.fontSizeMin = 13f;
+        labelTmp.fontSizeMax = 20f;
         labelTmp.enableWordWrapping = false;
         labelTmp.overflowMode = TextOverflowModes.Overflow;
     }
 
-    // Layer 7 (crest plate) is intentionally unused -- no third stat row on
-    // this screen. StatWave stays exactly as HUD.cs already fills it (harmless,
-    // just never rendered); only its GameObject is hidden.
-    static void HideUnusedWaveStat(Transform panel)
-    {
-        Transform wave = panel.Find("StatWave");
-        if (wave != null) wave.gameObject.SetActive(false);
-    }
-
-    // ================= buttons (Play Again / Main Menu) =================
-
-    static void BuildButton(Transform panel, string buttonName, string buttonSprite, string iconSprite, string label, float y)
+    static void BuildButton(Transform panel, string buttonName, string buttonSprite, string iconSprite,
+        string label, Color textColor, Color iconColor, float y, float height)
     {
         Transform button = panel.Find(buttonName);
+        if (button == null) return;
+        button.gameObject.SetActive(true);
         var btnImg = button.GetComponent<UImage>();
         btnImg.sprite = Load<Sprite>(buttonSprite);
         btnImg.type = UImage.Type.Simple;
@@ -209,9 +160,8 @@ public static class GameOverPopupBuilder
         var btnRT = button.GetComponent<RectTransform>();
         btnRT.anchorMin = btnRT.anchorMax = new Vector2(0.5f, 0.5f);
         btnRT.anchoredPosition = new Vector2(0f, y);
-        btnRT.sizeDelta = new Vector2(RowWidth, RowHeight);
+        btnRT.sizeDelta = new Vector2(RowWidth, height);
 
-        // Icon: left side, vertically centered, non-raycast so clicks still reach the Button.
         Transform icon = button.Find("Icon");
         if (icon == null)
         {
@@ -224,30 +174,33 @@ public static class GameOverPopupBuilder
         var iconImg = icon.GetComponent<UImage>();
         iconImg.sprite = Load<Sprite>(iconSprite);
         iconImg.preserveAspect = true;
+        iconImg.color = iconColor;
         var iconRT = icon.GetComponent<RectTransform>();
-        iconRT.anchorMin = new Vector2(0.10f, 0.5f);
-        iconRT.anchorMax = new Vector2(0.10f, 0.5f);
+        iconRT.anchorMin = new Vector2(0f, 0.5f);
+        iconRT.anchorMax = new Vector2(0f, 0.5f);
         iconRT.pivot = new Vector2(0.5f, 0.5f);
-        iconRT.anchoredPosition = Vector2.zero;
-        iconRT.sizeDelta = new Vector2(76f, 76f);
+        iconRT.anchoredPosition = new Vector2(44f, 0f);
+        iconRT.sizeDelta = new Vector2(44f, 44f);
 
-        // Label: existing TMP_Text child (button doubled as a text pill before
-        // this pass), repositioned to the icon's right, still vertically centered.
         Transform labelT = button.Find("PLAY-AGAIN") ?? button.Find("Text (TMP)") ?? FindAnyTmpChild(button);
-        var labelRT = labelT.GetComponent<RectTransform>();
-        labelRT.anchorMin = new Vector2(0.20f, 0f);
-        labelRT.anchorMax = new Vector2(0.95f, 1f);
-        labelRT.offsetMin = Vector2.zero; labelRT.offsetMax = Vector2.zero;
-        var labelTmp = labelT.GetComponent<TMP_Text>();
-        labelTmp.text = label;
-        labelTmp.alignment = TextAlignmentOptions.Center;
-        labelTmp.fontStyle = FontStyles.Bold;
-        labelTmp.color = new Color(0.18f, 0.12f, 0.02f); // dark warm brown -- reads clearly on both the gold and blue plates, matching the reference's dark button text
-        labelTmp.enableAutoSizing = true;
-        labelTmp.fontSizeMin = 20f;
-        labelTmp.fontSizeMax = 34f;
-        labelTmp.enableWordWrapping = false;
-        labelTmp.overflowMode = TextOverflowModes.Overflow;
+        if (labelT != null)
+        {
+            var labelRT = labelT.GetComponent<RectTransform>();
+            labelRT.anchorMin = new Vector2(0.18f, 0f);
+            labelRT.anchorMax = new Vector2(0.95f, 1f);
+            labelRT.offsetMin = Vector2.zero;
+            labelRT.offsetMax = Vector2.zero;
+            var labelTmp = labelT.GetComponent<TMP_Text>();
+            labelTmp.text = label;
+            labelTmp.alignment = TextAlignmentOptions.Center;
+            labelTmp.fontStyle = FontStyles.Bold;
+            labelTmp.color = textColor;
+            labelTmp.enableAutoSizing = true;
+            labelTmp.fontSizeMin = 18f;
+            labelTmp.fontSizeMax = 28f;
+            labelTmp.enableWordWrapping = false;
+            labelTmp.overflowMode = TextOverflowModes.Overflow;
+        }
     }
 
     static Transform FindAnyTmpChild(Transform parent)

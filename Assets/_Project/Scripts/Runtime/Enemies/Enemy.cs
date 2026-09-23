@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
+
 // One marching enemy carrying a word. Rotates to face the fortress as it walks,
 // with juice: scale-pop per correct letter, particles + shake + sound on death.
 public class Enemy : MonoBehaviour
@@ -20,6 +21,17 @@ public class Enemy : MonoBehaviour
     public int coinsOnDeath = 3;
     [Tooltip("No longer spawned by Die() — replaced by CoinFlyManager's fly-to-counter visual. Left here unused in case you want the old ground-hop coins for something else.")]
     public Coin coinPrefab;
+
+    [Header("Progression & Multi-Phase Boss")]
+    [Tooltip("The wave this enemy was spawned on, used to scale coin rewards.")]
+    public int currentWaveNumber = 1;
+    [Tooltip("Whether this enemy is a boss flagship.")]
+    public bool isBoss = false;
+    [Tooltip("Total armor / word phases (1 for normal enemies, 2+ for bosses).")]
+    public int totalPhases = 1;
+    [Tooltip("Current active phase (1-based).")]
+    public int currentPhase = 1;
+    private System.Func<int, string> nextPhaseWordProvider;
 
     [Header("Combat")]
     public int damage = 10;
@@ -97,12 +109,17 @@ public class Enemy : MonoBehaviour
         if (skinApplier == null) skinApplier = GetComponentInChildren<EnemySkinApplier>();
     }
 
-    public void Init(string word, Transform fortress, float speedBonus)
+    public void Init(string word, Transform fortress, float speedBonus, int waveNumber = 1, bool isBossEnemy = false, int phases = 1, System.Func<int, string> wordProvider = null)
     {
         Word = word.ToUpper();
         displayWord = Word;
         target = fortress;
         moveSpeed += speedBonus;
+        currentWaveNumber = Mathf.Max(1, waveNumber);
+        isBoss = isBossEnemy;
+        totalPhases = Mathf.Max(1, phases);
+        currentPhase = 1;
+        nextPhaseWordProvider = wordProvider;
         TypedCount = 0;
         IsDefeated = false;
         RefreshLabel();
@@ -163,8 +180,51 @@ public class Enemy : MonoBehaviour
         RefreshLabel();
         Pop();
         SfxPlayer.PlayType();
-        if (TypedCount >= Word.Length) Die(true);
+        if (TypedCount >= Word.Length)
+        {
+            if (currentPhase < totalPhases && nextPhaseWordProvider != null)
+            {
+                AdvanceToNextPhase();
+            }
+            else
+            {
+                Die(true);
+            }
+        }
         return true;
+    }
+
+    private void AdvanceToNextPhase()
+    {
+        currentPhase++;
+        string nextWord = nextPhaseWordProvider != null ? nextPhaseWordProvider(currentPhase) : null;
+        if (string.IsNullOrEmpty(nextWord))
+        {
+            Die(true);
+            return;
+        }
+
+        // Armor stripped feedback: hit stop, camera shake, sound effect
+        CameraShake.ShakeKill();
+        if (HitStop.Instance != null)
+            HitStop.Stop(HitStop.Instance.smallKillFreeze);
+        SfxPlayer.PlayKill();
+
+        // Phase milestone reward: partial coin drop
+        int phaseReward = CalculateCoinReward() / 2;
+        if (phaseReward > 0)
+        {
+            CoinFlyManager.Spawn(transform.position, phaseReward);
+            if (GameManager.Instance != null) GameManager.Instance.AddCoins(phaseReward);
+            PopupManager.ShowCoins(transform.position, phaseReward);
+        }
+
+        // Switch word to the next armor/core phase
+        Word = nextWord.ToUpper();
+        displayWord = Word;
+        TypedCount = 0;
+        RefreshLabel();
+        Pop();
     }
 
     public void Defeat() { Die(true); }
@@ -201,6 +261,12 @@ public class Enemy : MonoBehaviour
         string src = string.IsNullOrEmpty(displayWord) ? Word : displayWord;
         string typed = src.Substring(0, TypedCount);
 
+        string phaseBadge = "";
+        if (totalPhases > 1)
+        {
+            phaseBadge = $" <color=#FFD700><size=70%>[{currentPhase}/{totalPhases}]</size></color>";
+        }
+
         if (highlightNextLetter && TypedCount < src.Length)
         {
             // Pulses the NEXT letter's brightness between a base gold and a
@@ -212,12 +278,12 @@ public class Enemy : MonoBehaviour
             string hex = ColorUtility.ToHtmlStringRGB(glow);
             label.text = "<color=#46E36B>" + typed + "</color>"
                        + "<color=#" + hex + ">" + nextChar + "</color>"
-                       + untypedRest;
+                       + untypedRest + phaseBadge;
         }
         else
         {
             string rest = src.Substring(TypedCount);
-            label.text = "<color=#46E36B>" + typed + "</color>" + rest;
+            label.text = "<color=#46E36B>" + typed + "</color>" + rest + phaseBadge;
         }
     }
 
@@ -241,6 +307,34 @@ public class Enemy : MonoBehaviour
         popCo = null;
     }
 
+    public int CalculateCoinReward()
+    {
+        int baseReward = coinsOnDeath;
+        if (isBoss)
+        {
+            // Massive boss jackpot scaling with wave
+            baseReward += 25 + currentWaveNumber * 6;
+        }
+        else
+        {
+            // Dynamic standard enemy reward: scales with wave tier + word length
+            baseReward += Mathf.FloorToInt((currentWaveNumber - 1) * 0.35f);
+            if (!string.IsNullOrEmpty(Word) && Word.Length > 4)
+            {
+                baseReward += (Word.Length - 4);
+            }
+        }
+
+        int rewardCap = isBoss ? 500 : Mathf.Max(40, 30 + currentWaveNumber * 3);
+        if (UpgradeManager.Instance != null && UpgradeManager.Instance.coinMagnetUpgrade != null)
+        {
+            int cmLevel = UpgradeManager.Instance.LevelOf(UpgradeManager.Instance.coinMagnetUpgrade);
+            if (cmLevel > 0) rewardCap += Mathf.RoundToInt(UpgradeManager.Instance.coinMagnetUpgrade.ValueForLevel(cmLevel));
+        }
+
+        return Mathf.Clamp(Mathf.RoundToInt(baseReward * ComboManager.Multiplier), baseReward, rewardCap);
+    }
+
     void Die(bool rewardCoins)
     {
         if (IsDefeated) return;
@@ -260,15 +354,7 @@ public class Enemy : MonoBehaviour
                 CameraShake.Shake(HitStop.Instance.bigShakeDuration, HitStop.Instance.bigShakeMagnitude);
             SfxPlayer.PlayKill();
 
-            // Coin Magnet upgrade raises this cap so a big combo multiplier isn't
-            // wasted once rewards would otherwise hit the ceiling.
-            int rewardCap = 30;
-            if (UpgradeManager.Instance != null && UpgradeManager.Instance.coinMagnetUpgrade != null)
-            {
-                int cmLevel = UpgradeManager.Instance.LevelOf(UpgradeManager.Instance.coinMagnetUpgrade);
-                if (cmLevel > 0) rewardCap += Mathf.RoundToInt(UpgradeManager.Instance.coinMagnetUpgrade.ValueForLevel(cmLevel));
-            }
-            int reward = Mathf.Clamp(Mathf.RoundToInt(coinsOnDeath * ComboManager.Multiplier), coinsOnDeath, rewardCap);
+            int reward = CalculateCoinReward();
             if (reward > 0)
             {
                 // Spawn BEFORE banking: CoinFlyManager marks the reward as

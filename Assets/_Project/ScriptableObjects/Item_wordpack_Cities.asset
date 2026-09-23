@@ -15,7 +15,7 @@ MonoBehaviour:
   id: CITIES
   displayName: CITIES
   description: Explore famous cities across the world.
-  icon: {fileID: 21300000, guid: af1e79e39ff5040409b61729b8eb5205, type: 3}
+  icon: {fileID: 21300000, guid: 9e395a6d4d914c948acf7ef28557df05, type: 3}
   previewImage: {fileID: 0}
   price: 150
   kind: 3

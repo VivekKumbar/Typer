@@ -6,8 +6,16 @@ using UnityEngine.UI;
 public class ShieldBar : MonoBehaviour
 {
     public Slider bar;
-    [Tooltip("Hide the whole bar object when the shield is down.")]
+    [Tooltip("Optional LoadingBarUI for smooth filling like the loading bar.")]
+    public LoadingBarUI loadingBar;
+    [Tooltip("Optional legacy root toggle. If null, the bar frame stays visible with 0 fill.")]
     public GameObject barRoot;
+
+    void Awake()
+    {
+        if (bar == null) bar = GetComponent<Slider>();
+        if (loadingBar == null) loadingBar = GetComponent<LoadingBarUI>();
+    }
 
     void Start()
     {
@@ -15,7 +23,10 @@ public class ShieldBar : MonoBehaviour
         if (sm != null)
         {
             sm.OnShieldChanged += UpdateBar;
-            UpdateBar(sm.Current, sm.shieldMax);
+            float frac = sm.shieldMax > 0 ? (float)sm.Current / sm.shieldMax : 0f;
+            if (loadingBar != null) loadingBar.SnapTo01(frac);
+            else if (bar != null) bar.value = frac;
+            if (barRoot != null) barRoot.SetActive(sm.Current > 0);
         }
     }
 
@@ -27,7 +38,18 @@ public class ShieldBar : MonoBehaviour
 
     void UpdateBar(int cur, int max)
     {
-        if (bar) { bar.maxValue = max; bar.value = cur; }
-        if (barRoot) barRoot.SetActive(cur > 0);   // only show while shielded
+        float frac = max > 0 ? (float)cur / max : 0f;
+        if (loadingBar != null)
+        {
+            loadingBar.SetTargetProgress01(frac);
+        }
+        else if (bar != null)
+        {
+            bar.minValue = 0f;
+            bar.maxValue = 1f;
+            bar.value = frac;
+        }
+
+        if (barRoot != null) barRoot.SetActive(cur > 0);
     }
 }

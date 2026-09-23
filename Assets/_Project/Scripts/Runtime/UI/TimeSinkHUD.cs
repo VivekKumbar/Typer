@@ -27,6 +27,8 @@ public class TimeSinkHUD : MonoBehaviour
 {
     [Header("Single ability bar -- charge while charging, remaining duration while active")]
     public Slider bar;
+    [Tooltip("Optional LoadingBarUI for smooth filling like the loading bar.")]
+    public LoadingBarUI loadingBar;
 
     [Header("Button")]
     public Button activateButton;
@@ -58,7 +60,9 @@ public class TimeSinkHUD : MonoBehaviour
         if (readyPulse) readyPulse.SetActive(ts.IsReady);
         // Sync-now: reflect whichever the manager is currently doing, instead
         // of assuming a fresh 0 (same idiom ComboHUD/HUD use for restored state).
-        if (bar) bar.value = ts.IsActive ? ts.RemainingFraction : (ts.chargeMax > 0f ? ts.Charge / ts.chargeMax : 0f);
+        float initialFrac = ts.IsActive ? ts.RemainingFraction : (ts.chargeMax > 0f ? ts.Charge / ts.chargeMax : 0f);
+        if (loadingBar != null) loadingBar.SnapTo01(initialFrac);
+        else if (bar) bar.value = initialFrac;
         RefreshLabel();
     }
 
@@ -79,6 +83,8 @@ public class TimeSinkHUD : MonoBehaviour
     // "can't be dragged" requirement even if a scene edit ever changes it.
     void ConfigureBar()
     {
+        if (loadingBar == null && bar != null)
+            loadingBar = bar.GetComponent<LoadingBarUI>();
         if (!bar) return;
         bar.minValue = 0f; bar.maxValue = 1f;
         bar.wholeNumbers = false;
@@ -94,9 +100,10 @@ public class TimeSinkHUD : MonoBehaviour
 
     void UpdateCharge(float fill)
     {
-        // Direct assignment, no rescaling — fill is already 0..1. Only ever
+        // Direct assignment or smooth easing — fill is already 0..1. Only ever
         // fires while not active, so this can't stomp an in-progress duration drain.
-        if (bar) bar.value = fill;
+        if (loadingBar != null) loadingBar.SetTargetProgress01(fill);
+        else if (bar) bar.value = fill;
     }
 
     // The ONLY place that enables the button — fired exactly once, exactly
@@ -118,9 +125,10 @@ public class TimeSinkHUD : MonoBehaviour
 
     void UpdateDuration(float remaining01)
     {
-        // Direct assignment, no rescaling — remaining01 is already 0..1. Only
+        // Direct assignment or smooth easing — remaining01 is already 0..1. Only
         // ever fires while active, so this can't stomp mid-charge progress.
-        if (bar) bar.value = remaining01;
+        if (loadingBar != null) loadingBar.SetTargetProgress01(remaining01);
+        else if (bar) bar.value = remaining01;
     }
 
     void OnEnded()

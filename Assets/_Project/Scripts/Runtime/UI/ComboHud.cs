@@ -6,6 +6,8 @@ public class ComboHUD : MonoBehaviour
 {
     public TMP_Text comboText;
     public Slider overloadBar;
+    [Tooltip("Optional LoadingBarUI for smooth filling like the loading bar.")]
+    public LoadingBarUI overloadLoadingBar;
     public Button overloadButton;
     public ReadyStateHighlight overloadHighlight;
     public ReadyPulse overloadPulse;
@@ -18,6 +20,9 @@ public class ComboHUD : MonoBehaviour
         cm.OnOverloadChanged += UpdateOverload;
         cm.OnOverloadReady += OnReady;
 
+        if (overloadLoadingBar == null && overloadBar != null)
+            overloadLoadingBar = overloadBar.GetComponent<LoadingBarUI>();
+
         if (overloadBar) { overloadBar.minValue = 0; overloadBar.maxValue = 1; }
 
         // Pull current values right now instead of assuming a fresh 0/1f
@@ -26,6 +31,7 @@ public class ComboHUD : MonoBehaviour
         // immediately regardless of script execution order (same idiom HUD.cs
         // uses for health).
         UpdateCombo(cm.combo, ComboManager.Multiplier);
+        if (overloadLoadingBar != null) overloadLoadingBar.SnapTo01(cm.OverloadFill);
         UpdateOverload(cm.OverloadFill);
         if (cm.overloadReady) OnReady();
     }
@@ -53,7 +59,8 @@ public class ComboHUD : MonoBehaviour
 
     void UpdateOverload(float fill)
     {
-        if (overloadBar) overloadBar.value = fill;
+        if (overloadLoadingBar != null) overloadLoadingBar.SetTargetProgress01(fill);
+        else if (overloadBar) overloadBar.value = fill;
         if (fill < 1f)
         {
             if (overloadButton) overloadButton.interactable = false;

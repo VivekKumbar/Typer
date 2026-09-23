@@ -227,6 +227,11 @@ public class GameManager : MonoBehaviour
         int wave = WaveManager.Instance != null ? WaveManager.Instance.CurrentWaveNumber : 0;
         int peakCombo = ComboManager.Instance != null ? ComboManager.Instance.HighestComboThisRun : 0;
         StatsManager.EndRun(wave, peakCombo, coinsEarnedThisRun, StatsManager.CurrentRunAccuracy);
+
+        int played = PlayerPrefs.GetInt("TypeKeep_GamesPlayedSinceInterstitial", 0) + 1;
+        PlayerPrefs.SetInt("TypeKeep_GamesPlayedSinceInterstitial", played);
+        PlayerPrefs.Save();
+        Debug.Log($"[GameManager] Run completed. Games played since last interstitial: {played}");
     }
 
     // Writes a mid-run save if the run is still active — used when pausing to

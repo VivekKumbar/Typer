@@ -15,7 +15,7 @@ MonoBehaviour:
   id: FOOD
   displayName: FOOD
   description: Discover delicious foods from around the world.
-  icon: {fileID: 21300000, guid: af1e79e39ff5040409b61729b8eb5205, type: 3}
+  icon: {fileID: 21300000, guid: c5d48382bfb47684ab93caf68c2befc6, type: 3}
   previewImage: {fileID: 0}
   price: 150
   kind: 3

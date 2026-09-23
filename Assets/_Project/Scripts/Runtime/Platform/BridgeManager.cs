@@ -76,6 +76,11 @@ public class BridgeManager : MonoBehaviour
                 // Pause state hook
                 Bridge.platform.pauseStateChanged += HandlePauseStateChanged;
             }
+
+            if (Bridge.advertisement != null)
+            {
+                Bridge.advertisement.SetMinimumDelayBetweenInterstitial(30);
+            }
         }
         catch (Exception ex)
         {

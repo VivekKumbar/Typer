@@ -29,10 +29,40 @@ public class WaveManager : MonoBehaviour
     [Tooltip("Optional. Shown right before a boss wave's big enemy spawns — see the Big Enemy section below.")]
     public BossWarningBanner bossWarningBanner;
 
-    [Header("WAVES — edit these to set words-per-wave")]
+    [Header("Wave Progression & 1.1x Scaling Curves")]
+    [Tooltip("When true, dynamically generates balanced waves using the 1.1x exponential difficulty curves. When false, falls back to the authored waves array.")]
+    public bool useMathematicalScaling = true;
+    [Tooltip("Base spawn interval on Wave 1 in seconds (generous onboarding intro).")]
+    [SerializeField] private float baseSpawnInterval = 3.0f;
+    [Tooltip("Scaling multiplier per wave for spawn interval (Interval = Base / Scale^(Wave - 1)).")]
+    [SerializeField] private float spawnIntervalScaleFactor = 1.09f;
+    [Tooltip("Hard floor clamp for spawn interval to ensure human reaction readability.")]
+    [SerializeField] private float minSpawnIntervalClamp = 0.65f;
+
+    [Tooltip("Base enemy count on Wave 1.")]
+    [SerializeField] private int baseEnemyCount = 5;
+    [Tooltip("Enemy count growth factor per wave.")]
+    [SerializeField] private float enemyCountGrowthFactor = 1.1f;
+    [Tooltip("Hard ceiling clamp for total enemies per wave.")]
+    [SerializeField] private int maxEnemyCountClamp = 35;
+
+    [Tooltip("Extra speed added per wave: (wave - 1) * speedBonusPerWave.")]
+    [SerializeField] private float speedBonusPerWave = 0.08f;
+    [Tooltip("Hard maximum speed bonus clamp to prevent runaway velocities.")]
+    [SerializeField] private float maxSpeedBonusClamp = 1.8f;
+
+    [Header("Screen Density Protection")]
+    [Tooltip("Base max active enemies allowed on screen simultaneously on Wave 1.")]
+    [SerializeField] private int baseMaxActiveEnemies = 2;
+    [Tooltip("Maximum active enemies growth per wave.")]
+    [SerializeField] private float maxActiveEnemiesGrowthPerWave = 0.35f;
+    [Tooltip("Hard cap on simultaneous active enemies on screen at once to protect player flow.")]
+    [SerializeField] private int hardMaxActiveEnemiesClamp = 8;
+
+    [Header("Authored Waves (Used if useMathematicalScaling is disabled)")]
     public Wave[] waves;
 
-    [Header("Endless mode (after the authored waves)")]
+    [Header("Endless mode (after authored waves if useMathematicalScaling is disabled)")]
     public int endlessStartCount = 10;
     public int endlessCountPerWave = 2;
     public float endlessSpawnInterval = 1.0f;
@@ -54,21 +84,23 @@ public class WaveManager : MonoBehaviour
     [Tooltip("Extra move speed added to every spawning enemy while Greed (ComboManager.greedUpgrade) is at boss level — the 'small risk' that comes with its big coin multiplier.")]
     public float greedBossSpeedBump = 0.3f;
 
-    [Header("Big Enemy (mini-boss + horde)")]
+    [Header("Boss Encounter Cadence (ZType Style)")]
     [Tooltip("The big enemy prefab (Enemy + BigEnemySpawner). Leave empty to disable this feature entirely.")]
     public Enemy bigEnemyPrefab;
-    [Tooltip("A big enemy appears every this-many waves.")]
-    public int bigEnemyEveryNWaves = 4;
-    [Tooltip("The first wave a big enemy can appear on.")]
-    public int firstBigEnemyWave = 4;
-    [Tooltip("Word length on the big enemy's FIRST appearance.")]
-    public int bigEnemyStartLength = 8;
-    [Tooltip("How much longer the big enemy's word gets each subsequent appearance (2nd, 3rd, ...).")]
+    [Tooltip("A boss appears every this-many waves after first appearance (e.g. Wave 5, 8, 11, 14, 17...).")]
+    public int bigEnemyEveryNWaves = 3;
+    [Tooltip("The first wave a boss appears on.")]
+    public int firstBigEnemyWave = 5;
+    [Tooltip("Word length on the boss's FIRST appearance.")]
+    public int bigEnemyStartLength = 7;
+    [Tooltip("How much longer the boss's word gets each subsequent appearance (2nd, 3rd, ...).")]
     public int bigEnemyLengthGrowthPerAppearance = 1;
-    [Tooltip("Optional cap on the big enemy's word length. 0 = no cap.")]
-    public int bigEnemyMaxLength = 0;
-    [Tooltip("On a big-enemy wave, the normal enemy count for that wave is multiplied by this — fewer normal enemies to make room for the mini-boss + horde.")]
-    [Range(0f, 1f)] public float normalCountMultiplierOnBigWave = 0.5f;
+    [Tooltip("Optional cap on the boss's word length. 0 = no cap.")]
+    public int bigEnemyMaxLength = 12;
+    [Tooltip("Number of armor / word phases for the boss (Phase 1 shield, Phase 2 core).")]
+    public int bossPhases = 2;
+    [Tooltip("On a boss wave, the normal enemy count for that wave is multiplied by this — fewer normal enemies to focus on the boss.")]
+    [Range(0f, 1f)] public float normalCountMultiplierOnBigWave = 0.4f;
 
     // How many big enemies have spawned this run so far (1st, 2nd, 3rd...),
     // used for the length-growth formula. Per-run only, resets on scene reload.
@@ -194,9 +226,9 @@ public class WaveManager : MonoBehaviour
             yield return Countdown(thisBreakTime);
             if (GameOver) yield break;
 
-            // Big enemy: spawn once at the top of the wave so it has the whole
-            // wave to walk (and horde) before the field needs to clear.
+            // Big enemy / Boss encounter (cadence starts at Wave 5, recurs every 3rd wave)
             bool bigWave = IsBigEnemyWave(waveNumber);
+            Enemy activeBoss = null;
             if (bigWave && bigEnemyPrefab != null)
             {
                 // Same "this wave has a boss" check that gates the spawn itself,
@@ -205,22 +237,47 @@ public class WaveManager : MonoBehaviour
                     yield return bossWarningBanner.ShowAndWait();
                 if (GameOver) yield break;
 
-                SpawnBigEnemy();
+                activeBoss = SpawnBigEnemy(waveNumber);
             }
 
             waveActive = true; // banner, countdown and boss warning are over -- the player can type now
 
-            // Spawn this wave's enemies (Night can scale how many; a big-enemy
-            // wave also thins the normal spawns to make room for the horde)
+            // If a boss is active, pause standard minion spawns until the boss is defeated.
+            // This allows the player to focus on the boss and its mini missile fragments without screen clutter!
+            if (activeBoss != null)
+            {
+                while (activeBoss != null && !activeBoss.IsDefeated)
+                {
+                    if (GameOver) yield break;
+                    if (debugSkipRequested) break;
+                    yield return null;
+                }
+            }
+
+            // Spawn this wave's enemies (Night can scale how many; a boss
+            // wave also thins the normal spawns to make room for the boss duel)
             float countMult = DayNightCycle.Instance != null ? DayNightCycle.Instance.CurrentProfile.enemyCountMultiplier : 1f;
             int enemyCount = Mathf.Max(1, Mathf.RoundToInt(w.enemyCount * countMult));
             if (bigWave) enemyCount = Mathf.Max(1, Mathf.RoundToInt(enemyCount * normalCountMultiplierOnBigWave));
+
+            int maxActive = GetMaxActiveEnemies(waveNumber);
 
             for (int i = 0; i < enemyCount; i++)
             {
                 if (GameOver) yield break;
                 if (debugSkipRequested) break; // "skipwave"/"setwave" -- abandon this wave's remaining spawns
-                if (enemyPrefabs != null && enemyPrefabs.Length > 0) SpawnOne(w.speedBonus);
+
+                // Screen density protection: wait if too many enemies are active simultaneously.
+                // Ensures Wave 1 has at most 2 active enemies on screen at any time!
+                while (Enemy.Active.Count >= maxActive)
+                {
+                    if (GameOver) yield break;
+                    if (debugSkipRequested) break;
+                    yield return null;
+                }
+
+                if (debugSkipRequested) break;
+                if (enemyPrefabs != null && enemyPrefabs.Length > 0) SpawnOne(w.speedBonus, waveNumber);
                 yield return Wait(w.spawnInterval);
             }
             debugSkipRequested = false; // consumed -- doesn't leak into the next wave
@@ -243,19 +300,97 @@ public class WaveManager : MonoBehaviour
         }
     }
 
-    Wave GetWave(int index)
+    public Wave GetWave(int index)
     {
-        if (waves != null && index < waves.Length) return waves[index];
+        int waveNumber = index + 1;
+        if (!useMathematicalScaling && waves != null && index < waves.Length && waves[index] != null)
+        {
+            return waves[index];
+        }
 
-        // Endless: scale up after the authored list runs out
-        int extra = index - (waves != null ? waves.Length : 0);
+        // Dynamic 1.1x mathematical scaling curve
         return new Wave
         {
-            label = "Wave",
-            enemyCount = endlessStartCount + extra * endlessCountPerWave,
-            spawnInterval = endlessSpawnInterval,
-            speedBonus = extra * endlessSpeedBonusPerWave
+            label = IsBigEnemyWave(waveNumber) ? $"BOSS WAVE {waveNumber}" : $"WAVE {waveNumber}",
+            enemyCount = GetEnemyCount(waveNumber),
+            spawnInterval = GetSpawnInterval(waveNumber),
+            speedBonus = GetSpeedBonus(waveNumber),
+            breakTimeOverride = -1f
         };
+    }
+
+    public float GetSpawnInterval(int waveNumber)
+    {
+        // Decrease spawn interval by InitialInterval / (1.1 ^ (wave - 1)) with safe floor clamp
+        float interval = baseSpawnInterval / Mathf.Pow(spawnIntervalScaleFactor, waveNumber - 1);
+        return Mathf.Max(minSpawnIntervalClamp, interval);
+    }
+
+    public float GetSpeedBonus(int waveNumber)
+    {
+        // Increase enemy approach speed by (wave - 1) * speedBonusPerWave with safe max velocity clamp
+        float bonus = (waveNumber - 1) * speedBonusPerWave;
+        return Mathf.Min(maxSpeedBonusClamp, bonus);
+    }
+
+    public int GetMaxActiveEnemies(int waveNumber)
+    {
+        // Onboarding protection: Wave 1 = 2 max, Wave 2 = 3 max, Wave 3 = 4 max
+        if (waveNumber == 1) return 2;
+        if (waveNumber == 2) return 3;
+        if (waveNumber == 3) return 4;
+
+        int cap = baseMaxActiveEnemies + Mathf.FloorToInt((waveNumber - 1) * maxActiveEnemiesGrowthPerWave);
+        return Mathf.Clamp(cap, 2, hardMaxActiveEnemiesClamp);
+    }
+
+    public int GetEnemyCount(int waveNumber)
+    {
+        int count = Mathf.RoundToInt(baseEnemyCount * Mathf.Pow(enemyCountGrowthFactor, waveNumber - 1));
+        return Mathf.Clamp(count, baseEnemyCount, maxEnemyCountClamp);
+    }
+
+    public void GetWordLengths(int waveNumber, Enemy prefab, out int minLen, out int maxLen)
+    {
+        // Dynamic word pool distribution:
+        // Waves 1-3: 3-5 letters (Wave 1 strictly 3-4 simple common words)
+        // Waves 4-7: 4-7 letters with occasional composite words
+        // Waves 8+: Mix of fast 3-letter interceptors and 8-12 letter heavy ships
+        if (waveNumber == 1)
+        {
+            minLen = 3;
+            maxLen = 4;
+        }
+        else if (waveNumber <= 3)
+        {
+            minLen = 3;
+            maxLen = 5;
+        }
+        else if (waveNumber <= 7)
+        {
+            minLen = 4;
+            maxLen = 7;
+        }
+        else
+        {
+            if (prefab != null && prefab.enemyTypeId == "Runner")
+            {
+                minLen = 3;
+                maxLen = 4;
+            }
+            else if (prefab != null && prefab.enemyTypeId == "Brute")
+            {
+                minLen = 7;
+                maxLen = 11;
+            }
+            else
+            {
+                float r = Random.value;
+                if (r < 0.35f) { minLen = 3; maxLen = 4; }
+                else if (r < 0.75f) { minLen = 5; maxLen = 7; }
+                else { minLen = 8; maxLen = Mathf.Min(12, 7 + (waveNumber - 7)); }
+            }
+        }
     }
 
     string BannerText(Wave w, int index)
@@ -264,44 +399,62 @@ public class WaveManager : MonoBehaviour
         return custom ? w.label : ("WAVE " + (index + 1));
     }
 
-    bool IsBigEnemyWave(int waveNumber)
+    public bool IsBigEnemyWave(int waveNumber)
     {
         if (bigEnemyEveryNWaves <= 0 || waveNumber < firstBigEnemyWave) return false;
         return (waveNumber - firstBigEnemyWave) % bigEnemyEveryNWaves == 0;
     }
 
-    // Word length uses its own dedicated growth formula (appearance number,
-    // not the day/night length shift or the prefab's own Min/Max Letters) —
-    // deliberately independent so it scales predictably run over run.
-    void SpawnBigEnemy()
+    // Spawns a high-threat flagship boss with multi-phase words (Phase 1 shield armor, Phase 2 core).
+    Enemy SpawnBigEnemy(int waveNumber)
     {
         bigEnemyAppearances++;
-        int length = bigEnemyStartLength + (bigEnemyAppearances - 1) * bigEnemyLengthGrowthPerAppearance;
-        if (bigEnemyMaxLength > 0) length = Mathf.Min(length, bigEnemyMaxLength);
-        length = Mathf.Max(1, length);
+        int baseLen = bigEnemyStartLength + (bigEnemyAppearances - 1) * bigEnemyLengthGrowthPerAppearance;
+        if (bigEnemyMaxLength > 0) baseLen = Mathf.Min(baseLen, bigEnemyMaxLength);
+        baseLen = Mathf.Max(4, baseLen);
 
-        Vector3 pos = new Vector3(Random.Range(minX, maxX), groundY, spawnZ);
-        Enemy e = Instantiate(bigEnemyPrefab, pos, Quaternion.identity);
-        string word = wordBank.GetWord(length, length);
-        e.Init(word, fortress, 0f);
+        Vector3 pos = new Vector3(Random.Range(minX * 0.5f, maxX * 0.5f), groundY, spawnZ);
+        Enemy boss = Instantiate(bigEnemyPrefab, pos, Quaternion.identity);
+
+        string firstWord = wordBank != null ? wordBank.GetWord(baseLen, baseLen) : "FLAGSHIP";
+        if (string.IsNullOrEmpty(firstWord)) firstWord = "DESTROYER";
+
+        System.Func<int, string> wordProvider = (phaseIndex) =>
+        {
+            int pLen = Mathf.Clamp(baseLen + (phaseIndex - 1), 4, 14);
+            string pw = wordBank != null ? wordBank.GetWord(pLen, pLen) : null;
+            if (string.IsNullOrEmpty(pw)) pw = (phaseIndex == 2 ? "REACTOR" : "OVERLOAD");
+            return pw;
+        };
+
+        boss.Init(
+            word: firstWord,
+            fortress: fortress,
+            speedBonus: 0f, // Boss moves at deliberate flagship drift speed
+            waveNumber: waveNumber,
+            isBossEnemy: true,
+            phases: bossPhases,
+            wordProvider: wordProvider
+        );
+
+        return boss;
     }
 
-    void SpawnOne(float speedBonus)
+    void SpawnOne(float speedBonus, int waveNumber)
     {
         Enemy prefab = enemyPrefabs[Random.Range(0, enemyPrefabs.Length)];
         Vector3 pos = new Vector3(Random.Range(minX, maxX), groundY, spawnZ);
         Enemy e = Instantiate(prefab, pos, Quaternion.identity);
 
-        // Day/night word length shift — the word POOL is untouched, only the
-        // length range drawn from it changes.
+        // Dynamic word length shift
+        GetWordLengths(waveNumber, prefab, out int minLen, out int maxLen);
         DifficultyProfile profile = DayNightCycle.Instance != null ? DayNightCycle.Instance.CurrentProfile : null;
         int shift = profile != null ? profile.wordLengthShift : 0;
-        int minLen = Mathf.Max(1, prefab.minLetters + shift);
-        int maxLen = Mathf.Max(minLen, prefab.maxLetters + shift);
-        string word = wordBank.GetWord(minLen, maxLen);
+        minLen = Mathf.Max(1, minLen + shift);
+        maxLen = Mathf.Max(minLen, maxLen + shift);
+        string word = wordBank != null ? wordBank.GetWord(minLen, maxLen) : "TEST";
 
-        // Speed: wave's own bonus, day/night multiplier (on the prefab's base
-        // speed), Heavy Boots per-level slow, and Greed's boss-only risk bump.
+        // Speed: wave's own bonus, day/night multiplier, Heavy Boots slow, and Greed bump
         float extraSpeed = speedBonus;
         if (profile != null) extraSpeed += prefab.moveSpeed * (profile.enemySpeedMultiplier - 1f);
 
@@ -311,8 +464,6 @@ public class WaveManager : MonoBehaviour
             int hbLevel = um.LevelOf(um.heavyBootsUpgrade);
             if (hbLevel > 0 && hbLevel < UpgradeDefinition.BossLevel)
                 extraSpeed -= um.heavyBootsUpgrade.ValueForLevel(hbLevel);
-            // Boss-level Heavy Boots' near-tower slow is applied continuously
-            // by UpgradeManager (Enemy.NearTowerSlowMultiplier), not here.
         }
         if (ComboManager.Instance != null && ComboManager.Instance.greedUpgrade != null && um != null
             && um.LevelOf(ComboManager.Instance.greedUpgrade) >= UpgradeDefinition.BossLevel)
@@ -320,7 +471,15 @@ public class WaveManager : MonoBehaviour
             extraSpeed += greedBossSpeedBump;
         }
 
-        e.Init(word, fortress, extraSpeed);
+        e.Init(
+            word: word,
+            fortress: fortress,
+            speedBonus: extraSpeed,
+            waveNumber: waveNumber,
+            isBossEnemy: false,
+            phases: 1,
+            wordProvider: null
+        );
 
         if (profile != null && profile.mixedCaseWords)
             e.SetDisplayWordMixedCase();
@@ -337,6 +496,53 @@ public class WaveManager : MonoBehaviour
                     e.PreType(boss ? 2 : 1);
             }
         }
+    }
+
+    [ContextMenu("Simulate 20 Waves")]
+    public void Simulate20Waves()
+    {
+        SimulateWaves(20);
+    }
+
+    public void SimulateWaves(int count = 20)
+    {
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("=== WAVE PROGRESSION BALANCING SIMULATION (1.1x Scaling) ===");
+        sb.AppendLine(string.Format("{0,-6} | {1,-6} | {2,-7} | {3,-8} | {4,-7} | {5,-11} | {6,-10} | {7,-8} | {8,-10}",
+            "Wave", "Boss?", "Enemies", "Interval", "Speed+", "Word Len", "Max Active", "Est WPM", "Est Coins"));
+        sb.AppendLine(new string('-', 98));
+
+        for (int w = 1; w <= count; w++)
+        {
+            bool isBoss = IsBigEnemyWave(w);
+            int enemies = GetEnemyCount(w);
+            if (isBoss) enemies = Mathf.Max(2, Mathf.RoundToInt(enemies * normalCountMultiplierOnBigWave));
+            float interval = GetSpawnInterval(w);
+            float speedBonus = GetSpeedBonus(w);
+            GetWordLengths(w, null, out int minLen, out int maxLen);
+            int maxActive = GetMaxActiveEnemies(w);
+            float avgLen = (minLen + maxLen) * 0.5f;
+            int estWpm = Mathf.RoundToInt((avgLen / interval) * 12f);
+
+            // Projected coin yield
+            int estCoins = 0;
+            for (int i = 0; i < enemies; i++)
+            {
+                int enemyCoins = 3 + Mathf.FloorToInt((w - 1) * 0.35f) + Mathf.Max(0, Mathf.RoundToInt(avgLen) - 4);
+                estCoins += enemyCoins;
+            }
+            if (isBoss)
+            {
+                int bossCoins = 20 + 25 + w * 6;
+                estCoins += bossCoins + (bossCoins / 2); // full kill + phase reward
+            }
+
+            sb.AppendLine(string.Format("{0,-6} | {1,-6} | {2,-7} | {3,-8:F2}s | +{4,-6:F2} | {5,-11} | {6,-10} | ~{7,-7} | ~{8,-10}",
+                w, isBoss ? "YES" : "no", enemies, interval, speedBonus, $"{minLen}-{maxLen} chars", maxActive, $"{estWpm} WPM", estCoins));
+        }
+
+        sb.AppendLine(new string('-', 98));
+        Debug.Log(sb.ToString());
     }
 
     IEnumerator Wait(float seconds)

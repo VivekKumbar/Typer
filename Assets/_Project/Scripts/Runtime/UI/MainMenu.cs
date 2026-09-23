@@ -57,11 +57,12 @@ public class MainMenu : MonoBehaviour
     public ShopCatalog shopCatalog;
 
     [Header("Interstitial on return to Main Menu")]
-    [Tooltip("Show an interstitial ad every Nth time the player returns to this scene (persisted across app sessions via PlayerPrefs, not just this session).")]
-    public int showInterstitialEveryNReturns = 3;
+    [Tooltip("Show an interstitial ad once the player has played N games (persisted across app sessions via PlayerPrefs).")]
+    public int gamesPlayedForInterstitial = 5;
     [Tooltip("Never show an interstitial within this many seconds of a rewarded ad closing, to avoid back-to-back ad fatigue.")]
     public float interstitialCooldownAfterRewardedSeconds = 60f;
     const string ReturnCountKey = "TypeKeep_MainMenuReturnCount";
+    public const string GamesPlayedSinceInterstitialKey = "TypeKeep_GamesPlayedSinceInterstitial";
 
     [Header("FTUE replay ('?' button)")]
     [Tooltip("Optional. Loads the FTUE tutorial scene on demand, any time -- not gated by FtueState, so it works even after the player's already seen it once.")]
@@ -136,9 +137,21 @@ public class MainMenu : MonoBehaviour
         PlayerPrefs.SetInt(ReturnCountKey, count);
         PlayerPrefs.Save();
 
-        // No ad SDK integrated yet -- nothing to show. Re-wire this once one
-        // is: check showInterstitialEveryNReturns / interstitialCooldownAfterRewardedSeconds
-        // against the new SDK's ready/last-rewarded state, same as before.
+        int gamesPlayed = PlayerPrefs.GetInt(GamesPlayedSinceInterstitialKey, 0);
+        Debug.Log($"[MainMenu] Checking interstitial ad condition. Games played since last ad: {gamesPlayed}/{gamesPlayedForInterstitial}");
+
+        if (gamesPlayed >= gamesPlayedForInterstitial)
+        {
+            if (PlayGamaAds.Instance != null)
+            {
+                PlayGamaAds.Instance.ShowInterstitial(success =>
+                {
+                    Debug.Log($"[MainMenu] Interstitial ad shown (success: {success}). Resetting games played counter.");
+                });
+                PlayerPrefs.SetInt(GamesPlayedSinceInterstitialKey, 0);
+                PlayerPrefs.Save();
+            }
+        }
     }
 
     void RefreshContinueButton()

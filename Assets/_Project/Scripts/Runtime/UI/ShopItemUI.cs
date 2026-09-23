@@ -38,8 +38,13 @@ public class ShopItemUI : MonoBehaviour
 
         if (iconImage)
         {
-            iconImage.sprite = item.icon;
-            iconImage.color = item.icon != null ? Color.white : new Color(1, 1, 1, 0);
+            bool isGround = item != null && item.slot == "GroundSkin";
+            iconImage.gameObject.SetActive(!isGround);
+            if (!isGround)
+            {
+                iconImage.sprite = item.icon;
+                iconImage.color = item.icon != null ? Color.white : new Color(1, 1, 1, 0);
+            }
         }
         if (previewImage && item.previewImage != null) previewImage.sprite = item.previewImage;
         if (nameText)  nameText.text = item.displayName;
@@ -56,6 +61,11 @@ public class ShopItemUI : MonoBehaviour
     {
         bool owned = ShopInventory.IsOwned(item);
 
+        if (iconImage && item != null && item.slot == "GroundSkin")
+        {
+            iconImage.gameObject.SetActive(false);
+        }
+
         if (item.kind == ShopItemKind.WordPack)
         {
             bool selected = WordPackSelection.IsSelected(item);
@@ -64,8 +74,8 @@ public class ShopItemUI : MonoBehaviour
             if (priceGroup) priceGroup.SetActive(!owned);
             if (equippedBadge) equippedBadge.SetActive(false); // not used for word packs
             if (selectedBadge) selectedBadge.SetActive(selected);
-            if (lockedOverlay) lockedOverlay.SetActive(!owned);
-            if (iconImage && item.icon != null) iconImage.color = owned ? Color.white : lockedIconTint;
+            if (lockedOverlay) lockedOverlay.SetActive(false);
+            if (iconImage && item.icon != null) iconImage.color = Color.white;
 
             if (actionLabel)
             {

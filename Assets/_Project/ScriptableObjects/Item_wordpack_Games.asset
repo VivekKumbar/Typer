@@ -15,7 +15,7 @@ MonoBehaviour:
   id: GAMES
   displayName: GAMES
   description: Challenge yourself with exciting classic games.
-  icon: {fileID: 21300000, guid: af1e79e39ff5040409b61729b8eb5205, type: 3}
+  icon: {fileID: 21300000, guid: f17a200b394f9d9438296802a71b43cf, type: 3}
   previewImage: {fileID: 0}
   price: 150
   kind: 3
