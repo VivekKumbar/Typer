@@ -1,7 +1,15 @@
 fileFormatVersion: 2
 guid: f253703b2879e714ca961aa385810972
+AssetOrigin:
+  serializedVersion: 1
+  productId: 186888
+  packageName: SCI FI CHARACTERS MEGA PACK VOL 2
+  packageVersion: 1.321
+  assetPath: Assets/Protofactor/Sci Fi/Sci Fi Characters Mega Pack Vol 2/SciFi Robots
+    Pack Vol 2/Advanced Combat Droid/FBX Files/SM_AssaultPistolBig.fbx
+  uploadId: 942968
 ModelImporter:
-  serializedVersion: 24501
+  serializedVersion: 24200
   internalIDToNameTable:
   - first:
       1: 100000
@@ -32,7 +40,6 @@ ModelImporter:
     materialName: 1
     materialSearch: 1
     materialLocation: 1
-    searchTexturesGlobally: 0
   animations:
     legacyGenerateAnimations: 4
     bakeSimulation: 0
@@ -54,7 +61,7 @@ ModelImporter:
     extraExposedTransformPaths: []
     extraUserProperties: []
     clipAnimations: []
-    isReadable: 1
+    isReadable: 0
   meshes:
     lODScreenPercentages: []
     globalScale: 1
@@ -83,8 +90,6 @@ ModelImporter:
     generateMeshLods: 0
     meshLodGenerationFlags: 0
     maximumMeshLod: -1
-    importUVs: -1
-    importVertexColors: 1
     meshOptimizationFlags: -1
     indexFormat: 0
     secondaryUVAngleDistortion: 8
@@ -104,7 +109,6 @@ ModelImporter:
     legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 0
     blendShapeNormalImportMode: 1
     normalSmoothingSource: 0
-    calculateBlendshapeNormalsDeltaFromImportedNormals: 1
   referencedClips: []
   importAnimation: 1
   humanDescription:
@@ -135,11 +139,3 @@ ModelImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 186888
-  packageName: SCI FI CHARACTERS MEGA PACK VOL 2
-  packageVersion: 1.321
-  assetPath: Assets/Protofactor/Sci Fi/Sci Fi Characters Mega Pack Vol 2/SciFi Robots
-    Pack Vol 2/Advanced Combat Droid/FBX Files/SM_AssaultPistolBig.fbx
-  uploadId: 942968

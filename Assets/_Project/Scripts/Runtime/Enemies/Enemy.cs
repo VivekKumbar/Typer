@@ -99,14 +99,47 @@ public class Enemy : MonoBehaviour
 
     private Transform target;
     private Vector3 baseScale;
+    private float baseMoveSpeed;
     private Coroutine popCo;
+    private EnemyHitFlash hitFlash;
+    public EnemyHitFlash HitFlash => hitFlash;
 
     void Awake()
     {
         baseScale = transform.localScale;
+        baseMoveSpeed = moveSpeed;
         if (enemyAnimator == null) enemyAnimator = GetComponentInChildren<EnemyAnimator>();
         if (dissolve == null) dissolve = GetComponentInChildren<EnemyDissolve>();
         if (skinApplier == null) skinApplier = GetComponentInChildren<EnemySkinApplier>();
+        if (hitFlash == null) hitFlash = GetComponent<EnemyHitFlash>();
+    }
+
+    public void ResetState()
+    {
+        if (popCo != null) { StopCoroutine(popCo); popCo = null; }
+        transform.localScale = baseScale;
+        moveSpeed = baseMoveSpeed;
+        IsDefeated = false;
+        IsBlocked = false;
+        TypedCount = 0;
+        Word = "";
+        displayWord = "";
+        SlowMultiplier = 1f;
+        NearTowerSlowMultiplier = 1f;
+        nextPhaseWordProvider = null;
+        if (label != null)
+        {
+            label.gameObject.SetActive(true);
+            label.text = "";
+        }
+        if (dissolve != null)
+        {
+            dissolve.ResetDissolve();
+        }
+        if (enemyAnimator != null)
+        {
+            enemyAnimator.ResetAnimation();
+        }
     }
 
     public void Init(string word, Transform fortress, float speedBonus, int waveNumber = 1, bool isBossEnemy = false, int phases = 1, System.Func<int, string> wordProvider = null)
@@ -255,36 +288,54 @@ public class Enemy : MonoBehaviour
         if (TypedCount >= Word.Length) Die(true); // fully pre-typed (short word + high pre-type) is still a real kill
     }
 
+    private static readonly System.Text.StringBuilder s_labelBuilder = new System.Text.StringBuilder(128);
+
     void RefreshLabel()
     {
         if (label == null) return;
         string src = string.IsNullOrEmpty(displayWord) ? Word : displayWord;
-        string typed = src.Substring(0, TypedCount);
-
-        string phaseBadge = "";
-        if (totalPhases > 1)
+        if (string.IsNullOrEmpty(src))
         {
-            phaseBadge = $" <color=#FFD700><size=70%>[{currentPhase}/{totalPhases}]</size></color>";
+            label.text = "";
+            return;
+        }
+
+        s_labelBuilder.Clear();
+
+        if (TypedCount > 0)
+        {
+            s_labelBuilder.Append("<color=#46E36B>");
+            s_labelBuilder.Append(src, 0, Mathf.Min(TypedCount, src.Length));
+            s_labelBuilder.Append("</color>");
         }
 
         if (highlightNextLetter && TypedCount < src.Length)
         {
-            // Pulses the NEXT letter's brightness between a base gold and a
-            // near-white peak, on top of the normal typed/untyped coloring.
-            string nextChar = src.Substring(TypedCount, 1);
-            string untypedRest = src.Substring(TypedCount + 1);
-            float pulse = (Mathf.Sin(Time.time * nextLetterPulseSpeed) + 1f) * 0.5f; // 0..1
+            float pulse = (Mathf.Sin(Time.time * nextLetterPulseSpeed) + 1f) * 0.5f;
             Color glow = Color.Lerp(new Color(1f, 0.82f, 0.2f), Color.white, pulse);
             string hex = ColorUtility.ToHtmlStringRGB(glow);
-            label.text = "<color=#46E36B>" + typed + "</color>"
-                       + "<color=#" + hex + ">" + nextChar + "</color>"
-                       + untypedRest + phaseBadge;
+
+            s_labelBuilder.Append("<color=#").Append(hex).Append(">");
+            s_labelBuilder.Append(src[TypedCount]);
+            s_labelBuilder.Append("</color>");
+
+            if (TypedCount + 1 < src.Length)
+                s_labelBuilder.Append(src, TypedCount + 1, src.Length - (TypedCount + 1));
         }
         else
         {
-            string rest = src.Substring(TypedCount);
-            label.text = "<color=#46E36B>" + typed + "</color>" + rest + phaseBadge;
+            if (TypedCount < src.Length)
+                s_labelBuilder.Append(src, TypedCount, src.Length - TypedCount);
         }
+
+        if (totalPhases > 1)
+        {
+            s_labelBuilder.Append(" <color=#FFD700><size=70%>[")
+                          .Append(currentPhase).Append("/").Append(totalPhases)
+                          .Append("]</size></color>");
+        }
+
+        label.text = s_labelBuilder.ToString();
     }
 
     void Pop()
@@ -393,8 +444,29 @@ public class Enemy : MonoBehaviour
         if (wait > 0f)
         {
             if (label != null) label.gameObject.SetActive(false); // hide the word
-            Destroy(gameObject, wait);
+            StartCoroutine(ReturnToPoolAfterDelay(wait));
         }
-        else Destroy(gameObject);
+        else
+        {
+            DespawnOrReturn();
+        }
+    }
+
+    private IEnumerator ReturnToPoolAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        DespawnOrReturn();
+    }
+
+    private void DespawnOrReturn()
+    {
+        if (EnemyPool.Instance != null)
+        {
+            EnemyPool.Instance.Return(this);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
     }
 }

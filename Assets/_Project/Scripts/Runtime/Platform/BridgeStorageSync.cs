@@ -92,10 +92,10 @@ public static class BridgeStorageSync
     /// <summary>
     /// Sets a string key in PlayerPrefs and syncs to Bridge storage.
     /// </summary>
-    public static void SetString(string key, string value)
+    public static void SetString(string key, string value, bool saveToDisk = true)
     {
         PlayerPrefs.SetString(key, value);
-        PlayerPrefs.Save();
+        if (saveToDisk) PlayerPrefs.Save();
 
 #if UNITY_WEBGL
         try
@@ -115,10 +115,10 @@ public static class BridgeStorageSync
     /// <summary>
     /// Sets an integer key in PlayerPrefs and syncs to Bridge storage.
     /// </summary>
-    public static void SetInt(string key, int value)
+    public static void SetInt(string key, int value, bool saveToDisk = true)
     {
         PlayerPrefs.SetInt(key, value);
-        PlayerPrefs.Save();
+        if (saveToDisk) PlayerPrefs.Save();
 
 #if UNITY_WEBGL
         try
@@ -138,10 +138,10 @@ public static class BridgeStorageSync
     /// <summary>
     /// Sets a float key in PlayerPrefs and syncs to Bridge storage.
     /// </summary>
-    public static void SetFloat(string key, float value)
+    public static void SetFloat(string key, float value, bool saveToDisk = true)
     {
         PlayerPrefs.SetFloat(key, value);
-        PlayerPrefs.Save();
+        if (saveToDisk) PlayerPrefs.Save();
 
 #if UNITY_WEBGL
         try

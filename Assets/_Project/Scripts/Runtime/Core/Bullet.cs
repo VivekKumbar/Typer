@@ -78,7 +78,7 @@ public class Bullet : MonoBehaviour
 
         if (target != null && !target.IsDefeated)
         {
-            EnemyHitFlash flash = target.GetComponent<EnemyHitFlash>();
+            EnemyHitFlash flash = target.HitFlash != null ? target.HitFlash : target.GetComponent<EnemyHitFlash>();
             if (debugLog) Debug.Log("[Bullet] HIT " + target.name + " | flash component: " + (flash != null), this);
             if (flash != null) flash.Flash();
         }

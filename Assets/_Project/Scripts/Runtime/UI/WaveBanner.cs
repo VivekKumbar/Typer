@@ -14,14 +14,28 @@ public class WaveBanner : MonoBehaviour
 
     private Coroutine co;
 
+    private bool layoutWarmed;
+
     void Awake()
     {
+        if (text != null)
+        {
+            text.raycastTarget = false;
+        }
+
+        if (panelRoot != null)
+        {
+            var cg = panelRoot.GetComponent<CanvasGroup>();
+            if (cg == null) cg = panelRoot.AddComponent<CanvasGroup>();
+            cg.blocksRaycasts = false;
+            cg.interactable = false;
+
+            var graphics = panelRoot.GetComponentsInChildren<UnityEngine.UI.Graphic>(true);
+            foreach (var g in graphics) g.raycastTarget = false;
+        }
+
         SetVisible(false);
-        // Pre-warm TMP/Canvas layout for this text object before the first
-        // REAL Show/ShowRaw call (typically "Wave 1", milliseconds after
-        // scene load) -- otherwise that first call's auto-sizing can compute
-        // against a Canvas that has never done a layout pass yet and pick a
-        // font size that overflows the backdrop for a frame or two.
+
         if (text != null)
         {
             bool wasActive = (panelRoot != null ? panelRoot : text.gameObject).activeSelf;
@@ -29,6 +43,7 @@ public class WaveBanner : MonoBehaviour
             Canvas.ForceUpdateCanvases();
             text.ForceMeshUpdate(true, true);
             (panelRoot != null ? panelRoot : text.gameObject).SetActive(wasActive);
+            layoutWarmed = true;
         }
     }
 
@@ -60,18 +75,16 @@ public class WaveBanner : MonoBehaviour
         if (co != null) { StopCoroutine(co); co = null; }
         text.text = message;
         SetVisible(true);
-        WarmLayout();
+        text.ForceMeshUpdate(false, false);
     }
 
-    // The very first Show/ShowRaw call (e.g. "Wave 1" at game start) activates
-    // panelRoot from inactive in the same frame it sets the text -- Canvas
-    // hasn't run a layout pass on the freshly-activated hierarchy yet, so
-    // auto-sizing can compute against a stale/zero RectTransform.rect and pick
-    // a font size that overflows the backdrop. Forcing the layout pass before
-    // TMP recalculates its mesh fixes it without touching the autosize config.
     void WarmLayout()
     {
-        Canvas.ForceUpdateCanvases();
+        if (!layoutWarmed)
+        {
+            Canvas.ForceUpdateCanvases();
+            layoutWarmed = true;
+        }
         text.ForceMeshUpdate(true, true);
     }
 

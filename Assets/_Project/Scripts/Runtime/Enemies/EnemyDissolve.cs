@@ -38,7 +38,13 @@ public class EnemyDissolve : MonoBehaviour
             if (r != null) list.AddRange(r.materials); // per-enemy instances
         instances = list.ToArray();
 
-        // Make sure it starts fully visible
+        SetAll(startValue);
+    }
+
+    public void ResetDissolve()
+    {
+        StopAllCoroutines();
+        started = false;
         SetAll(startValue);
     }
 

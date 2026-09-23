@@ -182,6 +182,16 @@ public class WaveManager : MonoBehaviour
         // locked snapshot instead of reusing whatever a previous run in this
         // app session left cached.
         if (wordBank != null) wordBank.RebuildForNewRun();
+        if (EnemyPool.Instance == null)
+        {
+            var poolGO = new GameObject("EnemyPool");
+            poolGO.AddComponent<EnemyPool>();
+        }
+        var allPrefabs = new System.Collections.Generic.List<Enemy>();
+        if (enemyPrefabs != null) allPrefabs.AddRange(enemyPrefabs);
+        if (bigEnemyPrefab != null) allPrefabs.Add(bigEnemyPrefab);
+        EnemyPool.Instance.Prewarm(allPrefabs);
+
         SfxPlayer.PlayGameStart(); // once per run -- New Game and Continue both land here
         StartCoroutine(RunWaves());
     }
@@ -241,6 +251,8 @@ public class WaveManager : MonoBehaviour
             }
 
             waveActive = true; // banner, countdown and boss warning are over -- the player can type now
+            if (NativeKeyboardInput.Instance != null)
+                NativeKeyboardInput.Instance.FocusInputField();
 
             // If a boss is active, pause standard minion spawns until the boss is defeated.
             // This allows the player to focus on the boss and its mini missile fragments without screen clutter!
@@ -414,7 +426,9 @@ public class WaveManager : MonoBehaviour
         baseLen = Mathf.Max(4, baseLen);
 
         Vector3 pos = new Vector3(Random.Range(minX * 0.5f, maxX * 0.5f), groundY, spawnZ);
-        Enemy boss = Instantiate(bigEnemyPrefab, pos, Quaternion.identity);
+        Enemy boss = EnemyPool.Instance != null
+            ? EnemyPool.Instance.Get(bigEnemyPrefab, pos, Quaternion.identity)
+            : Instantiate(bigEnemyPrefab, pos, Quaternion.identity);
 
         string firstWord = wordBank != null ? wordBank.GetWord(baseLen, baseLen) : "FLAGSHIP";
         if (string.IsNullOrEmpty(firstWord)) firstWord = "DESTROYER";
@@ -444,7 +458,9 @@ public class WaveManager : MonoBehaviour
     {
         Enemy prefab = enemyPrefabs[Random.Range(0, enemyPrefabs.Length)];
         Vector3 pos = new Vector3(Random.Range(minX, maxX), groundY, spawnZ);
-        Enemy e = Instantiate(prefab, pos, Quaternion.identity);
+        Enemy e = EnemyPool.Instance != null
+            ? EnemyPool.Instance.Get(prefab, pos, Quaternion.identity)
+            : Instantiate(prefab, pos, Quaternion.identity);
 
         // Dynamic word length shift
         GetWordLengths(waveNumber, prefab, out int minLen, out int maxLen);

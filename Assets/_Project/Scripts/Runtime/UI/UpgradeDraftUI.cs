@@ -43,7 +43,22 @@ public class UpgradeDraftUI : MonoBehaviour
 
     public void Hide()
     {
-        if (panelRoot) panelRoot.SetActive(false);
+        if (panelRoot)
+        {
+            var cg = panelRoot.GetComponent<CanvasGroup>();
+            if (cg != null)
+            {
+                cg.blocksRaycasts = false;
+                cg.interactable = false;
+            }
+            panelRoot.SetActive(false);
+        }
+
+        if (UnityEngine.EventSystems.EventSystem.current != null)
+            UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(null);
+
+        if (NativeKeyboardInput.Instance != null)
+            NativeKeyboardInput.Instance.FocusInputField();
     }
 
     void Pick(UpgradeDefinition def)

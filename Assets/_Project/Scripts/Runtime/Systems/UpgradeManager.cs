@@ -214,11 +214,11 @@ public class UpgradeManager : MonoBehaviour
     void Update()
     {
         bool bossActive = heavyBootsUpgrade != null && LevelOf(heavyBootsUpgrade) >= UpgradeDefinition.BossLevel;
+        if (!bossActive) return;
 
         foreach (Enemy e in Enemy.Active)
         {
-            if (e == null) continue;
-            if (!bossActive) { e.NearTowerSlowMultiplier = 1f; continue; }
+            if (e == null || e.IsDefeated) continue;
 
             float t = Mathf.Clamp01(Mathf.InverseLerp(heavyBootsBossSafeDistance, heavyBootsBossDangerDistance, e.DistanceToFortress));
             e.NearTowerSlowMultiplier = Mathf.Lerp(1f, heavyBootsBossNearTowerSlow, t);

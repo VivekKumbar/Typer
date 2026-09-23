@@ -37,8 +37,8 @@ public static class SaveManager
     public static void SaveRun(RunSaveData data)
     {
         if (data == null) return;
-        BridgeStorageSync.SetString(DataKey, JsonUtility.ToJson(data));
-        BridgeStorageSync.SetInt(WaveKey, data.waveNumber);
+        BridgeStorageSync.SetString(DataKey, JsonUtility.ToJson(data), false);
+        BridgeStorageSync.SetInt(WaveKey, data.waveNumber, true);
     }
 
     public static RunSaveData LoadRun()

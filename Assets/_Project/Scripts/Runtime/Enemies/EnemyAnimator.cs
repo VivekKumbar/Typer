@@ -92,6 +92,22 @@ public class EnemyAnimator : MonoBehaviour
         }
     }
 
+    public void ResetAnimation()
+    {
+        StopAllCoroutines();
+        dying = false;
+        if (graph.IsValid())
+        {
+            mixer.SetInputWeight(0, 1f);
+            mixer.SetInputWeight(1, 0f);
+            if (walkClip != null)
+            {
+                var walk = (AnimationClipPlayable)mixer.GetInput(0);
+                walk.SetTime(0);
+            }
+        }
+    }
+
     // How long the death clip runs — the Enemy script uses this to delay destroy.
     public float DeathLength => deathClip != null ? deathClip.length : 0f;
 

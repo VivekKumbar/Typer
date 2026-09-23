@@ -3,6 +3,9 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+#if UNITY_WEBGL
+using Playgama;
+#endif
 
 /// <summary>
 /// Universal Unity Ads & Ad Network Manager.
@@ -399,7 +402,7 @@ public class AdManager : MonoBehaviour
             _ => "Rewarded Ad"
         };
 #elif UNITY_WEBGL
-        if (com.playgama.Bridge.advertisement != null && com.playgama.Bridge.advertisement.isRewardedSupported)
+        if (Bridge.advertisement != null && Bridge.advertisement.isRewardedSupported)
         {
             Action<Playgama.Modules.Advertisement.RewardedState> handler = null;
             bool wasRewarded = false;
@@ -411,17 +414,17 @@ public class AdManager : MonoBehaviour
                 }
                 else if (state == Playgama.Modules.Advertisement.RewardedState.Closed)
                 {
-                    com.playgama.Bridge.advertisement.rewardedStateChanged -= handler;
+                    Bridge.advertisement.rewardedStateChanged -= handler;
                     OnUnityAdsShowComplete(currentAdUnitId, wasRewarded ? UnityAdsShowCompletionState.COMPLETED : UnityAdsShowCompletionState.SKIPPED);
                 }
                 else if (state == Playgama.Modules.Advertisement.RewardedState.Failed)
                 {
-                    com.playgama.Bridge.advertisement.rewardedStateChanged -= handler;
+                    Bridge.advertisement.rewardedStateChanged -= handler;
                     OnUnityAdsShowComplete(currentAdUnitId, UnityAdsShowCompletionState.SKIPPED);
                 }
             };
-            com.playgama.Bridge.advertisement.rewardedStateChanged += handler;
-            com.playgama.Bridge.advertisement.ShowRewarded();
+            Bridge.advertisement.rewardedStateChanged += handler;
+            Bridge.advertisement.ShowRewarded();
         }
         else
         {
@@ -701,7 +704,7 @@ public class AdManager : MonoBehaviour
     public bool IsInterstitialReady()
     {
 #if UNITY_WEBGL
-        return adsEnabled && com.playgama.Bridge.advertisement != null && com.playgama.Bridge.advertisement.isInterstitialSupported;
+        return adsEnabled && Bridge.advertisement != null && Bridge.advertisement.isInterstitialSupported;
 #else
         return adsEnabled;
 #endif
@@ -710,19 +713,19 @@ public class AdManager : MonoBehaviour
     public void ShowInterstitial(Action onClosed)
     {
 #if UNITY_WEBGL
-        if (com.playgama.Bridge.advertisement != null && com.playgama.Bridge.advertisement.isInterstitialSupported)
+        if (Bridge.advertisement != null && Bridge.advertisement.isInterstitialSupported)
         {
             Action<Playgama.Modules.Advertisement.InterstitialState> handler = null;
             handler = state =>
             {
                 if (state == Playgama.Modules.Advertisement.InterstitialState.Closed || state == Playgama.Modules.Advertisement.InterstitialState.Failed)
                 {
-                    com.playgama.Bridge.advertisement.interstitialStateChanged -= handler;
+                    Bridge.advertisement.interstitialStateChanged -= handler;
                     onClosed?.Invoke();
                 }
             };
-            com.playgama.Bridge.advertisement.interstitialStateChanged += handler;
-            com.playgama.Bridge.advertisement.ShowInterstitial();
+            Bridge.advertisement.interstitialStateChanged += handler;
+            Bridge.advertisement.ShowInterstitial();
             return;
         }
 #endif

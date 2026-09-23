@@ -133,8 +133,9 @@ public class CoinFlyManager : MonoBehaviour
     {
         if (!enableCoinFly || amount <= 0 || flyLayer == null || counterTarget == null) return;
 
-        Camera cam = worldCamera != null ? worldCamera : Camera.main;
-        if (cam == null) return;
+        if (worldCamera == null) worldCamera = Camera.main;
+        if (worldCamera == null) return;
+        Camera cam = worldCamera;
 
         int count = Mathf.Clamp(amount, 1, maxCoinsPerKill);
         int[] shares = SplitShares(amount, count);

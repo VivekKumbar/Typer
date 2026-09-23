@@ -21,12 +21,16 @@ public class HUD : MonoBehaviour
     [Tooltip("e.g. 'WPM 42' (or 'WPM N/A' if the run ended almost instantly). This is the ONLY place WPM is shown anywhere in the game.")]
     public TMP_Text gameOverWpmText;
 
+    private WaveBanner cachedWaveBanner;
+
     void Start()
     {
         var gm = GameManager.Instance;
         gm.OnHealthChanged += UpdateHealth;
         gm.OnGameOver += ShowGameOver;
         if (gameOverPanel) gameOverPanel.SetActive(false);
+
+        cachedWaveBanner = FindAnyObjectByType<WaveBanner>();
 
         if (healthLoadingBar == null && healthBar != null)
             healthLoadingBar = healthBar.GetComponent<LoadingBarUI>();
@@ -72,8 +76,7 @@ public class HUD : MonoBehaviour
         // the banner -- it stays on screen, showing through the Game Over
         // dimmer's 88% opacity as a faint ghost behind the crest card. Force it
         // closed here so the popup is never sharing the screen with stray text.
-        var waveBanner = FindAnyObjectByType<WaveBanner>();
-        if (waveBanner != null) waveBanner.Hide();
+        if (cachedWaveBanner != null) cachedWaveBanner.Hide();
         if (gameOverPanel) gameOverPanel.SetActive(true);
     }
 
