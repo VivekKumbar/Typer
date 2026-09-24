@@ -6439,6 +6439,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: pf_torch_fire_01
       objectReference: {fileID: 0}
+    - target: {fileID: 155528, guid: 44eb32dcdfb035f4cb156673d7722d3a, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 400002, guid: 44eb32dcdfb035f4cb156673d7722d3a, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.2
@@ -8159,6 +8163,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: pf_torch_fire_01 (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 155528, guid: 44eb32dcdfb035f4cb156673d7722d3a, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 400002, guid: 44eb32dcdfb035f4cb156673d7722d3a, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.2
@@ -9332,6 +9340,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2017509312}
     m_Modifications:
+    - target: {fileID: 129764501590426279, guid: e28f1d90ce9d0d541859a784aa1bbff7, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 1091154365595022421, guid: e28f1d90ce9d0d541859a784aa1bbff7, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.06
@@ -9383,6 +9395,14 @@ PrefabInstance:
     - target: {fileID: 1091154365595022421, guid: e28f1d90ce9d0d541859a784aa1bbff7, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2358023019238833106, guid: e28f1d90ce9d0d541859a784aa1bbff7, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2936066587346694545, guid: e28f1d90ce9d0d541859a784aa1bbff7, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3568670107807407100, guid: e28f1d90ce9d0d541859a784aa1bbff7, type: 3}
       propertyPath: m_Name
