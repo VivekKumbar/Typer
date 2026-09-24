@@ -10674,7 +10674,7 @@ MonoBehaviour:
   dissolveProp: _Disolve
   hitPosProp: _HitPos
   displacementProp: _DisplacementStrength
-  colorProp: Color_cf12b49411d94583a269f83e6981abd1
+  colorProp: FresnelColor
   dissolveSpeed: 2.5
   displacementCurve:
     serializedVersion: 2
