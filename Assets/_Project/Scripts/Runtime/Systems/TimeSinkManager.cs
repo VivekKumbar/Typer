@@ -100,6 +100,7 @@ public class TimeSinkManager : MonoBehaviour
     public void Activate()
     {
         if (IsActive) return;
+        if (!IsReady) return;
         if (GameManager.Instance != null && GameManager.Instance.IsGameOver) return;
 
         Charge = 0f;

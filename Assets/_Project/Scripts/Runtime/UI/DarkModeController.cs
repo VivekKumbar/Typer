@@ -14,6 +14,7 @@ public class DarkModeController : MonoBehaviour
     [Header("Tower light (dark mode only)")]
     [Tooltip("A light placed on/above the tower. Only switched on in dark mode.")]
     public Light towerLight;
+    public Light towerPointLight;
     public float towerLightIntensity = 15f;
     public Color towerLightColor = new Color(1f, 0.9f, 0.7f);
     public float towerLightRange = 12f;
@@ -73,11 +74,23 @@ public class DarkModeController : MonoBehaviour
         // TOWER LIGHT — only glows in dark mode
         if (towerLight != null)
         {
+            towerLight.gameObject.SetActive(dark);
             towerLight.enabled = dark;
             towerLight.intensity = towerLightIntensity;
             towerLight.color = towerLightColor;
             towerLight.range = towerLightRange;
         }
         else if (debugLog) Debug.LogWarning("[DarkMode] towerLight NOT assigned (optional)", this);
+
+        if (towerPointLight == null && towerLight != null && towerLight.transform.parent != null)
+        {
+            var pl = towerLight.transform.parent.Find("Point Light");
+            if (pl != null) towerPointLight = pl.GetComponent<Light>();
+        }
+        if (towerPointLight != null)
+        {
+            towerPointLight.gameObject.SetActive(dark);
+            towerPointLight.enabled = dark;
+        }
     }
 }

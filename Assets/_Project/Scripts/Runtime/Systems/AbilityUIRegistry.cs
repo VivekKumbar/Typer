@@ -210,7 +210,12 @@ public class AbilityUIRegistry : MonoBehaviour
                 var inst = TimeSinkManager.Instance;
                 if (inst != null && !inst.IsActive)
                 {
-                    if (!inst.IsReady) inst.DebugFillCharge();
+                    if (!inst.IsReady)
+                    {
+                        SfxPlayer.PlayWrongKey();
+                        UIToast.ShowAt(btn.transform, "Time Sink Not Ready!", new Color(1f, 0.85f, 0.2f));
+                        return;
+                    }
                     inst.Activate();
                     SfxPlayer.PlayGameStart();
                     UIToast.ShowAt(btn.transform, "Time Sink Activated!", Color.cyan);
@@ -235,7 +240,12 @@ public class AbilityUIRegistry : MonoBehaviour
                 var inst = ComboManager.Instance;
                 if (inst != null)
                 {
-                    if (!inst.overloadReady) inst.DebugFillOverload();
+                    if (!inst.overloadReady)
+                    {
+                        SfxPlayer.PlayWrongKey();
+                        UIToast.ShowAt(btn.transform, "Overload Not Ready!", new Color(1f, 0.85f, 0.2f));
+                        return;
+                    }
                     inst.TriggerOverload();
                     SfxPlayer.PlayGameStart();
                     UIToast.ShowAt(btn.transform, "Overload Blast!", Color.yellow);

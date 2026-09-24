@@ -9,6 +9,7 @@ public class ComboHUD : MonoBehaviour
     [Tooltip("Optional LoadingBarUI for smooth filling like the loading bar.")]
     public LoadingBarUI overloadLoadingBar;
     public Button overloadButton;
+    public TMP_Text overloadLabel;
     public ReadyStateHighlight overloadHighlight;
     public ReadyPulse overloadPulse;
 
@@ -24,6 +25,9 @@ public class ComboHUD : MonoBehaviour
             overloadLoadingBar = overloadBar.GetComponent<LoadingBarUI>();
 
         if (overloadBar) { overloadBar.minValue = 0; overloadBar.maxValue = 1; }
+
+        if (overloadLabel == null && transform.parent != null)
+            overloadLabel = transform.parent.Find("OverloadLabel")?.GetComponent<TMP_Text>();
 
         // Pull current values right now instead of assuming a fresh 0/1f
         // start — on a Continue, ComboManager may already hold a restored
@@ -63,9 +67,9 @@ public class ComboHUD : MonoBehaviour
         else if (overloadBar) overloadBar.value = fill;
         if (fill < 1f)
         {
-            if (overloadButton) overloadButton.interactable = true;
             if (overloadHighlight) overloadHighlight.SetReady(false);
             if (overloadPulse) overloadPulse.SetActive(false);
+            if (overloadLabel) overloadLabel.text = "OVERLOAD";
         }
     }
 
@@ -74,5 +78,8 @@ public class ComboHUD : MonoBehaviour
         if (overloadButton) overloadButton.interactable = true;
         if (overloadHighlight) overloadHighlight.SetReady(true);
         if (overloadPulse) overloadPulse.SetActive(true);
+        if (overloadLabel) overloadLabel.text = "OVERLOAD READY!";
+        SfxPlayer.PlayButtonClick();
+        UIToast.ShowAt(overloadButton != null ? overloadButton.transform : transform, "Overload Ready! Tap to use!", Color.yellow);
     }
 }

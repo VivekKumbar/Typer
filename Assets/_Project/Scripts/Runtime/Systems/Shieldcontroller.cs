@@ -31,22 +31,26 @@ public class ShieldController : MonoBehaviour
     public float flashTime = 0.15f;
 
     [Header("Day / Night visual tuning")]
-    [Tooltip("Multiplier applied to the shield color at night to prevent intense bloom against the dark background.")]
-    [Range(0.01f, 1f)]
-    public float nightMultiplier = 0.12f;
+    [Tooltip("Multiplier applied to the shield color at night to compensate for low ambient/directional scene lighting.")]
+    [Range(1f, 50f)]
+    public float nightMultiplier = 25f;
+    [Tooltip("Fresnel power at night. Lower values (e.g. 2.8 - 3.2) broaden the rim glow so the shield doesn't look like a dark void at night. Set to 0 to keep day power (4.34).")]
+    public float nightFresnelPower = 2.8f;
     [Tooltip("Optional direct override for shield color at night. If alpha > 0, this is used instead of dayColor * nightMultiplier.")]
     public Color nightColorOverride = Color.clear;
 
     private Renderer rend;
     private Material mat;
-    private int dissolveId, hitPosId, dispId, colorId, edgeColorId;
+    private int dissolveId, hitPosId, dispId, colorId, edgeColorId, fresnelPowerId;
     private Color dayBaseColor;
     private Color dayEdgeColor;
+    private float dayFresnelPower = 4.34f;
     private Coroutine dissolveCo, rippleCo, flashCo;
     private bool subscribed;
     private bool lastNightState;
 
     private const string EDGE_COLOR_PROP = "Color_027e4586f058443ca29389a6ccbed930";
+    private const string FRESNEL_POWER_PROP = "Vector1_cf86a053aa2c40e78a605292021f44c3";
 
     void Awake()
     {
@@ -72,6 +76,7 @@ public class ShieldController : MonoBehaviour
         }
         colorId = Shader.PropertyToID(colorProp);
         edgeColorId = Shader.PropertyToID(EDGE_COLOR_PROP);
+        fresnelPowerId = Shader.PropertyToID(FRESNEL_POWER_PROP);
 
         if (mat.HasProperty(colorId))
             dayBaseColor = mat.GetColor(colorId);
@@ -88,6 +93,9 @@ public class ShieldController : MonoBehaviour
             dayEdgeColor = mat.GetColor(edgeColorId);
         else
             dayEdgeColor = new Color(0f, 2.7571898f, 12.844469f, 0f);
+
+        if (mat.HasProperty(fresnelPowerId))
+            dayFresnelPower = mat.GetFloat(fresnelPowerId);
 
         // Start fully DOWN (dissolved away)
         mat.SetFloat(dissolveId, 1f);
@@ -119,9 +127,7 @@ public class ShieldController : MonoBehaviour
 
     public bool IsNightMode()
     {
-        if (DayNightCycle.Instance != null)
-            return DayNightCycle.Instance.IsNight;
-        return DarkMode.Enabled;
+        return DarkMode.Enabled || (DayNightCycle.Instance != null && DayNightCycle.Instance.IsNight);
     }
 
     public Color GetCurrentBaseColor()
@@ -146,6 +152,11 @@ public class ShieldController : MonoBehaviour
         {
             Color edge = isNight ? (dayEdgeColor * nightMultiplier) : dayEdgeColor;
             mat.SetColor(edgeColorId, edge);
+        }
+        if (mat.HasProperty(fresnelPowerId))
+        {
+            float pow = (isNight && nightFresnelPower > 0f) ? nightFresnelPower : dayFresnelPower;
+            mat.SetFloat(fresnelPowerId, pow);
         }
     }
 
@@ -265,13 +276,14 @@ public class ShieldController : MonoBehaviour
     IEnumerator FlashRoutine()
     {
         if (mat == null) yield break;
-        mat.SetColor(colorId, hitColor);
+        Color currentHitColor = IsNightMode() ? hitColor * Mathf.Min(nightMultiplier, 10f) : hitColor;
+        mat.SetColor(colorId, currentHitColor);
         float t = 0f;
         Color targetColor = GetCurrentBaseColor();
         while (t < flashTime)
         {
             t += Time.deltaTime;
-            mat.SetColor(colorId, Color.Lerp(hitColor, targetColor, t / flashTime));
+            mat.SetColor(colorId, Color.Lerp(currentHitColor, targetColor, t / flashTime));
             yield return null;
         }
         mat.SetColor(colorId, targetColor);

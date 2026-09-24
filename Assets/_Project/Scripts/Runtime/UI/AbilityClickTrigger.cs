@@ -184,10 +184,11 @@ public class AbilityClickTrigger : MonoBehaviour, IPointerDownHandler, IPointerU
             return;
         }
 
-        // Free ability -- clicking it activates it immediately
         if (!ts.IsReady)
         {
-            ts.DebugFillCharge();
+            SfxPlayer.PlayWrongKey();
+            UIToast.ShowAt(toastOrigin, "Time Sink Not Ready!", new Color(1f, 0.85f, 0.2f));
+            return;
         }
 
         ts.Activate();
@@ -203,10 +204,11 @@ public class AbilityClickTrigger : MonoBehaviour, IPointerDownHandler, IPointerU
         var gm = GameManager.Instance;
         if (gm != null && gm.IsGameOver) return;
 
-        // Free ability -- clicking it activates it immediately
         if (!cm.overloadReady)
         {
-            cm.DebugFillOverload();
+            SfxPlayer.PlayWrongKey();
+            UIToast.ShowAt(toastOrigin, "Overload Not Ready!", new Color(1f, 0.85f, 0.2f));
+            return;
         }
 
         cm.TriggerOverload();

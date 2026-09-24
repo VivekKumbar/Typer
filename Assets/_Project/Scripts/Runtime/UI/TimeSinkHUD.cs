@@ -53,6 +53,9 @@ public class TimeSinkHUD : MonoBehaviour
         ts.OnEnded += OnEnded;
 
         ConfigureBar();
+        if (buttonLabel == null && transform.parent != null)
+            buttonLabel = transform.parent.Find("TimeSinkLabel")?.GetComponent<TMP_Text>();
+
         // Gate purely on the manager's own IsReady flag — not on any slider
         // value comparison — so this can never desync from a different max.
         if (activateButton) activateButton.interactable = !ts.IsActive;
@@ -104,6 +107,12 @@ public class TimeSinkHUD : MonoBehaviour
         // fires while not active, so this can't stomp an in-progress duration drain.
         if (loadingBar != null) loadingBar.SetTargetProgress01(fill);
         else if (bar) bar.value = fill;
+        if (fill < 1f)
+        {
+            if (readyHighlight) readyHighlight.SetReady(false);
+            if (readyPulse) readyPulse.SetActive(false);
+            RefreshLabel();
+        }
     }
 
     // The ONLY place that enables the button — fired exactly once, exactly
@@ -113,6 +122,9 @@ public class TimeSinkHUD : MonoBehaviour
         if (activateButton) activateButton.interactable = true;
         if (readyHighlight) readyHighlight.SetReady(true);
         if (readyPulse) readyPulse.SetActive(true);
+        SfxPlayer.PlayButtonClick();
+        UIToast.ShowAt(activateButton != null ? activateButton.transform : transform, "Time Sink Ready! Tap to use!", Color.cyan);
+        RefreshLabel();
     }
 
     void OnActivated()
@@ -145,6 +157,11 @@ public class TimeSinkHUD : MonoBehaviour
     {
         if (!buttonLabel) return;
         var ts = TimeSinkManager.Instance;
-        buttonLabel.text = (ts != null && ts.IsActive) ? "TIME SINK ACTIVE" : "TIME SINK";
+        if (ts != null && ts.IsActive)
+            buttonLabel.text = "TIME SINK ACTIVE";
+        else if (ts != null && ts.IsReady)
+            buttonLabel.text = "TIME SINK READY!";
+        else
+            buttonLabel.text = "TIME SINK";
     }
 }
