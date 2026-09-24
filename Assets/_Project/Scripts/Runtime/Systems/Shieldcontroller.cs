@@ -6,6 +6,7 @@ using UnityEngine;
 // - Absorbs fortress damage via ShieldManager
 // - Ripples at the hit point + flashes red on each hit
 // - Sinks down (dissolve 0 -> 1) when depleted
+// - Automatically dims shield color in Night mode so it doesn't over-bloom against the dark background.
 // Put this on the shield sphere (same object as its Renderer).
 public class ShieldController : MonoBehaviour
 {
@@ -29,11 +30,23 @@ public class ShieldController : MonoBehaviour
     public Color hitColor = Color.red;
     public float flashTime = 0.15f;
 
+    [Header("Day / Night visual tuning")]
+    [Tooltip("Multiplier applied to the shield color at night to prevent intense bloom against the dark background.")]
+    [Range(0.01f, 1f)]
+    public float nightMultiplier = 0.12f;
+    [Tooltip("Optional direct override for shield color at night. If alpha > 0, this is used instead of dayColor * nightMultiplier.")]
+    public Color nightColorOverride = Color.clear;
+
     private Renderer rend;
     private Material mat;
-    private int dissolveId, hitPosId, dispId, colorId;
-    private Color baseColor;
+    private int dissolveId, hitPosId, dispId, colorId, edgeColorId;
+    private Color dayBaseColor;
+    private Color dayEdgeColor;
     private Coroutine dissolveCo, rippleCo, flashCo;
+    private bool subscribed;
+    private bool lastNightState;
+
+    private const string EDGE_COLOR_PROP = "Color_027e4586f058443ca29389a6ccbed930";
 
     void Awake()
     {
@@ -51,32 +64,89 @@ public class ShieldController : MonoBehaviour
         dissolveId = Shader.PropertyToID(dissolveProp);
         hitPosId = Shader.PropertyToID(hitPosProp);
         dispId = Shader.PropertyToID(displacementProp);
-        colorId = Shader.PropertyToID(colorProp);
 
-        baseColor = mat.GetColor(colorId);
+        // Fallback for legacy scenes/prefabs that stored the display name "FresnelColor"
+        if (string.IsNullOrEmpty(colorProp) || colorProp == "FresnelColor" || !mat.HasProperty(colorProp))
+        {
+            colorProp = "Color_cf12b49411d94583a269f83e6981abd1";
+        }
+        colorId = Shader.PropertyToID(colorProp);
+        edgeColorId = Shader.PropertyToID(EDGE_COLOR_PROP);
+
+        if (mat.HasProperty(colorId))
+            dayBaseColor = mat.GetColor(colorId);
+        else
+            dayBaseColor = new Color(0f, 2.0847f, 6.4222f, 1f);
+
+        // If returned black/transparent from property lookup, fallback to standard day color
+        if (dayBaseColor.r <= 0.001f && dayBaseColor.g <= 0.001f && dayBaseColor.b <= 0.001f)
+        {
+            dayBaseColor = new Color(0f, 2.0847f, 6.4222f, 1f);
+        }
+
+        if (mat.HasProperty(edgeColorId))
+            dayEdgeColor = mat.GetColor(edgeColorId);
+        else
+            dayEdgeColor = new Color(0f, 2.7571898f, 12.844469f, 0f);
 
         // Start fully DOWN (dissolved away)
         mat.SetFloat(dissolveId, 1f);
         rend.enabled = false;
-    }
 
-    private bool subscribed;
+        lastNightState = IsNightMode();
+        ApplyPhaseColors(lastNightState);
+    }
 
     void Start()
     {
         Subscribe();
+        ApplyPhaseColors(IsNightMode());
 
-        // Sync-now: reflect whatever state ShieldManager already holds instead
-        // of only reacting to future events. Needed for a Continue restore —
-        // ShieldManager.Awake() sets Current directly from RunSaveData without
-        // firing OnShieldRaised (there's no "this is a resume, not a fresh buy"
-        // event to fire), so without this the bar (which self-syncs the same
-        // way in ShieldBar.Start) shows correctly but the bubble never appears.
-        // Also covers the Start()-ordering case where ShieldManager.Start()'s
-        // own OnShieldChanged broadcast fires before this object has subscribed.
         var sm = ShieldManager.Instance;
         if (sm != null && sm.IsActive)
             RaiseShield();
+    }
+
+    void Update()
+    {
+        bool night = IsNightMode();
+        if (night != lastNightState)
+        {
+            lastNightState = night;
+            ApplyPhaseColors(night);
+        }
+    }
+
+    public bool IsNightMode()
+    {
+        if (DayNightCycle.Instance != null)
+            return DayNightCycle.Instance.IsNight;
+        return DarkMode.Enabled;
+    }
+
+    public Color GetCurrentBaseColor()
+    {
+        if (IsNightMode())
+        {
+            if (nightColorOverride.a > 0f) return nightColorOverride;
+            return dayBaseColor * nightMultiplier;
+        }
+        return dayBaseColor;
+    }
+
+    public void ApplyPhaseColors(bool isNight)
+    {
+        if (mat == null) return;
+        Color c = isNight ? (nightColorOverride.a > 0f ? nightColorOverride : dayBaseColor * nightMultiplier) : dayBaseColor;
+        if (mat.HasProperty(colorId))
+        {
+            mat.SetColor(colorId, c);
+        }
+        if (mat.HasProperty(edgeColorId))
+        {
+            Color edge = isNight ? (dayEdgeColor * nightMultiplier) : dayEdgeColor;
+            mat.SetColor(edgeColorId, edge);
+        }
     }
 
     void Subscribe()
@@ -88,8 +158,13 @@ public class ShieldController : MonoBehaviour
             sm.OnShieldRaised += RaiseShield;
             sm.OnShieldBroken += SinkShield;
             sm.OnShieldChanged += OnShieldChanged;
-            subscribed = true;
         }
+        var dn = DayNightCycle.Instance;
+        if (dn != null)
+        {
+            dn.OnPhaseChanged += OnPhaseChanged;
+        }
+        subscribed = true;
     }
 
     void OnDisable()
@@ -102,13 +177,25 @@ public class ShieldController : MonoBehaviour
             sm.OnShieldBroken -= SinkShield;
             sm.OnShieldChanged -= OnShieldChanged;
         }
+        var dn = DayNightCycle.Instance;
+        if (dn != null)
+        {
+            dn.OnPhaseChanged -= OnPhaseChanged;
+        }
         subscribed = false;
+    }
+
+    void OnPhaseChanged(bool isNight)
+    {
+        lastNightState = isNight;
+        ApplyPhaseColors(isNight);
     }
 
     // ---- rise / sink ----
     void RaiseShield()
     {
         if (rend != null) rend.enabled = true;
+        ApplyPhaseColors(IsNightMode());
         if (dissolveCo != null) StopCoroutine(dissolveCo);
         dissolveCo = StartCoroutine(DissolveTo(0f, false)); // 0 = fully up
     }
@@ -180,12 +267,13 @@ public class ShieldController : MonoBehaviour
         if (mat == null) yield break;
         mat.SetColor(colorId, hitColor);
         float t = 0f;
+        Color targetColor = GetCurrentBaseColor();
         while (t < flashTime)
         {
             t += Time.deltaTime;
-            mat.SetColor(colorId, Color.Lerp(hitColor, baseColor, t / flashTime));
+            mat.SetColor(colorId, Color.Lerp(hitColor, targetColor, t / flashTime));
             yield return null;
         }
-        mat.SetColor(colorId, baseColor);
+        mat.SetColor(colorId, targetColor);
     }
 }
