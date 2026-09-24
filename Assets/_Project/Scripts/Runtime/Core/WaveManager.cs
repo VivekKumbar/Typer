@@ -105,6 +105,8 @@ public class WaveManager : MonoBehaviour
     // How many big enemies have spawned this run so far (1st, 2nd, 3rd...),
     // used for the length-growth formula. Per-run only, resets on scene reload.
     private int bigEnemyAppearances = 0;
+    private int bigEnemyAppearancesAtWaveStart = 0;
+    private Coroutine waveCoroutine;
 
     private int waveIndex = 0;
 
@@ -162,6 +164,80 @@ public class WaveManager : MonoBehaviour
             if (e != null && !e.IsDefeated) e.Defeat();
     }
 
+    /// <summary>
+    /// Revives the player from the Game Over state, cleans active enemies, resets health to 100%,
+    /// preserves all abilities/upgrades, and restarts the current wave. Indefinitely repeatable.
+    /// </summary>
+    public void ReviveCurrentWave()
+    {
+        if (waveCoroutine != null)
+        {
+            StopCoroutine(waveCoroutine);
+            waveCoroutine = null;
+        }
+
+        // 1. Revert boss count to what it was at the start of this wave
+        bigEnemyAppearances = bigEnemyAppearancesAtWaveStart;
+        debugSkipRequested = false;
+        debugJumpToWaveIndex = null;
+        waveActive = false;
+
+        // 2. Hide any lingering banners
+        if (banner != null) banner.Hide();
+        if (bossWarningBanner != null) bossWarningBanner.Hide();
+
+        // 3. Clear all active enemies on screen so player is not immediately swarmed
+        foreach (Enemy e in new System.Collections.Generic.List<Enemy>(Enemy.Active))
+        {
+            if (e != null)
+            {
+                Enemy.Active.Remove(e);
+                if (EnemyPool.Instance != null)
+                    EnemyPool.Instance.Return(e);
+                else
+                    Destroy(e.gameObject);
+            }
+        }
+
+        // 4. Clear typing controller's target
+        if (TypingController.Instance != null)
+        {
+            TypingController.Instance.ClearTarget();
+        }
+
+        // 5. Revive GameManager fortress
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.ReviveFortress();
+        }
+
+        // 6. Reset HUD: snap health bars to 100% and hide Game Over panel
+        HUD hud = FindAnyObjectByType<HUD>(FindObjectsInactive.Include);
+        if (hud != null)
+        {
+            hud.SnapHealthToFull();
+            hud.HideGameOver();
+        }
+
+        // 7. Unfreeze timescale
+        Time.timeScale = 1f;
+
+        // 8. Re-focus keyboard input
+        if (NativeKeyboardInput.Instance != null)
+        {
+            NativeKeyboardInput.Instance.FocusInputField();
+        }
+
+        // 9. Autosave checkpoint
+        SaveManager.CaptureAndSave(CurrentWaveNumber);
+
+        // 10. Play game start sound
+        SfxPlayer.PlayGameStart();
+
+        // 11. Restart wave coroutine for the current wave
+        waveCoroutine = StartCoroutine(RunWaves());
+    }
+
     void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
@@ -193,7 +269,7 @@ public class WaveManager : MonoBehaviour
         EnemyPool.Instance.Prewarm(allPrefabs);
 
         SfxPlayer.PlayGameStart(); // once per run -- New Game and Continue both land here
-        StartCoroutine(RunWaves());
+        waveCoroutine = StartCoroutine(RunWaves());
     }
 
     IEnumerator RunWaves()
@@ -211,6 +287,7 @@ public class WaveManager : MonoBehaviour
 
             Wave w = GetWave(waveIndex);
             int waveNumber = waveIndex + 1;
+            bigEnemyAppearancesAtWaveStart = bigEnemyAppearances;
 
             // Day/night + per-wave upgrade hooks, before anything else this wave.
             if (DayNightCycle.Instance != null) DayNightCycle.Instance.ApplyForWave(waveNumber);

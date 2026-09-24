@@ -63,7 +63,7 @@ public class ComboHUD : MonoBehaviour
         else if (overloadBar) overloadBar.value = fill;
         if (fill < 1f)
         {
-            if (overloadButton) overloadButton.interactable = false;
+            if (overloadButton) overloadButton.interactable = true;
             if (overloadHighlight) overloadHighlight.SetReady(false);
             if (overloadPulse) overloadPulse.SetActive(false);
         }

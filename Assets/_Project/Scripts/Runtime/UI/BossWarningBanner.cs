@@ -55,6 +55,20 @@ public class BossWarningBanner : MonoBehaviour
         running = StartCoroutine(ShowAndWait());
     }
 
+    public void Hide()
+    {
+        if (running != null)
+        {
+            StopCoroutine(running);
+            running = null;
+        }
+        if (text != null)
+        {
+            text.gameObject.SetActive(false);
+            SetAlpha(0f);
+        }
+    }
+
     // WaveManager calls: yield return bossWarningBanner.ShowAndWait();
     // Only returns once the whole beat is done, which is what lets the boss
     // spawn wait on it directly instead of guessing a fixed delay.

@@ -15,8 +15,8 @@ public class GameOverAdOffer : MonoBehaviour
     [Tooltip("The coin bonus fraction granted from this run's earnings (e.g. 0.5 for +50%, 1.0 for +100% / Double Coins). Editable in Unity Inspector.")]
     [Range(0f, 5f)] public float bonusFraction = 1.0f;
 
-    [Tooltip("Minimum coin bonus granted if no coins were earned during the run (e.g. dying on wave 1).")]
-    public int minimumBonusCoins = 50;
+    [Tooltip("Minimum coin bonus granted if no coins were earned during the run (0 to disable floor).")]
+    public int minimumBonusCoins = 0;
 
     [Header("2. Countdown / Ad Trigger Timer")]
     [Tooltip("Seconds to count down before triggering the ad (0 = show ad immediately on click). Uses unscaled time so it works while Game Over freezes Time.timeScale.")]
@@ -75,10 +75,11 @@ public class GameOverAdOffer : MonoBehaviour
     /// </summary>
     public int ComputeBonus()
     {
-        GameManager gm = GameManager.Instance;
+        GameManager gm = GameManager.Instance != null ? GameManager.Instance : FindAnyObjectByType<GameManager>();
         int runCoins = gm != null ? gm.coinsEarnedThisRun : 0;
+        if (runCoins <= 0) return 0;
         int calculated = Mathf.RoundToInt(runCoins * bonusFraction);
-        return Mathf.Max(calculated, minimumBonusCoins);
+        return minimumBonusCoins > 0 ? Mathf.Max(calculated, minimumBonusCoins) : calculated;
     }
 
     /// <summary>
@@ -93,7 +94,7 @@ public class GameOverAdOffer : MonoBehaviour
 
         if (watchAdLabel != null)
         {
-            GameManager gm = GameManager.Instance;
+            GameManager gm = GameManager.Instance != null ? GameManager.Instance : FindAnyObjectByType<GameManager>();
             int runCoins = gm != null ? gm.coinsEarnedThisRun : 0;
             if (runCoins > 0)
             {

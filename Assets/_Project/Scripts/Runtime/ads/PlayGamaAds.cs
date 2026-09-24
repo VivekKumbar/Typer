@@ -302,7 +302,7 @@ public class PlayGamaAds : MonoBehaviour
         StartSimulatedAd(false, "Simulating Interstitial Ad", onComplete);
     }
 
-    public void ShowRewarded(Action<bool> onRewarded = null)
+    public void ShowRewarded(Action<bool> onRewarded = null, string adTitle = "Simulating Rewarded Video Ad")
     {
 #if UNITY_WEBGL && !UNITY_EDITOR
         try
@@ -345,6 +345,6 @@ public class PlayGamaAds : MonoBehaviour
             Debug.LogError($"Playgama Rewarded failed: {e}");
         }
 #endif
-        StartSimulatedAd(true, "Simulating Double Coins Rewarded Video Ad", onRewarded);
+        StartSimulatedAd(true, adTitle, onRewarded);
     }
 }

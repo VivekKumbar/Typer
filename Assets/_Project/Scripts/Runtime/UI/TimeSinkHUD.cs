@@ -55,7 +55,7 @@ public class TimeSinkHUD : MonoBehaviour
         ConfigureBar();
         // Gate purely on the manager's own IsReady flag — not on any slider
         // value comparison — so this can never desync from a different max.
-        if (activateButton) activateButton.interactable = ts.IsReady;
+        if (activateButton) activateButton.interactable = !ts.IsActive;
         if (readyHighlight) readyHighlight.SetReady(ts.IsReady);
         if (readyPulse) readyPulse.SetActive(ts.IsReady);
         // Sync-now: reflect whichever the manager is currently doing, instead
@@ -135,7 +135,7 @@ public class TimeSinkHUD : MonoBehaviour
     {
         // Explicit, not just inherited from OnActivated: disabled after the
         // effect ends until the next full charge fires OnReady again.
-        if (activateButton) activateButton.interactable = false;
+        if (activateButton) activateButton.interactable = true;
         if (readyHighlight) readyHighlight.SetReady(false);
         if (readyPulse) readyPulse.SetActive(false);
         RefreshLabel();

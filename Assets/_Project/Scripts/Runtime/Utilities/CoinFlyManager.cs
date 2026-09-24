@@ -117,6 +117,14 @@ public class CoinFlyManager : MonoBehaviour
             displayedTotal += realTotal - expected;
             RefreshText();
         }
+        else if (realTotal < expected)
+        {
+            // Coins were spent (e.g. Repair, Shield, Shop). Immediately deduct from displayed counter.
+            int spent = expected - realTotal;
+            displayedTotal = Mathf.Max(0, displayedTotal - spent);
+            RefreshText();
+            if (counterBounce != null) counterBounce.Bounce();
+        }
     }
 
     void RefreshText()

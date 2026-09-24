@@ -51,9 +51,26 @@ public class ShieldController : MonoBehaviour
         dissolveId = Shader.PropertyToID(dissolveProp);
         hitPosId = Shader.PropertyToID(hitPosProp);
         dispId = Shader.PropertyToID(displacementProp);
+
+        // Ensure property name points to the actual shader property, not display name
+        if (string.IsNullOrEmpty(colorProp) || colorProp == "FresnelColor" || !mat.HasProperty(colorProp))
+            colorProp = "Color_cf12b49411d94583a269f83e6981abd1";
+
         colorId = Shader.PropertyToID(colorProp);
 
-        baseColor = mat.GetColor(colorId);
+        if (mat.HasProperty(colorId))
+            baseColor = mat.GetColor(colorId);
+
+        // Fallback if material returned black or transparent: use vibrant glowing cyan
+        if (baseColor.r <= 0.05f && baseColor.g <= 0.05f && baseColor.b <= 0.05f)
+        {
+            baseColor = new Color(0f, 2.0847f, 6.4222f, 1f);
+        }
+
+        if (mat.HasProperty(colorId))
+            mat.SetColor(colorId, baseColor);
+        if (mat.HasProperty("_EmissionColor"))
+            mat.SetColor("_EmissionColor", baseColor);
 
         // Start fully DOWN (dissolved away)
         mat.SetFloat(dissolveId, 1f);
@@ -179,13 +196,17 @@ public class ShieldController : MonoBehaviour
     {
         if (mat == null) yield break;
         mat.SetColor(colorId, hitColor);
+        if (mat.HasProperty("_EmissionColor")) mat.SetColor("_EmissionColor", hitColor);
         float t = 0f;
         while (t < flashTime)
         {
             t += Time.deltaTime;
-            mat.SetColor(colorId, Color.Lerp(hitColor, baseColor, t / flashTime));
+            Color c = Color.Lerp(hitColor, baseColor, t / flashTime);
+            mat.SetColor(colorId, c);
+            if (mat.HasProperty("_EmissionColor")) mat.SetColor("_EmissionColor", c);
             yield return null;
         }
         mat.SetColor(colorId, baseColor);
+        if (mat.HasProperty("_EmissionColor")) mat.SetColor("_EmissionColor", baseColor);
     }
 }

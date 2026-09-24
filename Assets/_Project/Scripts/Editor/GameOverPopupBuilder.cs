@@ -42,19 +42,53 @@ public static class GameOverPopupBuilder
         Transform adBtn = panel.Find("WatchAdButton");
         if (adBtn != null) adBtn.gameObject.SetActive(false);
 
-        Transform card = BuildCard(panel);
+        BuildCard(panel);
         BuildStatRow(panel, "StatCoins", "CoinsRow", "stat_row_coins", "COINS",
             new Color(1f, 0.88f, 0.22f), 105f);
         BuildStatRow(panel, "StatWpm", "WpmRow", "stat_row_wpm", "WPM",
             new Color(0.20f, 0.82f, 1f), -5f);
+
+        BuildButton(panel, "ContinueButton", "button_gold", "icon_restart", "CONTINUE (Watch Ad)",
+            new Color(0.20f, 0.13f, 0.03f), new Color(0.20f, 0.13f, 0.03f), -95f, 66f);
+
+        Transform continueBtnT = panel.Find("ContinueButton");
+        if (continueBtnT != null)
+        {
+            var reviveOffer = continueBtnT.GetComponent<GameOverReviveOffer>();
+            if (reviveOffer == null) reviveOffer = continueBtnT.gameObject.AddComponent<GameOverReviveOffer>();
+            reviveOffer.continueButton = continueBtnT.GetComponent<Button>();
+            reviveOffer.continueLabel = continueBtnT.GetComponentInChildren<TMP_Text>();
+            EditorUtility.SetDirty(reviveOffer);
+        }
+
         BuildButton(panel, "RestartButton", "button_gold", "icon_restart", "PLAY AGAIN",
-            new Color(0.20f, 0.13f, 0.03f), new Color(0.20f, 0.13f, 0.03f), -115f, 82f);
+            new Color(0.20f, 0.13f, 0.03f), new Color(0.20f, 0.13f, 0.03f), -175f, 66f);
         BuildButton(panel, "MainMenu", "button_blue", "icon_house", "MAIN MENU",
-            new Color(0.95f, 0.98f, 1f), Color.white, -220f, 80f);
+            new Color(0.95f, 0.98f, 1f), Color.white, -255f, 66f);
+
+        // Reposition WatchAdButton (Double Coins) below Main Menu to prevent overlap
+        if (adBtn != null)
+        {
+            var adRT = adBtn.GetComponent<RectTransform>();
+            if (adRT != null)
+            {
+                adRT.anchorMin = adRT.anchorMax = new Vector2(0.5f, 0.5f);
+                adRT.anchoredPosition = new Vector2(0f, -335f);
+                adRT.sizeDelta = new Vector2(300f, 54f);
+            }
+        }
+
+        // Set minimumBonusCoins to 0 on GameOverAdOffer
+        var adOffer = panel.GetComponent<GameOverAdOffer>();
+        if (adOffer != null)
+        {
+            adOffer.minimumBonusCoins = 0;
+            EditorUtility.SetDirty(adOffer);
+        }
 
         EditorUtility.SetDirty(canvasGO);
         EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
-        Debug.Log("[GameOverPopupBuilder] Game Over popup built to match exact reference art.");
+        Debug.Log("[GameOverPopupBuilder] Game Over popup built to match exact reference art with Continue ad button.");
     }
 
     static Transform BuildCard(Transform panel)
@@ -151,9 +185,16 @@ public static class GameOverPopupBuilder
         string label, Color textColor, Color iconColor, float y, float height)
     {
         Transform button = panel.Find(buttonName);
-        if (button == null) return;
+        if (button == null)
+        {
+            var go = new GameObject(buttonName, typeof(RectTransform));
+            button = go.transform;
+            button.SetParent(panel, false);
+            button.gameObject.AddComponent<UImage>();
+            button.gameObject.AddComponent<Button>();
+        }
         button.gameObject.SetActive(true);
-        var btnImg = button.GetComponent<UImage>();
+        var btnImg = button.GetComponent<UImage>() ?? button.gameObject.AddComponent<UImage>();
         btnImg.sprite = Load<Sprite>(buttonSprite);
         btnImg.type = UImage.Type.Simple;
         btnImg.color = Color.white;
@@ -182,25 +223,29 @@ public static class GameOverPopupBuilder
         iconRT.anchoredPosition = new Vector2(44f, 0f);
         iconRT.sizeDelta = new Vector2(44f, 44f);
 
-        Transform labelT = button.Find("PLAY-AGAIN") ?? button.Find("Text (TMP)") ?? FindAnyTmpChild(button);
-        if (labelT != null)
+        Transform labelT = button.Find("PLAY-AGAIN") ?? button.Find("Text (TMP)") ?? button.Find("Label") ?? FindAnyTmpChild(button);
+        if (labelT == null)
         {
-            var labelRT = labelT.GetComponent<RectTransform>();
-            labelRT.anchorMin = new Vector2(0.18f, 0f);
-            labelRT.anchorMax = new Vector2(0.95f, 1f);
-            labelRT.offsetMin = Vector2.zero;
-            labelRT.offsetMax = Vector2.zero;
-            var labelTmp = labelT.GetComponent<TMP_Text>();
-            labelTmp.text = label;
-            labelTmp.alignment = TextAlignmentOptions.Center;
-            labelTmp.fontStyle = FontStyles.Bold;
-            labelTmp.color = textColor;
-            labelTmp.enableAutoSizing = true;
-            labelTmp.fontSizeMin = 18f;
-            labelTmp.fontSizeMax = 28f;
-            labelTmp.enableWordWrapping = false;
-            labelTmp.overflowMode = TextOverflowModes.Overflow;
+            var go = new GameObject("Label", typeof(RectTransform));
+            labelT = go.transform;
+            labelT.SetParent(button, false);
+            labelT.gameObject.AddComponent<TextMeshProUGUI>();
         }
+        var labelRT = labelT.GetComponent<RectTransform>();
+        labelRT.anchorMin = new Vector2(0.18f, 0f);
+        labelRT.anchorMax = new Vector2(0.95f, 1f);
+        labelRT.offsetMin = Vector2.zero;
+        labelRT.offsetMax = Vector2.zero;
+        var labelTmp = labelT.GetComponent<TMP_Text>();
+        labelTmp.text = label;
+        labelTmp.alignment = TextAlignmentOptions.Center;
+        labelTmp.fontStyle = FontStyles.Bold;
+        labelTmp.color = textColor;
+        labelTmp.enableAutoSizing = true;
+        labelTmp.fontSizeMin = 18f;
+        labelTmp.fontSizeMax = 28f;
+        labelTmp.enableWordWrapping = false;
+        labelTmp.overflowMode = TextOverflowModes.Overflow;
     }
 
     static Transform FindAnyTmpChild(Transform parent)

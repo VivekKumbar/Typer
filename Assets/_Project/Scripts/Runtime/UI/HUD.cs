@@ -9,6 +9,9 @@ public class HUD : MonoBehaviour
     public Slider healthBar;
     [Tooltip("Optional LoadingBarUI for smooth health animation.")]
     public LoadingBarUI healthLoadingBar;
+    [Tooltip("Optional secondary health bar on the abilities row (RepairBar).")]
+    public Slider repairBar;
+    private LoadingBarUI repairLoadingBar;
     [Tooltip("Optional 'cur/max' label over the health bar (e.g. '100/100'). Kept in sync wherever healthBar itself is.")]
     public TMP_Text healthText;
     public GameObject gameOverPanel;
@@ -35,12 +38,54 @@ public class HUD : MonoBehaviour
         if (healthLoadingBar == null && healthBar != null)
             healthLoadingBar = healthBar.GetComponent<LoadingBarUI>();
 
+        if (repairBar == null)
+        {
+            foreach (var s in Resources.FindObjectsOfTypeAll<Slider>())
+            {
+                if (s != null && s.gameObject.name == "RepairBar")
+                {
+                    repairBar = s;
+                    break;
+                }
+            }
+        }
+        if (repairBar != null && repairLoadingBar == null)
+            repairLoadingBar = repairBar.GetComponent<LoadingBarUI>();
+
         // Pull the current value right now, in case GameManager already fired
         // its startup event before this HUD subscribed. Snap to current health.
         float frac = gm.maxHealth > 0 ? (float)gm.currentHealth / gm.maxHealth : 1f;
         if (healthLoadingBar != null) healthLoadingBar.SnapTo01(frac);
         else if (healthBar != null) { healthBar.minValue = 0f; healthBar.maxValue = 1f; healthBar.value = frac; }
+
+        if (repairLoadingBar != null) repairLoadingBar.SnapTo01(frac);
+        else if (repairBar != null) { repairBar.minValue = 0f; repairBar.maxValue = 1f; repairBar.value = frac; }
+
+        // Top health bar is for health display only (not the repair button)
+        if (healthBar != null)
+        {
+            healthBar.interactable = false;
+        }
+
         if (healthText) healthText.text = gm.currentHealth + "/" + gm.maxHealth;
+    }
+
+    void WireHealthClickTarget(GameObject root, Transform bounceTarget = null)
+    {
+        if (root == null) return;
+        Transform bounce = bounceTarget != null ? bounceTarget : root.transform;
+
+        var handler = root.GetComponent<HealthBarClickHandler>();
+        if (handler == null) handler = root.AddComponent<HealthBarClickHandler>();
+        handler.bounceTarget = bounce;
+
+        foreach (var g in root.GetComponentsInChildren<Graphic>(true))
+        {
+            g.raycastTarget = true;
+            var childHandler = g.GetComponent<HealthBarClickHandler>();
+            if (childHandler == null) childHandler = g.gameObject.AddComponent<HealthBarClickHandler>();
+            childHandler.bounceTarget = bounce;
+        }
     }
 
     void OnDestroy()
@@ -64,6 +109,18 @@ public class HUD : MonoBehaviour
             healthBar.maxValue = 1f;
             healthBar.value = frac;
         }
+
+        if (repairLoadingBar != null)
+        {
+            repairLoadingBar.SetTargetProgress01(frac);
+        }
+        else if (repairBar != null)
+        {
+            repairBar.minValue = 0f;
+            repairBar.maxValue = 1f;
+            repairBar.value = frac;
+        }
+
         if (healthText) healthText.text = cur + "/" + max;
     }
 
@@ -78,6 +135,23 @@ public class HUD : MonoBehaviour
         // closed here so the popup is never sharing the screen with stray text.
         if (cachedWaveBanner != null) cachedWaveBanner.Hide();
         if (gameOverPanel) gameOverPanel.SetActive(true);
+    }
+
+    public void HideGameOver()
+    {
+        if (gameOverPanel) gameOverPanel.SetActive(false);
+    }
+
+    public void SnapHealthToFull()
+    {
+        if (healthLoadingBar != null) healthLoadingBar.SnapTo01(1f);
+        else if (healthBar != null) healthBar.value = 1f;
+
+        if (repairLoadingBar != null) repairLoadingBar.SnapTo01(1f);
+        else if (repairBar != null) repairBar.value = 1f;
+
+        if (GameManager.Instance != null && healthText != null)
+            healthText.text = GameManager.Instance.maxHealth + "/" + GameManager.Instance.maxHealth;
     }
 
     void FillGameOverStats()

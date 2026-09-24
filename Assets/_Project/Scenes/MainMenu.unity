@@ -577,6 +577,7 @@ RectTransform:
   - {fileID: 838271387}
   - {fileID: 1960692772}
   - {fileID: 393654005}
+  - {fileID: 1950214972}
   - {fileID: 138243544}
   - {fileID: 913653817}
   - {fileID: 1776821396}
@@ -592,7 +593,6 @@ RectTransform:
   - {fileID: 1099059103}
   - {fileID: 1955800502}
   - {fileID: 1955900602}
-  - {fileID: 1950214972}
   - {fileID: 1714888645}
   - {fileID: 1395070624}
   - {fileID: 471770481}

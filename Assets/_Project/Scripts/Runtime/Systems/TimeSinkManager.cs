@@ -99,7 +99,7 @@ public class TimeSinkManager : MonoBehaviour
     // Hooked to the Time Sink button.
     public void Activate()
     {
-        if (IsActive || !IsReady) return;
+        if (IsActive) return;
         if (GameManager.Instance != null && GameManager.Instance.IsGameOver) return;
 
         Charge = 0f;

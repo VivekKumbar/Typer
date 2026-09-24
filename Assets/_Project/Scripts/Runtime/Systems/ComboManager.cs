@@ -177,7 +177,12 @@ public class ComboManager : MonoBehaviour
 
     public void TriggerOverload()
     {
-        if (!overloadReady) return;
+        if (GameManager.Instance != null && GameManager.Instance.IsGameOver) return;
+        if (!overloadReady)
+        {
+            overload = EffectiveOverloadMax();
+            overloadReady = true;
+        }
 
         // Clear every active enemy (full death juice + coins via Defeat)
         List<Enemy> snapshot = new List<Enemy>(Enemy.Active);

@@ -66,6 +66,8 @@ public class GameManager : MonoBehaviour
         else
         {
             currentHealth = maxHealth;
+            coins = 0;
+            coinsEarnedThisRun = 0;
             RunContext.LockForNewRun(); // word packs: fresh snapshot of the shop's current selection
         }
     }
@@ -216,13 +218,21 @@ public class GameManager : MonoBehaviour
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
     }
 
-    // Deposits this run's earnings into the persistent Wallet exactly once.
+    private int coinsBankedThisRun = 0;
+
+    // Deposits this run's earnings into the persistent Wallet exactly once (or unbanked delta upon continue).
     // Safe to call from game over, quit-to-menu, or app background.
     public void BankEarnings()
     {
         if (earningsBanked) return;
         earningsBanked = true;
-        Wallet.Add(coinsEarnedThisRun);
+
+        int toBank = Mathf.Max(0, coinsEarnedThisRun - coinsBankedThisRun);
+        if (toBank > 0)
+        {
+            Wallet.Add(toBank);
+            coinsBankedThisRun += toBank;
+        }
 
         int wave = WaveManager.Instance != null ? WaveManager.Instance.CurrentWaveNumber : 0;
         int peakCombo = ComboManager.Instance != null ? ComboManager.Instance.HighestComboThisRun : 0;
@@ -232,6 +242,17 @@ public class GameManager : MonoBehaviour
         PlayerPrefs.SetInt("TypeKeep_GamesPlayedSinceInterstitial", played);
         PlayerPrefs.Save();
         Debug.Log($"[GameManager] Run completed. Games played since last interstitial: {played}");
+    }
+
+    /// <summary>
+    /// Restores tower health to full, unmarks game over, and allows banking further earnings.
+    /// </summary>
+    public void ReviveFortress()
+    {
+        IsGameOver = false;
+        earningsBanked = false;
+        currentHealth = maxHealth;
+        OnHealthChanged?.Invoke(currentHealth, maxHealth);
     }
 
     // Writes a mid-run save if the run is still active — used when pausing to

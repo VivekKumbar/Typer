@@ -22,6 +22,8 @@ public class TypingController : MonoBehaviour
         mainCamera = Camera.main;
     }
 
+    public void ClearTarget() => currentTarget = null;
+
     void Update()
     {
         if (currentTarget != null && currentTarget.IsDefeated)
