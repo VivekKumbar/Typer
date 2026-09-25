@@ -165,6 +165,8 @@ public class UpgradeManager : MonoBehaviour
         IsDraftOpen = false;
 
         ApplyPick(picked);
+        if (GameManager.Instance != null)
+            GameManager.Instance.SaveProgressIfActive();
 
         if (weFroze && Time.timeScale == 0f)
             Time.timeScale = 1f;

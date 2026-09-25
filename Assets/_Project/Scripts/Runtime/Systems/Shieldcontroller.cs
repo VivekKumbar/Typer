@@ -203,15 +203,16 @@ public class ShieldController : MonoBehaviour
     }
 
     // ---- rise / sink ----
-    void RaiseShield()
+    public void RaiseShield()
     {
+        gameObject.SetActive(true);
         if (rend != null) rend.enabled = true;
         ApplyPhaseColors(IsNightMode());
         if (dissolveCo != null) StopCoroutine(dissolveCo);
         dissolveCo = StartCoroutine(DissolveTo(0f, false)); // 0 = fully up
     }
 
-    void SinkShield()
+    public void SinkShield()
     {
         if (dissolveCo != null) StopCoroutine(dissolveCo);
         dissolveCo = StartCoroutine(DissolveTo(1f, true));  // 1 = gone, then hide

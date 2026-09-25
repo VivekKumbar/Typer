@@ -23,6 +23,8 @@ public class HUD : MonoBehaviour
     public TMP_Text gameOverCoinsText;
     [Tooltip("e.g. 'WPM 42' (or 'WPM N/A' if the run ended almost instantly). This is the ONLY place WPM is shown anywhere in the game.")]
     public TMP_Text gameOverWpmText;
+    [Tooltip("Persistent wave indicator text in the corner of HUD. Optional.")]
+    public TMP_Text persistentWaveText;
 
     private WaveBanner cachedWaveBanner;
 
@@ -32,6 +34,12 @@ public class HUD : MonoBehaviour
         gm.OnHealthChanged += UpdateHealth;
         gm.OnGameOver += ShowGameOver;
         if (gameOverPanel) gameOverPanel.SetActive(false);
+
+        if (persistentWaveText != null && WaveManager.Instance != null)
+        {
+            persistentWaveText.text = $"Wave {WaveManager.Instance.currentWave}";
+            WaveManager.Instance.OnWaveStarted += UpdateWaveDisplay;
+        }
 
         cachedWaveBanner = FindAnyObjectByType<WaveBanner>();
 
@@ -90,10 +98,19 @@ public class HUD : MonoBehaviour
 
     void OnDestroy()
     {
+        if (WaveManager.Instance != null)
+            WaveManager.Instance.OnWaveStarted -= UpdateWaveDisplay;
+
         if (GameManager.Instance == null) return;
         var gm = GameManager.Instance;
         gm.OnHealthChanged -= UpdateHealth;
         gm.OnGameOver -= ShowGameOver;
+    }
+
+    void UpdateWaveDisplay(int wave)
+    {
+        if (persistentWaveText != null)
+            persistentWaveText.text = $"Wave {wave}";
     }
 
     void UpdateHealth(int cur, int max)

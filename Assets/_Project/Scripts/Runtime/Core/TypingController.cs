@@ -146,9 +146,8 @@ public class TypingController : MonoBehaviour
             if (ComboManager.Instance) ComboManager.Instance.RegisterHit();
             StatsManager.RecordCorrectLetter();
             if (TimeSinkManager.Instance) TimeSinkManager.Instance.AddCharge();
-            // Only fire a bullet if the enemy is still alive. The killing letter
-            // shows the death burst instead of leaving an orphan bullet flying.
-            if (!currentTarget.IsDefeated && tower != null)
+            // Fire bullet and play shooting sound immediately on every correct letter
+            if (tower != null && currentTarget != null)
                 tower.FireAt(currentTarget);
             if (currentTarget.IsDefeated) currentTarget = null; // word done, move on
         }

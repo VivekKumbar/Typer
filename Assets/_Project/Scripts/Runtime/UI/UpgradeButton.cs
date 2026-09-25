@@ -118,6 +118,6 @@ public class UpgradeButton : MonoBehaviour
         FindLabelIfNeeded();
         if (labelText == null) return;
         string name = type == UpgradeType.RepairFortress ? "REPAIR" : "MAX HP";
-        labelText.text = $"{name} ({cost})";
+        labelText.text = $" ({cost})";
     }
 }

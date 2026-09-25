@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.EventSystems;
 using TMPro;
 
@@ -17,7 +17,8 @@ public class NativeKeyboardInput : MonoBehaviour
     public bool keepKeyboardOpen = true;
 
     private string previous = "";
-    private int lastHardwareInputFrame = -1;
+    private int lastHardwareInputFrame = -100;
+    private float lastHardwareInputTime = -100f;
 
     void Awake()
     {
@@ -33,7 +34,7 @@ public class NativeKeyboardInput : MonoBehaviour
     {
         if (inputField == null) return;
         inputField.onValueChanged.AddListener(OnChanged);
-        inputField.text = "";
+        inputField.SetTextWithoutNotify("");
         previous = "";
         OpenKeyboard();
     }
@@ -57,10 +58,14 @@ public class NativeKeyboardInput : MonoBehaviour
 
     void OnChanged(string current)
     {
-        // Avoid duplicate keystroke processing if hardware input was already consumed this frame
-        if (Time.frameCount == lastHardwareInputFrame)
+        // Avoid duplicate keystroke processing if hardware input was already consumed recently
+        if (Time.unscaledTime - lastHardwareInputTime < 0.35f || (Time.frameCount - lastHardwareInputFrame) <= 5)
         {
-            previous = current;
+            previous = "";
+            if (inputField != null && !string.IsNullOrEmpty(current))
+            {
+                inputField.SetTextWithoutNotify("");
+            }
             return;
         }
 
@@ -77,9 +82,9 @@ public class NativeKeyboardInput : MonoBehaviour
         previous = current;
 
         // Keep the hidden buffer from growing forever
-        if (current.Length >= 32)
+        if (current.Length >= 16)
         {
-            inputField.text = "";
+            if (inputField != null) inputField.SetTextWithoutNotify("");
             previous = "";
         }
     }
@@ -94,10 +99,11 @@ public class NativeKeyboardInput : MonoBehaviour
                 if (char.IsLetter(c) && TypingController.Instance != null)
                 {
                     lastHardwareInputFrame = Time.frameCount;
+                    lastHardwareInputTime = Time.unscaledTime;
                     TypingController.Instance.ReceiveChar(c);
                     if (inputField != null)
                     {
-                        inputField.text = "";
+                        inputField.SetTextWithoutNotify("");
                         previous = "";
                     }
                 }

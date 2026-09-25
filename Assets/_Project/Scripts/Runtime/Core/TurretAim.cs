@@ -55,6 +55,16 @@ public class TurretAim : MonoBehaviour
         pylon.rotation = Quaternion.Slerp(pylon.rotation, want, turnSpeed * Time.deltaTime);
     }
 
+    // Snaps rotation to immediately face a target point (used on shot fired).
+    public void SnapAimAt(Vector3 worldPoint)
+    {
+        if (pylon == null) return;
+        Vector3 dir = worldPoint - pylon.position;
+        if (yAxisOnly) dir.y = 0f;
+        if (dir.sqrMagnitude < 0.001f) return;
+        pylon.rotation = Quaternion.LookRotation(dir) * Quaternion.Euler(0f, yawOffset, 0f);
+    }
+
     // Called by the Tower when it fires — gives the bullet spawn point.
     public Transform GetMuzzle() { return muzzle != null ? muzzle : pylon; }
 

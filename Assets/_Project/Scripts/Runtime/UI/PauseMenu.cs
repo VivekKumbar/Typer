@@ -24,6 +24,7 @@ public class PauseMenu : MonoBehaviour
         if (GameManager.Instance != null && GameManager.Instance.IsGameOver) return;
         IsPaused = true;
         Time.timeScale = 0f;
+        AudioListener.pause = true;
         if (pausePanel) pausePanel.SetActive(true);
         BridgeManager.SendLevelPaused();
     }
@@ -32,7 +33,16 @@ public class PauseMenu : MonoBehaviour
     {
         IsPaused = false;
         Time.timeScale = 1f;
+        AudioListener.pause = false;
         if (pausePanel) pausePanel.SetActive(false);
         BridgeManager.SendLevelResumed();
+    }
+
+    private void OnDisable()
+    {
+        if (IsPaused)
+        {
+            AudioListener.pause = false;
+        }
     }
 }

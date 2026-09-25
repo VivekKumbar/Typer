@@ -49,7 +49,7 @@ public class ReadyStateHighlight : MonoBehaviour
     public void SetReady(bool ready)
     {
         EnsureCaptured();
-        if (bg) bg.color = ready ? ReadyBg : normalBg;
+        if (bg && normalBg.a > 0.05f) bg.color = ready ? ReadyBg : normalBg;
         if (label) label.color = ready ? ReadyText : normalText;
     }
 

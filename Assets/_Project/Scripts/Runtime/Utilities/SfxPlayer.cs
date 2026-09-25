@@ -53,7 +53,11 @@ public class SfxPlayer : MonoBehaviour
         bulletFireFallback = MakeSweep(1500f, 500f, 0.10f, 0.18f); // short falling "pew"
     }
 
-    public static void PlayType() { if (Instance && GameSettings.SfxEnabled) Instance.src.PlayOneShot(Instance.typeClip); }
+    public static void PlayType()
+    {
+        if (Instance && GameSettings.SfxEnabled && Instance.bulletFireSound == null)
+            Instance.src.PlayOneShot(Instance.typeClip);
+    }
 
     // Kept for backward compatibility -- Enemy.cs's existing kill-path call
     // site is untouched. Internally this is now the same event/clip as

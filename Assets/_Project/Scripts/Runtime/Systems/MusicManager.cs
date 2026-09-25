@@ -27,11 +27,17 @@ public class MusicManager : MonoBehaviour
 
     public enum MusicMode { None, Menu, Gameplay }
 
-    [Header("Music clips -- assign your own")]
-    [Tooltip("Plays (looping) on the Main Menu. Restarted from the beginning every time the player returns to the menu. Expected: \"The Tavern\".")]
+    [Header("Music clips -- single or default fallback")]
+    [Tooltip("Plays on the Main Menu if no playlist is assigned. Expected: \"The Tavern\".")]
     public AudioClip mainMenuMusic;
-    [Tooltip("Plays (looping) for the whole run -- New Game, Continue, and the FTUE tutorial. Expected: \"Land of Knights\".")]
+    [Tooltip("Plays for the whole run if no playlist is assigned. Expected: \"Land of Knights\".")]
     public AudioClip gameplayMusic;
+
+    [Header("Music playlists (random looping)")]
+    [Tooltip("Playlist of audio clips for the Main Menu. When one finishes, another random one plays.")]
+    public AudioClip[] mainMenuPlaylist;
+    [Tooltip("Playlist of audio clips for Gameplay. When one finishes, another random one plays.")]
+    public AudioClip[] gameplayPlaylist;
 
     [Header("Playback")]
     [Tooltip("Music volume once faded in (0-1). Independent of the SFX volume.")]
@@ -53,6 +59,8 @@ public class MusicManager : MonoBehaviour
     private Coroutine routine;
     private AudioClip targetClip;
     private bool initialized;
+    private int lastMenuIndex = -1;
+    private int lastGameplayIndex = -1;
 
     void Awake()
     {
@@ -69,7 +77,7 @@ public class MusicManager : MonoBehaviour
 
         src = GetComponent<AudioSource>();
         src.playOnAwake = false;
-        src.loop = true;
+        src.loop = false;
         src.spatialBlend = 0f;
         src.volume = 0f;
     }
@@ -79,6 +87,51 @@ public class MusicManager : MonoBehaviour
         GameSettings.OnMusicChanged += HandleMusicToggled;
         SceneManager.sceneLoaded += HandleSceneLoaded;
         SyncToScene(SceneManager.GetActiveScene()); // the scene this manager first appeared in
+    }
+
+    void Update()
+    {
+        if (CurrentMode == MusicMode.None || !GameSettings.MusicEnabled || routine != null) return;
+        if (src == null || AudioListener.pause) return;
+
+        // When a track finishes naturally, pick and play the next random loop
+        if (!src.isPlaying && targetClip != null)
+        {
+            PlayNextTrack();
+        }
+    }
+
+    void PlayNextTrack()
+    {
+        AudioClip next = PickNextRandomClip(CurrentMode);
+        if (next == null) return;
+
+        targetClip = next;
+        src.clip = next;
+        src.time = 0f;
+        src.volume = musicVolume;
+        src.Play();
+    }
+
+    AudioClip PickNextRandomClip(MusicMode mode)
+    {
+        AudioClip[] list = (mode == MusicMode.Menu) ? mainMenuPlaylist : gameplayPlaylist;
+        if (list != null && list.Length > 0)
+        {
+            if (list.Length == 1) return list[0];
+            int last = (mode == MusicMode.Menu) ? lastMenuIndex : lastGameplayIndex;
+            int next = Random.Range(0, list.Length);
+            if (next == last)
+            {
+                next = (next + 1 + Random.Range(0, list.Length - 1)) % list.Length;
+            }
+            if (mode == MusicMode.Menu) lastMenuIndex = next;
+            else lastGameplayIndex = next;
+            return list[next];
+        }
+
+        // Fallback to legacy single clips
+        return (mode == MusicMode.Menu) ? mainMenuMusic : gameplayMusic;
     }
 
     void OnDestroy()
@@ -107,26 +160,15 @@ public class MusicManager : MonoBehaviour
 
     void SetMode(MusicMode mode, bool restart)
     {
+        bool modeChanged = (CurrentMode != mode);
         CurrentMode = mode;
         if (!GameSettings.MusicEnabled) return; // remembered; toggling Music ON later picks it up
 
-        AudioClip clip = ClipFor(mode);
-        // Same track already playing (or mid-fade-in) and nobody asked for a restart -> leave it alone.
-        // Uses this manager's own record of what it's playing rather than AudioSource.isPlaying,
-        // which can read false while the listener is paused (ads / tab hidden) even though the track is "on".
-        if (!restart && clip == targetClip) return;
+        // Same mode already playing and nobody asked for a restart -> leave it alone.
+        if (!modeChanged && !restart && src.isPlaying) return;
 
+        AudioClip clip = PickNextRandomClip(mode);
         StartTransition(clip);
-    }
-
-    AudioClip ClipFor(MusicMode mode)
-    {
-        switch (mode)
-        {
-            case MusicMode.Menu: return mainMenuMusic;
-            case MusicMode.Gameplay: return gameplayMusic;
-            default: return null;
-        }
     }
 
     void HandleMusicToggled(bool on)
@@ -137,7 +179,7 @@ public class MusicManager : MonoBehaviour
             return;
         }
         // Toggled ON mid-scene: start the CURRENT mode's track right away (fresh from the start).
-        if (CurrentMode != MusicMode.None) StartTransition(ClipFor(CurrentMode));
+        if (CurrentMode != MusicMode.None) StartTransition(PickNextRandomClip(CurrentMode));
     }
 
     void HandleSceneLoaded(Scene scene, LoadSceneMode loadMode) { SyncToScene(scene); }

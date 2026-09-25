@@ -82,6 +82,21 @@ public class GameManager : MonoBehaviour
             UpgradeManager.Instance.OnUpgradeChanged += HandleUpgradeChanged;
 
         StatsManager.OnCorrectLetterRecorded += HandleCorrectLetter;
+
+        StartCoroutine(AutosaveLoop());
+    }
+
+    private System.Collections.IEnumerator AutosaveLoop()
+    {
+        var wait = new WaitForSecondsRealtime(4f);
+        while (true)
+        {
+            yield return wait;
+            if (!IsGameOver && currentHealth > 0)
+            {
+                SaveProgressIfActive();
+            }
+        }
     }
 
     void OnDestroy()
@@ -265,6 +280,16 @@ public class GameManager : MonoBehaviour
         if (IsGameOver) return;
         if (WaveManager.Instance == null) return;
         SaveManager.CaptureAndSave(WaveManager.Instance.CurrentWaveNumber);
+        PlayerPrefs.Save();
+    }
+
+    void OnApplicationFocus(bool hasFocus)
+    {
+        if (!hasFocus)
+        {
+            BankEarnings();
+            SaveProgressIfActive();
+        }
     }
 
     // If the app is closed/backgrounded mid-run, bank what we have and save

@@ -37,37 +37,13 @@ public class Tower : MonoBehaviour
     {
         if (bulletPrefab == null || enemy == null) return;
 
-        // No turret assigned -> old behaviour, fire immediately
-        if (turret == null) { Shoot(enemy); return; }
-
-        pending.Add(new PendingShot { target = enemy, queuedAt = Time.time });
-    }
-
-    void Update()
-    {
-        if (pending.Count == 0) return;
-
-        for (int i = pending.Count - 1; i >= 0; i--)
+        // Instantly aim turret towards target so muzzle aligns right away
+        if (turret != null)
         {
-            PendingShot s = pending[i];
-
-            // Target died while we were traversing -> drop the shot
-            if (s.target == null || s.target.IsDefeated)
-            {
-                pending.RemoveAt(i);
-                continue;
-            }
-
-            bool aimed = turret.IsAimedAt(s.target.transform, aimTolerance);
-            bool waitedTooLong = Time.time - s.queuedAt >= maxQueueTime;
-            bool spaced = Time.time - lastShotTime >= shotSpacing;
-
-            if ((aimed || waitedTooLong) && spaced)
-            {
-                Shoot(s.target);
-                pending.RemoveAt(i);
-            }
+            turret.SnapAimAt(enemy.transform.position);
         }
+
+        Shoot(enemy);
     }
 
     void Shoot(Enemy enemy)

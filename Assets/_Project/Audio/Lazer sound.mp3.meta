@@ -15,7 +15,7 @@ AudioImporter:
   platformSettingOverrides:
     WebGL:
       serializedVersion: 2
-      loadType: 2
+      loadType: 0
       sampleRateSetting: 2
       sampleRateOverride: 44100
       compressionFormat: 7
@@ -24,9 +24,9 @@ AudioImporter:
       preloadAudioData: 1
   forceToMono: 0
   normalize: 1
-  loadInBackground: 1
+  loadInBackground: 0
   ambisonic: 0
-  3D: 1
+  3D: 0
   userData: 
   assetBundleName: 
   assetBundleVariant: 

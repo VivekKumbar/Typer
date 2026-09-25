@@ -727,6 +727,63 @@ MonoBehaviour:
   hitMagnitude: 0.45
   intensity: 1
   enableShake: 1
+--- !u!1001 &339540991
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 4883087762311595831, guid: 91551f31aa7cb1143b444bd47c02b87a, type: 3}
+      propertyPath: m_Name
+      value: AudioManager
+      objectReference: {fileID: 0}
+    - target: {fileID: 7713550967414722108, guid: 91551f31aa7cb1143b444bd47c02b87a, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7713550967414722108, guid: 91551f31aa7cb1143b444bd47c02b87a, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7713550967414722108, guid: 91551f31aa7cb1143b444bd47c02b87a, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7713550967414722108, guid: 91551f31aa7cb1143b444bd47c02b87a, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7713550967414722108, guid: 91551f31aa7cb1143b444bd47c02b87a, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7713550967414722108, guid: 91551f31aa7cb1143b444bd47c02b87a, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7713550967414722108, guid: 91551f31aa7cb1143b444bd47c02b87a, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7713550967414722108, guid: 91551f31aa7cb1143b444bd47c02b87a, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7713550967414722108, guid: 91551f31aa7cb1143b444bd47c02b87a, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7713550967414722108, guid: 91551f31aa7cb1143b444bd47c02b87a, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 91551f31aa7cb1143b444bd47c02b87a, type: 3}
 --- !u!1 &353300822
 GameObject:
   m_ObjectHideFlags: 0
@@ -1647,6 +1704,7 @@ MonoBehaviour:
   normalVolume: {fileID: 2079279402}
   darkVolume: {fileID: 1627862890}
   towerLight: {fileID: 1218578651}
+  towerPointLight: {fileID: 0}
   towerLightIntensity: 15
   towerLightColor: {r: 1, g: 0.9, b: 0.7, a: 1}
   towerLightRange: 12
@@ -3095,7 +3153,7 @@ AudioSource:
   m_GameObject: {fileID: 1321742868}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
+  OutputAudioMixerGroup: {fileID: -6853369894604426433, guid: 4969c4803b41151409145f54a12ea088, type: 2}
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 0}
   m_PlayOnAwake: 1
@@ -3808,6 +3866,9 @@ MonoBehaviour:
   rippleSpeed: 3
   hitColor: {r: 1, g: 0, b: 0, a: 1}
   flashTime: 0.15
+  nightMultiplier: 25
+  nightFresnelPower: 2.8
+  nightColorOverride: {r: 0, g: 0, b: 0, a: 0}
 --- !u!1 &1436098867
 GameObject:
   m_ObjectHideFlags: 0
@@ -5657,3 +5718,4 @@ SceneRoots:
   - {fileID: 1238721729}
   - {fileID: 983320889}
   - {fileID: 14289432}
+  - {fileID: 339540991}

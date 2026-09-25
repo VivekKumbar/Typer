@@ -42,7 +42,7 @@ AudioSource:
   m_GameObject: {fileID: 977657840089269918}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
+  OutputAudioMixerGroup: {fileID: 9179133869249774041, guid: 4969c4803b41151409145f54a12ea088, type: 2}
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 0}
   m_PlayOnAwake: 1
@@ -144,6 +144,23 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MusicManager
   mainMenuMusic: {fileID: 8300000, guid: 0c395d683c706d74594e3cf8a92d698f, type: 3}
   gameplayMusic: {fileID: 8300000, guid: b6de56871611a144f98415b0b2b0c702, type: 3}
+  mainMenuPlaylist:
+  - {fileID: 8300000, guid: 1bbf0cfa9e428124ab3d4250b0a23d63, type: 3}
+  - {fileID: 8300000, guid: 7c648987214c56f4db9c82d00fc1e75d, type: 3}
+  - {fileID: 8300000, guid: 0bac3f80ce8127844b10297ab61a116d, type: 3}
+  - {fileID: 8300000, guid: 9707ae7a160eab34f98d0cb66cc0c332, type: 3}
+  - {fileID: 8300000, guid: a03e39db84db7c3429fc0e917c6d6b97, type: 3}
+  - {fileID: 8300000, guid: 8f2f1112da99aa744b723af1e379a221, type: 3}
+  - {fileID: 8300000, guid: 7d58985b20054bc42b946c705416cbd0, type: 3}
+  - {fileID: 8300000, guid: 1d78b700bbfa2744b9ce0edb94676a35, type: 3}
+  gameplayPlaylist:
+  - {fileID: 8300000, guid: 135dc22cfb7f25d49b5f1160077cf02e, type: 3}
+  - {fileID: 8300000, guid: 3a21b55958a973c4b834fc11e320415d, type: 3}
+  - {fileID: 8300000, guid: 72bc8c2154be87a4e8672d5dd57333db, type: 3}
+  - {fileID: 8300000, guid: 0a9f6aef0e071814aa3c20d3afcb6c48, type: 3}
+  - {fileID: 8300000, guid: 9cd3e75d18f3f95408fa1e3a30097c3a, type: 3}
+  - {fileID: 8300000, guid: 0d929761d8d41834e8db78aa17c8b13a, type: 3}
+  - {fileID: 8300000, guid: c918f154b48b55841b806ebd4ec91759, type: 3}
   musicVolume: 0.6
   fadeDuration: 0.6
   menuSceneNames:
