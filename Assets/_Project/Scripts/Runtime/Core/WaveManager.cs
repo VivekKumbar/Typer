@@ -74,15 +74,6 @@ public class WaveManager : MonoBehaviour
     [Tooltip("Seconds counted down live on the banner (5, 4, 3, 2, 1...) at the START of each wave, right after the 'WAVE N' label and before enemies begin spawning -- the global default. An individual Wave entry's Break Time Override can lengthen/shorten this for that specific wave. Also used for endless-mode waves, which have no per-wave override of their own.")]
     public float breakTime = 5f;
 
-    [Header("Powerups")]
-    [Tooltip("Prefab for collectible shield powerups in the game world.")]
-    public ShieldPowerup shieldPowerupPrefab;
-    [Tooltip("Chance (0..1) to spawn a shield powerup when a wave begins.")]
-    [Range(0f, 1f)] public float shieldSpawnChance = 0.4f;
-    [Tooltip("Periodic spawn interval in seconds.")]
-    public float shieldPeriodicSpawnInterval = 25f;
-    private float shieldSpawnTimer;
-
     [Header("Spawn area (top-down, XZ ground plane)")]
     public float minX = -4f;
     public float maxX = 4f;
@@ -263,45 +254,6 @@ public class WaveManager : MonoBehaviour
         currentWave = waveIndex + 1;
     }
 
-    void Update()
-    {
-        if (shieldPowerupPrefab != null && waveActive && !GameOver)
-        {
-            shieldSpawnTimer += Time.deltaTime;
-            if (shieldSpawnTimer >= shieldPeriodicSpawnInterval)
-            {
-                shieldSpawnTimer = 0f;
-                SpawnShieldPowerup();
-            }
-        }
-    }
-
-    public void SpawnShieldPowerup(Vector3? customPos = null)
-    {
-        if (shieldPowerupPrefab == null) return;
-        Vector3 pos;
-        if (customPos.HasValue)
-        {
-            pos = customPos.Value;
-            pos.y = groundY + 0.5f;
-        }
-        else
-        {
-            float x = Random.Range(minX * 0.7f, maxX * 0.7f);
-            float z = Random.Range(-1.5f, 5.0f);
-            pos = new Vector3(x, groundY + 0.5f, z);
-        }
-        Instantiate(shieldPowerupPrefab, pos, Quaternion.identity);
-    }
-
-    public void TryDropShieldPowerup(Vector3 pos, float chance = 0.15f)
-    {
-        if (shieldPowerupPrefab != null && Random.value < chance)
-        {
-            SpawnShieldPowerup(pos);
-        }
-    }
-
     void Start()
     {
         // RunContext is locked in GameManager.Awake() (guaranteed to run before
@@ -361,12 +313,6 @@ public class WaveManager : MonoBehaviour
             // delay (see breakTime/breakTimeOverride below), shown live on
             // the banner rather than a silent wait.
             if (banner != null) banner.Show(BannerText(w, waveIndex));
-
-            // Spawn shield powerup for wave if probability triggers
-            if (shieldPowerupPrefab != null && Random.value < shieldSpawnChance)
-            {
-                SpawnShieldPowerup();
-            }
 
             yield return Wait(announceTime);
             if (GameOver) yield break;

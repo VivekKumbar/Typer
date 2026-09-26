@@ -427,11 +427,6 @@ public class Enemy : MonoBehaviour
                 StatsManager.RecordPerfectWord(); // feeds WordsTypedPerfectly-based achievements
             }
 
-            if (WaveManager.Instance != null)
-            {
-                float dropChance = isBoss ? 1.0f : (Word != null && Word.Length > bigWordLength ? 0.35f : 0.08f);
-                WaveManager.Instance.TryDropShieldPowerup(transform.position, dropChance);
-            }
         }
 
         // Play the death animation + dissolve, then clean up
