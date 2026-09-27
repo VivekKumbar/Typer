@@ -197,9 +197,21 @@ public class AbilityUIRegistry : MonoBehaviour
     {
         var label = FindInTree<TMP_Text>(root, "TimeSinkLabel");
         var ts = TimeSinkManager.Instance;
+        string abilityUpper = (ts != null && ts.slowMoUpgrade != null && !string.IsNullOrEmpty(ts.slowMoUpgrade.displayName))
+            ? ts.slowMoUpgrade.displayName.ToUpperInvariant()
+            : "CHRONOS";
+        string abilityName = (ts != null && ts.slowMoUpgrade != null && !string.IsNullOrEmpty(ts.slowMoUpgrade.displayName))
+            ? ts.slowMoUpgrade.displayName
+            : "Chronos";
+
         if (label != null)
         {
-            label.text = (ts != null && ts.IsActive) ? "TIME SINK ACTIVE" : "TIME SINK";
+            if (ts != null && ts.IsActive)
+                label.text = $"{abilityUpper} ACTIVE";
+            else if (ts != null && ts.IsUnlocked && ts.IsReady)
+                label.text = $"{abilityUpper} READY!";
+            else
+                label.text = abilityUpper;
         }
 
         var btn = root.GetComponentInChildren<Button>(true);
@@ -210,15 +222,16 @@ public class AbilityUIRegistry : MonoBehaviour
                 var inst = TimeSinkManager.Instance;
                 if (inst != null && !inst.IsActive)
                 {
+                    if (!inst.IsUnlocked) return;
                     if (!inst.IsReady)
                     {
                         SfxPlayer.PlayWrongKey();
-                        UIToast.ShowAt(btn.transform, "Time Sink Not Ready!", new Color(1f, 0.85f, 0.2f));
+                        UIToast.ShowAt(btn.transform, $"{abilityName} Not Ready!", new Color(1f, 0.85f, 0.2f));
                         return;
                     }
                     inst.Activate();
                     SfxPlayer.PlayGameStart();
-                    UIToast.ShowAt(btn.transform, "Time Sink Activated!", Color.cyan);
+                    UIToast.ShowAt(btn.transform, $"{abilityName} Activated!", Color.cyan);
                 }
             });
         }
@@ -227,9 +240,13 @@ public class AbilityUIRegistry : MonoBehaviour
     void SetupOverload(GameObject root)
     {
         var label = FindInTree<TMP_Text>(root, "OverloadLabel");
+        var cm = ComboManager.Instance;
         if (label != null)
         {
-            label.text = "OVERLOAD";
+            if (cm != null && cm.IsOverloadUnlocked && cm.overloadReady)
+                label.text = "OVERLOAD READY!";
+            else
+                label.text = "OVERLOAD";
         }
 
         var btn = root.GetComponentInChildren<Button>(true);
@@ -240,6 +257,7 @@ public class AbilityUIRegistry : MonoBehaviour
                 var inst = ComboManager.Instance;
                 if (inst != null)
                 {
+                    if (!inst.IsOverloadUnlocked) return;
                     if (!inst.overloadReady)
                     {
                         SfxPlayer.PlayWrongKey();

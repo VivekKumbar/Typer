@@ -59,6 +59,14 @@ public class WaveManager : MonoBehaviour
     [Tooltip("Hard cap on simultaneous active enemies on screen at once to protect player flow.")]
     [SerializeField] private int hardMaxActiveEnemiesClamp = 8;
 
+    [Header("Wave Economy & Clear Bonus")]
+    [Tooltip("Base coins awarded on wave 1 completion.")]
+    public int baseWaveCoinReward = 10;
+    [Tooltip("Coins added per wave: waveReward = baseWaveCoinReward + waveCoinGrowth * (waveNumber - 1).")]
+    public int waveCoinGrowth = 4;
+    [Tooltip("One-time clear bonus awarded on completing Wave 10.")]
+    public int wave10ClearBonus = 120;
+
     [Header("Authored Waves (Used if useMathematicalScaling is disabled)")]
     public Wave[] waves;
 
@@ -387,6 +395,24 @@ public class WaveManager : MonoBehaviour
             }
 
             waveActive = false; // field is clear -- nothing left to type until the next wave goes live
+
+            // Wave Economy: Award wave reward = 10 + 4*(waveNumber - 1), plus wave 10 clear bonus (+120 coins)
+            int waveReward = CalculateWaveReward(waveNumber);
+            int clearBonus = (waveNumber == 10) ? wave10ClearBonus : 0;
+            int totalWaveReward = waveReward + clearBonus;
+
+            if (GameManager.Instance != null && totalWaveReward > 0)
+            {
+                Vector3 rewardPos = fortress != null ? fortress.position : transform.position;
+                CoinFlyManager.Spawn(rewardPos, totalWaveReward);
+                GameManager.Instance.AddCoins(totalWaveReward);
+                PopupManager.ShowCoins(rewardPos + Vector3.up * 1.5f, totalWaveReward);
+                if (clearBonus > 0)
+                {
+                    UIToast.ShowAt(fortress != null ? fortress : transform, "WAVE 10 CLEARED! +120 COIN BONUS", Color.yellow);
+                }
+            }
+
             BridgeManager.SendLevelCompleted(waveNumber);
             SaveManager.CaptureAndSave(waveNumber + 1);
 
@@ -396,6 +422,11 @@ public class WaveManager : MonoBehaviour
 
             waveIndex++;
         }
+    }
+
+    public int CalculateWaveReward(int waveNumber)
+    {
+        return Mathf.Max(0, baseWaveCoinReward + waveCoinGrowth * (waveNumber - 1));
     }
 
     public Wave GetWave(int index)

@@ -29,24 +29,52 @@ public class ComboHUD : MonoBehaviour
         if (overloadLabel == null && transform.parent != null)
             overloadLabel = transform.parent.Find("OverloadLabel")?.GetComponent<TMP_Text>();
 
+        if (UpgradeManager.Instance != null)
+            UpgradeManager.Instance.OnUpgradeChanged += HandleUpgradeChanged;
+
         // Pull current values right now instead of assuming a fresh 0/1f
         // start — on a Continue, ComboManager may already hold a restored
         // combo/overload from before, and this makes the HUD reflect it
         // immediately regardless of script execution order (same idiom HUD.cs
         // uses for health).
         UpdateCombo(cm.combo, ComboManager.Multiplier);
-        if (overloadLoadingBar != null) overloadLoadingBar.SnapTo01(cm.OverloadFill);
-        UpdateOverload(cm.OverloadFill);
-        if (cm.overloadReady) OnReady();
+        bool isUnlocked = cm.IsOverloadUnlocked;
+        float fill = isUnlocked ? cm.OverloadFill : 0f;
+        if (overloadLoadingBar != null) overloadLoadingBar.SnapTo01(fill);
+        UpdateOverload(fill);
+        if (isUnlocked && cm.overloadReady) OnReady();
+        else
+        {
+            if (overloadButton) overloadButton.interactable = false;
+            if (overloadHighlight) overloadHighlight.SetReady(false);
+            if (overloadPulse) overloadPulse.SetActive(false);
+            if (overloadLabel) overloadLabel.text = "OVERLOAD";
+        }
     }
 
     void OnDestroy()
     {
         var cm = ComboManager.Instance;
-        if (cm == null) return;
-        cm.OnComboChanged -= UpdateCombo;
-        cm.OnOverloadChanged -= UpdateOverload;
-        cm.OnOverloadReady -= OnReady;
+        if (cm != null)
+        {
+            cm.OnComboChanged -= UpdateCombo;
+            cm.OnOverloadChanged -= UpdateOverload;
+            cm.OnOverloadReady -= OnReady;
+        }
+
+        if (UpgradeManager.Instance != null)
+            UpgradeManager.Instance.OnUpgradeChanged -= HandleUpgradeChanged;
+    }
+
+    void HandleUpgradeChanged(UpgradeDefinition def, int level)
+    {
+        var cm = ComboManager.Instance;
+        if (cm != null && def == cm.overloadUpgrade)
+        {
+            UpdateOverload(cm.OverloadFill);
+            if (cm.IsOverloadUnlocked && cm.overloadReady)
+                OnReady();
+        }
     }
 
     void UpdateCombo(int combo, float mult)
@@ -63,6 +91,19 @@ public class ComboHUD : MonoBehaviour
 
     void UpdateOverload(float fill)
     {
+        var cm = ComboManager.Instance;
+        bool isUnlocked = cm != null && cm.IsOverloadUnlocked;
+        if (!isUnlocked)
+        {
+            if (overloadLoadingBar != null) overloadLoadingBar.SetTargetProgress01(0f);
+            else if (overloadBar) overloadBar.value = 0f;
+            if (overloadHighlight) overloadHighlight.SetReady(false);
+            if (overloadPulse) overloadPulse.SetActive(false);
+            if (overloadLabel) overloadLabel.text = "OVERLOAD";
+            if (overloadButton) overloadButton.interactable = false;
+            return;
+        }
+
         if (overloadLoadingBar != null) overloadLoadingBar.SetTargetProgress01(fill);
         else if (overloadBar) overloadBar.value = fill;
         if (fill < 1f)
@@ -75,6 +116,9 @@ public class ComboHUD : MonoBehaviour
 
     void OnReady()
     {
+        var cm = ComboManager.Instance;
+        if (cm == null || !cm.IsOverloadUnlocked) return;
+
         if (overloadButton) overloadButton.interactable = true;
         if (overloadHighlight) overloadHighlight.SetReady(true);
         if (overloadPulse) overloadPulse.SetActive(true);

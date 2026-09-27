@@ -51,10 +51,12 @@ public class ComboManager : MonoBehaviour
 
     public static float Multiplier => Instance ? Instance.CurrentMultiplier() * Instance.GreedMultiplier() : 1f;
 
+    public bool IsOverloadUnlocked => overloadUpgrade == null || (UpgradeManager.Instance != null && UpgradeManager.Instance.LevelOf(overloadUpgrade) > 0);
+
     // Overload's fill fraction (0..1) against its EFFECTIVE max — used by
     // ComboHUD to sync its bar immediately on Start instead of assuming 0,
     // so a restored overload charge is visible right away.
-    public float OverloadFill => EffectiveOverloadMax() > 0f ? overload / EffectiveOverloadMax() : 0f;
+    public float OverloadFill => (IsOverloadUnlocked && EffectiveOverloadMax() > 0f) ? overload / EffectiveOverloadMax() : 0f;
 
     void Awake()
     {
@@ -73,6 +75,32 @@ public class ComboManager : MonoBehaviour
             HighestComboThisRun = Mathf.Max(HighestComboThisRun, Mathf.Max(0, save.highestComboThisRun));
             overload = Mathf.Max(0f, save.overload);
             overloadReady = save.overloadReady;
+        }
+    }
+
+    void Start()
+    {
+        if (!IsOverloadUnlocked)
+        {
+            overload = 0f;
+            overloadReady = false;
+        }
+
+        if (UpgradeManager.Instance != null)
+            UpgradeManager.Instance.OnUpgradeChanged += HandleUpgradeChanged;
+    }
+
+    void OnDestroy()
+    {
+        if (UpgradeManager.Instance != null)
+            UpgradeManager.Instance.OnUpgradeChanged -= HandleUpgradeChanged;
+    }
+
+    void HandleUpgradeChanged(UpgradeDefinition def, int level)
+    {
+        if (def == overloadUpgrade && level > 0)
+        {
+            OnOverloadChanged?.Invoke(OverloadFill);
         }
     }
 
@@ -129,7 +157,7 @@ public class ComboManager : MonoBehaviour
         if (CurrentMultiplier() > multiplierBefore && TypingController.Instance != null && TypingController.Instance.CurrentTarget != null)
             PopupManager.ShowCombo(TypingController.Instance.CurrentTarget.transform.position, combo);
 
-        if (!overloadReady)
+        if (IsOverloadUnlocked && !overloadReady)
         {
             float effectiveMax = EffectiveOverloadMax();
             overload += 1f;
@@ -158,7 +186,7 @@ public class ComboManager : MonoBehaviour
         if (combo == 0) return;
         combo = 0;
         OnComboChanged?.Invoke(combo, CurrentMultiplier());
-        // Overload is NOT drained on a miss � only the combo resets.
+        // Overload is NOT drained on a miss  only the combo resets.
     }
 
     // DEBUG CONSOLE HOOK: instantly fills Overload to ready, firing the same
@@ -168,6 +196,7 @@ public class ComboManager : MonoBehaviour
     // directly and silently leaving the UI/subscribers out of sync).
     public void DebugFillOverload()
     {
+        if (!IsOverloadUnlocked) return;
         float effectiveMax = EffectiveOverloadMax();
         overload = effectiveMax;
         overloadReady = true;
@@ -178,7 +207,7 @@ public class ComboManager : MonoBehaviour
     public void TriggerOverload()
     {
         if (GameManager.Instance != null && GameManager.Instance.IsGameOver) return;
-        if (!overloadReady) return;
+        if (!IsOverloadUnlocked || !overloadReady) return;
 
         // Clear every active enemy (full death juice + coins via Defeat)
         List<Enemy> snapshot = new List<Enemy>(Enemy.Active);

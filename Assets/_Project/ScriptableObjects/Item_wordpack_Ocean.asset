@@ -17,7 +17,7 @@ MonoBehaviour:
   description: Discover mysterious creatures beneath the waves.
   icon: {fileID: 21300000, guid: 0d6b0f8b25a6e0e449d8f04614e9ce38, type: 3}
   previewImage: {fileID: 0}
-  price: 150
+  price: 1200
   kind: 3
   slot: WordPack
   appliesToEnemyType: 

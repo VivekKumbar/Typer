@@ -17,7 +17,7 @@ MonoBehaviour:
   description: Explore the mysteries beyond our planet.
   icon: {fileID: 21300000, guid: 6b5f8b65b0ef3c344adf6f4dd44a9973, type: 3}
   previewImage: {fileID: 0}
-  price: 150
+  price: 1200
   kind: 3
   slot: WordPack
   appliesToEnemyType: 

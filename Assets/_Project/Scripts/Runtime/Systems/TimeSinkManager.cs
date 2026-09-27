@@ -52,7 +52,35 @@ public class TimeSinkManager : MonoBehaviour
         Instance = this;
     }
 
+    public bool IsUnlocked => slowMoUpgrade == null || (UpgradeManager.Instance != null && UpgradeManager.Instance.LevelOf(slowMoUpgrade) > 0);
+
     int UpgradeLevel() => (UpgradeManager.Instance != null && slowMoUpgrade != null) ? UpgradeManager.Instance.LevelOf(slowMoUpgrade) : 0;
+
+    void Start()
+    {
+        if (!IsUnlocked)
+        {
+            Charge = 0f;
+            IsReady = false;
+        }
+
+        if (UpgradeManager.Instance != null)
+            UpgradeManager.Instance.OnUpgradeChanged += HandleUpgradeChanged;
+    }
+
+    void OnDestroy()
+    {
+        if (UpgradeManager.Instance != null)
+            UpgradeManager.Instance.OnUpgradeChanged -= HandleUpgradeChanged;
+    }
+
+    void HandleUpgradeChanged(UpgradeDefinition def, int level)
+    {
+        if (def == slowMoUpgrade && level > 0)
+        {
+            OnChargeChanged?.Invoke(chargeMax > 0f ? Charge / chargeMax : 0f);
+        }
+    }
 
     void Update()
     {
@@ -71,6 +99,7 @@ public class TimeSinkManager : MonoBehaviour
     // A miss should never call this — the charge is forgiving, like Overload.
     public void AddCharge()
     {
+        if (!IsUnlocked) return;
         if (IsActive || IsReady) return;
 
         Charge += 1f;
@@ -89,7 +118,7 @@ public class TimeSinkManager : MonoBehaviour
     // small public wrapper rather than the console setting Charge directly.
     public void DebugFillCharge()
     {
-        if (IsActive) return; // already mid-effect -- nothing to fill
+        if (!IsUnlocked || IsActive) return; // locked or already mid-effect -- nothing to fill
         Charge = chargeMax;
         IsReady = true;
         OnChargeChanged?.Invoke(1f);
@@ -99,6 +128,7 @@ public class TimeSinkManager : MonoBehaviour
     // Hooked to the Time Sink button.
     public void Activate()
     {
+        if (!IsUnlocked) return;
         if (IsActive) return;
         if (!IsReady) return;
         if (GameManager.Instance != null && GameManager.Instance.IsGameOver) return;

@@ -52,18 +52,22 @@ public class TimeSinkHUD : MonoBehaviour
         ts.OnDurationChanged += UpdateDuration;
         ts.OnEnded += OnEnded;
 
+        if (UpgradeManager.Instance != null)
+            UpgradeManager.Instance.OnUpgradeChanged += HandleUpgradeChanged;
+
         ConfigureBar();
         if (buttonLabel == null && transform.parent != null)
             buttonLabel = transform.parent.Find("TimeSinkLabel")?.GetComponent<TMP_Text>();
 
-        // Gate purely on the manager's own IsReady flag — not on any slider
+        // Gate purely on the manager's own IsReady flag + IsUnlocked — not on any slider
         // value comparison — so this can never desync from a different max.
-        if (activateButton) activateButton.interactable = !ts.IsActive;
-        if (readyHighlight) readyHighlight.SetReady(ts.IsReady);
-        if (readyPulse) readyPulse.SetActive(ts.IsReady);
+        bool unlocked = ts.IsUnlocked;
+        if (activateButton) activateButton.interactable = unlocked && !ts.IsActive && ts.IsReady;
+        if (readyHighlight) readyHighlight.SetReady(unlocked && ts.IsReady);
+        if (readyPulse) readyPulse.SetActive(unlocked && ts.IsReady);
         // Sync-now: reflect whichever the manager is currently doing, instead
         // of assuming a fresh 0 (same idiom ComboHUD/HUD use for restored state).
-        float initialFrac = ts.IsActive ? ts.RemainingFraction : (ts.chargeMax > 0f ? ts.Charge / ts.chargeMax : 0f);
+        float initialFrac = unlocked ? (ts.IsActive ? ts.RemainingFraction : (ts.chargeMax > 0f ? ts.Charge / ts.chargeMax : 0f)) : 0f;
         if (loadingBar != null) loadingBar.SnapTo01(initialFrac);
         else if (bar) bar.value = initialFrac;
         RefreshLabel();
@@ -72,12 +76,31 @@ public class TimeSinkHUD : MonoBehaviour
     void OnDestroy()
     {
         var ts = TimeSinkManager.Instance;
-        if (ts == null) return;
-        ts.OnChargeChanged -= UpdateCharge;
-        ts.OnChargeReady -= OnReady;
-        ts.OnActivated -= OnActivated;
-        ts.OnDurationChanged -= UpdateDuration;
-        ts.OnEnded -= OnEnded;
+        if (ts != null)
+        {
+            ts.OnChargeChanged -= UpdateCharge;
+            ts.OnChargeReady -= OnReady;
+            ts.OnActivated -= OnActivated;
+            ts.OnDurationChanged -= UpdateDuration;
+            ts.OnEnded -= OnEnded;
+        }
+
+        if (UpgradeManager.Instance != null)
+            UpgradeManager.Instance.OnUpgradeChanged -= HandleUpgradeChanged;
+    }
+
+    void HandleUpgradeChanged(UpgradeDefinition def, int level)
+    {
+        var ts = TimeSinkManager.Instance;
+        if (ts != null && def == ts.slowMoUpgrade)
+        {
+            RefreshLabel();
+            float fill = ts.IsUnlocked ? (ts.IsActive ? ts.RemainingFraction : (ts.chargeMax > 0f ? ts.Charge / ts.chargeMax : 0f)) : 0f;
+            if (loadingBar != null) loadingBar.SetTargetProgress01(fill);
+            else if (bar) bar.value = fill;
+            if (ts.IsUnlocked && ts.IsReady)
+                OnReady();
+        }
     }
 
     // minValue=0 / maxValue=1 always — the bar only ever receives a
@@ -103,6 +126,19 @@ public class TimeSinkHUD : MonoBehaviour
 
     void UpdateCharge(float fill)
     {
+        var ts = TimeSinkManager.Instance;
+        bool unlocked = ts != null && ts.IsUnlocked;
+        if (!unlocked)
+        {
+            if (loadingBar != null) loadingBar.SetTargetProgress01(0f);
+            else if (bar) bar.value = 0f;
+            if (readyHighlight) readyHighlight.SetReady(false);
+            if (readyPulse) readyPulse.SetActive(false);
+            if (activateButton) activateButton.interactable = false;
+            RefreshLabel();
+            return;
+        }
+
         // Direct assignment or smooth easing — fill is already 0..1. Only ever
         // fires while not active, so this can't stomp an in-progress duration drain.
         if (loadingBar != null) loadingBar.SetTargetProgress01(fill);
@@ -119,11 +155,17 @@ public class TimeSinkHUD : MonoBehaviour
     // when TimeSinkManager.Charge reaches chargeMax.
     void OnReady()
     {
+        var ts = TimeSinkManager.Instance;
+        if (ts == null || !ts.IsUnlocked) return;
+
         if (activateButton) activateButton.interactable = true;
         if (readyHighlight) readyHighlight.SetReady(true);
         if (readyPulse) readyPulse.SetActive(true);
         SfxPlayer.PlayButtonClick();
-        UIToast.ShowAt(activateButton != null ? activateButton.transform : transform, "Time Sink Ready! Tap to use!", Color.cyan);
+        string abilityName = (ts.slowMoUpgrade != null && !string.IsNullOrEmpty(ts.slowMoUpgrade.displayName))
+            ? ts.slowMoUpgrade.displayName
+            : "Chronos";
+        UIToast.ShowAt(activateButton != null ? activateButton.transform : transform, $"{abilityName} Ready! Tap to use!", Color.cyan);
         RefreshLabel();
     }
 
@@ -147,7 +189,9 @@ public class TimeSinkHUD : MonoBehaviour
     {
         // Explicit, not just inherited from OnActivated: disabled after the
         // effect ends until the next full charge fires OnReady again.
-        if (activateButton) activateButton.interactable = true;
+        var ts = TimeSinkManager.Instance;
+        bool unlocked = ts != null && ts.IsUnlocked;
+        if (activateButton) activateButton.interactable = unlocked;
         if (readyHighlight) readyHighlight.SetReady(false);
         if (readyPulse) readyPulse.SetActive(false);
         RefreshLabel();
@@ -157,11 +201,15 @@ public class TimeSinkHUD : MonoBehaviour
     {
         if (!buttonLabel) return;
         var ts = TimeSinkManager.Instance;
+        string abilityUpper = (ts != null && ts.slowMoUpgrade != null && !string.IsNullOrEmpty(ts.slowMoUpgrade.displayName))
+            ? ts.slowMoUpgrade.displayName.ToUpperInvariant()
+            : "CHRONOS";
+
         if (ts != null && ts.IsActive)
-            buttonLabel.text = "TIME SINK ACTIVE";
-        else if (ts != null && ts.IsReady)
-            buttonLabel.text = "TIME SINK READY!";
+            buttonLabel.text = $"{abilityUpper} ACTIVE";
+        else if (ts != null && ts.IsUnlocked && ts.IsReady)
+            buttonLabel.text = $"{abilityUpper} READY!";
         else
-            buttonLabel.text = "TIME SINK";
+            buttonLabel.text = abilityUpper;
     }
 }

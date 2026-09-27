@@ -173,33 +173,39 @@ public class AbilityClickTrigger : MonoBehaviour, IPointerDownHandler, IPointerU
     {
         var ts = TimeSinkManager.Instance;
         if (ts == null) return;
+        if (!ts.IsUnlocked) return;
 
         var gm = GameManager.Instance;
         if (gm != null && gm.IsGameOver) return;
 
+        string abilityName = (ts.slowMoUpgrade != null && !string.IsNullOrEmpty(ts.slowMoUpgrade.displayName))
+            ? ts.slowMoUpgrade.displayName
+            : "Chronos";
+
         if (ts.IsActive)
         {
             SfxPlayer.PlayButtonClick();
-            UIToast.ShowAt(toastOrigin, "Time Sink Active!", Color.cyan);
+            UIToast.ShowAt(toastOrigin, $"{abilityName} Active!", Color.cyan);
             return;
         }
 
         if (!ts.IsReady)
         {
             SfxPlayer.PlayWrongKey();
-            UIToast.ShowAt(toastOrigin, "Time Sink Not Ready!", new Color(1f, 0.85f, 0.2f));
+            UIToast.ShowAt(toastOrigin, $"{abilityName} Not Ready!", new Color(1f, 0.85f, 0.2f));
             return;
         }
 
         ts.Activate();
         SfxPlayer.PlayGameStart();
-        UIToast.ShowAt(toastOrigin, "Time Sink Activated!", Color.cyan);
+        UIToast.ShowAt(toastOrigin, $"{abilityName} Activated!", Color.cyan);
     }
 
     void ExecuteOverload(Transform toastOrigin)
     {
         var cm = ComboManager.Instance;
         if (cm == null) return;
+        if (!cm.IsOverloadUnlocked) return;
 
         var gm = GameManager.Instance;
         if (gm != null && gm.IsGameOver) return;
