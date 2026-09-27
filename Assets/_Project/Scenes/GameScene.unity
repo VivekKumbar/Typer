@@ -8110,7 +8110,6 @@ GameObject:
   - component: {fileID: 987156803}
   - component: {fileID: 987156802}
   - component: {fileID: 987156801}
-  - component: {fileID: 987156804}
   - component: {fileID: 987156805}
   m_Layer: 0
   m_Name: UIManager
@@ -8160,22 +8159,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &987156804
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 987156800}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dba74deea468fcd4889af56177e11ef4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::FpsDisplay
-  showOverlay: 0
-  refreshRate: 0.5
-  corner: 0
-  fontSize: 40
 --- !u!114 &987156805
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9315,7 +9298,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ComboManager
   combo: 0
   comboPerMultiplierStep: 10
-  maxMultiplier: 5
+  maxMultiplier: 10
   overloadMax: 30
   overload: 0
   overloadReady: 0
@@ -15241,8 +15224,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 920.3, y: -175.10376}
-  m_SizeDelta: {x: 180, y: 99.8806}
+  m_AnchoredPosition: {x: 900.1273, y: -175.10376}
+  m_SizeDelta: {x: 203.2203, y: 99.8806}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!225 &1950898345
 CanvasGroup:

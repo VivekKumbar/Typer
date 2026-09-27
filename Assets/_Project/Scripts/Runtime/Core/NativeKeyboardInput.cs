@@ -58,8 +58,11 @@ public class NativeKeyboardInput : MonoBehaviour
 
     void OnChanged(string current)
     {
-        // Avoid duplicate keystroke processing if hardware input was already consumed recently
-        if (Time.unscaledTime - lastHardwareInputTime < 0.35f || (Time.frameCount - lastHardwareInputFrame) <= 5)
+        // Avoid duplicate keystroke processing:
+        // On desktop/WebGL/Editor with hardware keyboard, Input.anyKeyDown / Input.inputString
+        // is handled in Update(). Since EventSystem can invoke OnChanged before Update(),
+        // check Input.anyKeyDown or Input.inputString to skip hardware keystrokes here.
+        if (Input.anyKeyDown || !string.IsNullOrEmpty(Input.inputString) || Time.frameCount == lastHardwareInputFrame || (Time.unscaledTime - lastHardwareInputTime) < 0.15f)
         {
             previous = "";
             if (inputField != null && !string.IsNullOrEmpty(current))
@@ -76,8 +79,14 @@ public class NativeKeyboardInput : MonoBehaviour
         {
             string added = current.Substring(previous.Length);
             foreach (char c in added)
+            {
                 if (char.IsLetter(c) && TypingController.Instance != null)
+                {
+                    lastHardwareInputFrame = Time.frameCount;
+                    lastHardwareInputTime = Time.unscaledTime;
                     TypingController.Instance.ReceiveChar(c);
+                }
+            }
         }
         previous = current;
 
