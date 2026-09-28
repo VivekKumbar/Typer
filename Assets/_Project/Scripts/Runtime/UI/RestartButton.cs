@@ -13,6 +13,8 @@ public class RestartButton : MonoBehaviour
     public void Restart()
     {
         if (GameManager.Instance != null) GameManager.Instance.BankEarnings();
+        SaveManager.ClearSave();
+        SaveManager.IsContinuing = false;
         Time.timeScale = 1f;
         AudioListener.pause = false;
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);

@@ -117,6 +117,7 @@ public class WaveManager : MonoBehaviour
     private Coroutine waveCoroutine;
 
     private int waveIndex = 0;
+    private bool isResumedWave;
 
     // 1-based, matching the "WAVE N" banner — the wave reached so far this run.
     public int CurrentWaveNumber => waveIndex + 1;
@@ -256,8 +257,12 @@ public class WaveManager : MonoBehaviour
         if (SaveManager.IsContinuing && SaveManager.HasSave())
         {
             RunSaveData save = SaveManager.LoadRun();
-            waveIndex = Mathf.Max(0, save.waveNumber - 1);
-            bigEnemyAppearances = Mathf.Max(0, save.bigEnemyAppearances);
+            if (save != null)
+            {
+                waveIndex = Mathf.Max(0, save.waveNumber - 1);
+                bigEnemyAppearances = Mathf.Max(0, save.bigEnemyAppearances);
+                isResumedWave = true;
+            }
         }
         currentWave = waveIndex + 1;
     }
@@ -308,7 +313,9 @@ public class WaveManager : MonoBehaviour
             if (DayNightCycle.Instance != null) DayNightCycle.Instance.ApplyForWave(waveNumber);
             if (ShieldManager.Instance != null) ShieldManager.Instance.NotifyWaveStart();
             if (ComboManager.Instance != null) ComboManager.Instance.NotifyWaveStart(DayNightCycle.Instance != null && DayNightCycle.Instance.IsNight);
-            if (GameManager.Instance != null) GameManager.Instance.ApplyRepairUpgrade();
+            if (GameManager.Instance != null && !isResumedWave)
+                GameManager.Instance.ApplyRepairUpgrade();
+            isResumedWave = false;
 
             // Autosave checkpoint — the start of a wave is the safest point to
             // resume from (never mid-wave). Also fires on wave 1 of a brand

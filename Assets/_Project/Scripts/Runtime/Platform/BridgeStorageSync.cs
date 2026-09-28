@@ -23,10 +23,12 @@ public static class BridgeStorageSync
         "Stats_CorrectLetters",
         "Stats_TotalCoinsCollected",
         "Stats_RunsPlayed",
+        "Stats_WordsTypedPerfectly",
         "Stats_HighestWave",
         "Stats_HighestCombo",
         "Stats_MostCoinsInRun",
         "Stats_BestRunAccuracy",
+        "Stats_SaveVersion",
 
         // Settings & options
         "TypeKeep_SfxEnabled",
@@ -66,7 +68,13 @@ public static class BridgeStorageSync
                             string val = dataList[i];
                             if (!string.IsNullOrEmpty(val))
                             {
-                                PlayerPrefs.SetString(key, val);
+                                if (int.TryParse(val, out int intVal))
+                                    PlayerPrefs.SetInt(key, intVal);
+                                else if (float.TryParse(val, NumberStyles.Float,
+                                         CultureInfo.InvariantCulture, out float floatVal))
+                                    PlayerPrefs.SetFloat(key, floatVal);
+                                else
+                                    PlayerPrefs.SetString(key, val);
                             }
                         }
                         PlayerPrefs.Save();

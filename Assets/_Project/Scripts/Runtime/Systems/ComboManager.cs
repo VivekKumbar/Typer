@@ -71,10 +71,13 @@ public class ComboManager : MonoBehaviour
         if (SaveManager.IsContinuing && SaveManager.HasSave())
         {
             RunSaveData save = SaveManager.LoadRun();
-            combo = Mathf.Max(0, save.combo);
-            HighestComboThisRun = Mathf.Max(HighestComboThisRun, Mathf.Max(0, save.highestComboThisRun));
-            overload = Mathf.Max(0f, save.overload);
-            overloadReady = save.overloadReady;
+            if (save != null)
+            {
+                combo = Mathf.Max(0, save.combo);
+                HighestComboThisRun = Mathf.Max(HighestComboThisRun, Mathf.Max(0, save.highestComboThisRun));
+                overload = Mathf.Max(0f, save.overload);
+                overloadReady = save.overloadReady;
+            }
         }
     }
 

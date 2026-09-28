@@ -17,6 +17,7 @@ public class GameManager : MonoBehaviour
     public int coins = 0;             // spendable this run
     public int coinsEarnedThisRun = 0; // total earned this run (for banking)
     private bool earningsBanked = false;
+    private bool runStatsRecorded = false;
 
     [Header("WPM (per run) — shown ONLY on the Game Over panel")]
     [Tooltip("Accumulated seconds of genuine typing time this run. Only ticks while IsTypingWindowOpen AND Time.timeScale > 0 -- pause, upgrade draft, wave announce/countdown, boss warning, game over all stop it. Saved/restored with the run, same as coins.")]
@@ -52,9 +53,12 @@ public class GameManager : MonoBehaviour
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
 
+        RunSaveData save = null;
         if (SaveManager.IsContinuing && SaveManager.HasSave())
+            save = SaveManager.LoadRun();
+
+        if (save != null)
         {
-            RunSaveData save = SaveManager.LoadRun();
             currentHealth = Mathf.Clamp(save.health, 0, maxHealth);
             shield = Mathf.Max(0, save.gmShield);
             coins = Mathf.Max(0, save.coins);
@@ -65,6 +69,8 @@ public class GameManager : MonoBehaviour
         }
         else
         {
+            if (SaveManager.IsContinuing)
+                SaveManager.ClearSave(); // save existed but was corrupt — discard it
             currentHealth = maxHealth;
             coins = 0;
             coinsEarnedThisRun = 0;
@@ -219,6 +225,7 @@ public class GameManager : MonoBehaviour
         {
             IsGameOver = true;
             BankEarnings();
+            RecordRunStats();
             SaveManager.ClearSave(); // run is over — nothing left to continue
             BridgeManager.SendLevelFailed(WaveManager.Instance != null ? WaveManager.Instance.CurrentWaveNumber : 1);
             OnGameOver?.Invoke();
@@ -248,6 +255,16 @@ public class GameManager : MonoBehaviour
             Wallet.Add(toBank);
             coinsBankedThisRun += toBank;
         }
+    }
+
+    // Records end-of-run stats (personal bests, RunsPlayed) exactly once per
+    // run. Separated from BankEarnings so that wallet deposits can happen on
+    // app-background without prematurely recording stats or double-counting
+    // RunsPlayed after a revive.
+    void RecordRunStats()
+    {
+        if (runStatsRecorded) return;
+        runStatsRecorded = true;
 
         int wave = WaveManager.Instance != null ? WaveManager.Instance.CurrentWaveNumber : 0;
         int peakCombo = ComboManager.Instance != null ? ComboManager.Instance.HighestComboThisRun : 0;
@@ -286,10 +303,7 @@ public class GameManager : MonoBehaviour
     void OnApplicationFocus(bool hasFocus)
     {
         if (!hasFocus)
-        {
-            BankEarnings();
             SaveProgressIfActive();
-        }
     }
 
     // If the app is closed/backgrounded mid-run, bank what we have and save

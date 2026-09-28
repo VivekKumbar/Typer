@@ -70,7 +70,11 @@ public class SplashScreen : MonoBehaviour, IPointerClickHandler
         // the bar still can't visibly jump -- only the target moves; the
         // displayed value eases toward it.
         bool preloadFinished = false;
-        BridgeStorageSync.Preload(() => preloadFinished = true);
+        BridgeStorageSync.Preload(() =>
+        {
+            StatsManager.ValidateAndMigrate();
+            preloadFinished = true;
+        });
 
         float t = 0f;
         while (t < minDisplayDuration || !preloadFinished)

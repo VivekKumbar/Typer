@@ -43,7 +43,8 @@ public class ShieldManager : MonoBehaviour
         if (SaveManager.IsContinuing && SaveManager.HasSave())
         {
             RunSaveData save = SaveManager.LoadRun();
-            Current = Mathf.Max(0, save.abilityShield);
+            if (save != null)
+                Current = Mathf.Max(0, save.abilityShield);
         }
     }
 

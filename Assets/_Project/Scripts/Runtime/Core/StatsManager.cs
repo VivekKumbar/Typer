@@ -17,6 +17,9 @@ public static class StatsManager
     const string KEY_MOST_COINS_IN_RUN = "Stats_MostCoinsInRun";
     const string KEY_BEST_RUN_ACCURACY = "Stats_BestRunAccuracy";
 
+    const string KEY_SAVE_VERSION = "Stats_SaveVersion";
+    const int CURRENT_VERSION = 1;
+
     // Fired after every recorded stat change, so the Profile screen can refresh live.
     public static event Action OnStatsChanged;
 
@@ -44,7 +47,7 @@ public static class StatsManager
         private set { BridgeStorageSync.SetInt(KEY_CORRECT_LETTERS, value); }
     }
 
-    public static float LifetimeAccuracy => LettersTyped > 0 ? (float)CorrectLetters / LettersTyped * 100f : 0f;
+    public static float LifetimeAccuracy => LettersTyped > 0 ? Mathf.Clamp((float)CorrectLetters / LettersTyped * 100f, 0f, 100f) : 0f;
 
     public static int TotalCoinsCollected
     {
@@ -97,7 +100,7 @@ public static class StatsManager
     static int runCorrectLetters;
 
     // This run's accuracy so far. Feed this into EndRun() when a run finishes.
-    public static float CurrentRunAccuracy => runLettersTyped > 0 ? (float)runCorrectLetters / runLettersTyped * 100f : 0f;
+    public static float CurrentRunAccuracy => runLettersTyped > 0 ? Mathf.Clamp((float)runCorrectLetters / runLettersTyped * 100f, 0f, 100f) : 0f;
 
     // ---- recording ----
     public static void RecordCorrectLetter()
@@ -178,5 +181,17 @@ public static class StatsManager
     static void Commit()
     {
         OnStatsChanged?.Invoke();
+    }
+
+    // Called once at startup (after BridgeStorageSync.Preload) to wipe stale
+    // stats left over from an older save format or a previous debug/test run.
+    public static void ValidateAndMigrate()
+    {
+        int version = PlayerPrefs.GetInt(KEY_SAVE_VERSION, 0);
+        if (version < CURRENT_VERSION)
+        {
+            ResetStats();
+            BridgeStorageSync.SetInt(KEY_SAVE_VERSION, CURRENT_VERSION);
+        }
     }
 }
