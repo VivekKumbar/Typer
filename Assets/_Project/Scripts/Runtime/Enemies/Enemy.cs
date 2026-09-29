@@ -52,6 +52,8 @@ public class Enemy : MonoBehaviour
 
     [Header("Movement")]
     public float moveSpeed = 1.5f;
+    [Tooltip("Minimum world-space distance to maintain behind the nearest enemy closer to the fortress. Prevents enemies from bunching up and overlapping labels during slow-mo or dense waves.")]
+    public float minEnemyGap = 1.5f;
 
     [Header("Facing (3D models)")]
     [Tooltip("How fast it turns to face the tower. Higher = snappier.")]
@@ -104,10 +106,16 @@ public class Enemy : MonoBehaviour
     private EnemyHitFlash hitFlash;
     public EnemyHitFlash HitFlash => hitFlash;
 
+    private float labelBaseLocalY;
+    private static int s_lastLabelResolveFrame = -1;
+    private static readonly List<Enemy> s_sortedForLabels = new List<Enemy>(32);
+
     void Awake()
     {
         baseScale = transform.localScale;
         baseMoveSpeed = moveSpeed;
+        if (label != null)
+            labelBaseLocalY = label.transform.localPosition.y;
         if (enemyAnimator == null) enemyAnimator = GetComponentInChildren<EnemyAnimator>();
         if (dissolve == null) dissolve = GetComponentInChildren<EnemyDissolve>();
         if (skinApplier == null) skinApplier = GetComponentInChildren<EnemySkinApplier>();
@@ -131,6 +139,9 @@ public class Enemy : MonoBehaviour
         {
             label.gameObject.SetActive(true);
             label.text = "";
+            Vector3 lp = label.transform.localPosition;
+            lp.y = labelBaseLocalY;
+            label.transform.localPosition = lp;
         }
         if (dissolve != null)
         {
@@ -186,7 +197,37 @@ public class Enemy : MonoBehaviour
 
         // Walk (unless a Blocker ally is holding this enemy in place)
         if (!IsBlocked)
-            transform.position += flat * moveSpeed * SlowMultiplier * NearTowerSlowMultiplier * Time.deltaTime;
+        {
+            float step = moveSpeed * SlowMultiplier * NearTowerSlowMultiplier * Time.deltaTime;
+            Vector3 newPos = transform.position + flat * step;
+            float newDist = Vector3.Distance(newPos, target.position);
+
+            Enemy nearestAhead = null;
+            float smallestGap = float.MaxValue;
+            for (int i = 0; i < Active.Count; i++)
+            {
+                Enemy e = Active[i];
+                if (e == this || e.IsDefeated) continue;
+                if (e.DistanceToFortress >= newDist) continue;
+                float g = Vector3.Distance(newPos, e.transform.position);
+                if (g < smallestGap)
+                {
+                    smallestGap = g;
+                    nearestAhead = e;
+                }
+            }
+
+            if (smallestGap < minEnemyGap && nearestAhead != null)
+            {
+                float currentGap = Vector3.Distance(transform.position, nearestAhead.transform.position);
+                float allowed = Mathf.Max(0f, currentGap - minEnemyGap);
+                transform.position += flat * Mathf.Min(step, allowed);
+            }
+            else
+            {
+                transform.position = newPos;
+            }
+        }
 
         // Turn to face the tower
         if (rotateTowardsTarget && flat.sqrMagnitude > 0.001f)
@@ -201,6 +242,60 @@ public class Enemy : MonoBehaviour
             CameraShake.ShakeHit();
             SfxPlayer.PlayHit();
             Die(false);
+        }
+    }
+
+    void LateUpdate()
+    {
+        if (Time.frameCount == s_lastLabelResolveFrame) return;
+        s_lastLabelResolveFrame = Time.frameCount;
+        ResolveAllLabelOverlaps();
+    }
+
+    static void ResolveAllLabelOverlaps()
+    {
+        s_sortedForLabels.Clear();
+        for (int i = 0; i < Active.Count; i++)
+        {
+            Enemy e = Active[i];
+            if (e == null || e.IsDefeated || e.label == null) continue;
+            if (!e.label.gameObject.activeInHierarchy) continue;
+            Vector3 lp = e.label.transform.localPosition;
+            lp.y = e.labelBaseLocalY;
+            e.label.transform.localPosition = lp;
+            s_sortedForLabels.Add(e);
+        }
+
+        if (s_sortedForLabels.Count < 2) return;
+
+        s_sortedForLabels.Sort((a, b) => a.DistanceToFortress.CompareTo(b.DistanceToFortress));
+
+        const float overlapThreshSq = 1.8f * 1.8f;
+        const float labelStackStep = 0.45f;
+
+        for (int i = 1; i < s_sortedForLabels.Count; i++)
+        {
+            Enemy curr = s_sortedForLabels[i];
+            float highestY = curr.labelBaseLocalY;
+
+            for (int j = 0; j < i; j++)
+            {
+                Enemy prev = s_sortedForLabels[j];
+                Vector3 diff = curr.transform.position - prev.transform.position;
+                float xzSq = diff.x * diff.x + diff.z * diff.z;
+                if (xzSq > overlapThreshSq) continue;
+
+                float prevY = prev.label.transform.localPosition.y + labelStackStep;
+                if (prevY > highestY)
+                    highestY = prevY;
+            }
+
+            if (highestY > curr.labelBaseLocalY)
+            {
+                Vector3 lp = curr.label.transform.localPosition;
+                lp.y = highestY;
+                curr.label.transform.localPosition = lp;
+            }
         }
     }
 

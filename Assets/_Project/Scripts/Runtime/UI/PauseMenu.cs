@@ -20,7 +20,7 @@ public class PauseMenu : MonoBehaviour
 
     public void Pause()
     {
-        // Don't allow pausing once the game is over
+        if (IsPaused) return;
         if (GameManager.Instance != null && GameManager.Instance.IsGameOver) return;
         IsPaused = true;
         Time.timeScale = 0f;
@@ -36,6 +36,18 @@ public class PauseMenu : MonoBehaviour
         AudioListener.pause = false;
         if (pausePanel) pausePanel.SetActive(false);
         BridgeManager.SendLevelResumed();
+    }
+
+    void OnApplicationFocus(bool hasFocus)
+    {
+        if (!hasFocus)
+            Pause();
+    }
+
+    void OnApplicationPause(bool paused)
+    {
+        if (paused)
+            Pause();
     }
 
     private void OnDisable()

@@ -42,7 +42,10 @@ public static class BridgeStorageSync
 
         // Mid-run checkpoint save
         "TypeKeep_RunSave",
-        "TypeKeep_RunSave_Wave"
+        "TypeKeep_RunSave_Wave",
+
+        // Profile avatar
+        "PlayerSelectedAvatar"
     };
 
     public static bool IsLoaded { get; private set; }

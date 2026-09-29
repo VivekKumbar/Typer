@@ -20,8 +20,14 @@ public static class StatsManager
     const string KEY_SAVE_VERSION = "Stats_SaveVersion";
     const int CURRENT_VERSION = 1;
 
+    const string KEY_SELECTED_AVATAR = "PlayerSelectedAvatar";
+    public const string DEFAULT_AVATAR = "char 1";
+
     // Fired after every recorded stat change, so the Profile screen can refresh live.
     public static event Action OnStatsChanged;
+
+    // Fired when the active profile avatar is changed.
+    public static event Action<string> OnAvatarChanged;
 
     // Fired once per correct keystroke, from the SAME call (RecordCorrectLetter)
     // that already feeds accuracy -- GameManager's WPM counter listens to this
@@ -93,6 +99,17 @@ public static class StatsManager
     {
         get { return PlayerPrefs.GetFloat(KEY_BEST_RUN_ACCURACY, 0f); }
         private set { BridgeStorageSync.SetFloat(KEY_BEST_RUN_ACCURACY, value); }
+    }
+
+    public static string SelectedAvatar
+    {
+        get { return PlayerPrefs.GetString(KEY_SELECTED_AVATAR, DEFAULT_AVATAR); }
+        set
+        {
+            string chosen = string.IsNullOrEmpty(value) ? DEFAULT_AVATAR : value;
+            BridgeStorageSync.SetString(KEY_SELECTED_AVATAR, chosen);
+            OnAvatarChanged?.Invoke(chosen);
+        }
     }
 
     // ---- per-run tracking (not persisted — reset at the end of each run) ----

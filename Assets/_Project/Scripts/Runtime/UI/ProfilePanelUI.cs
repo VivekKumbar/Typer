@@ -54,14 +54,25 @@ public class ProfilePanelUI : MonoBehaviour
     public TMP_Text totalCoinsText;
     public TMP_Text runsPlayedText;
 
+    [Header("Avatar")]
+    public Image avatarImage;
+    public Button avatarButton;
+    public ProfileAvatarPickerUI avatarPicker;
+
     void Start()
     {
         StatsManager.OnStatsChanged += Refresh;
+        StatsManager.OnAvatarChanged += HandleAvatarChanged;
+        if (avatarButton != null)
+        {
+            avatarButton.onClick.AddListener(OpenAvatarPicker);
+        }
     }
 
     void OnDestroy()
     {
         StatsManager.OnStatsChanged -= Refresh;
+        StatsManager.OnAvatarChanged -= HandleAvatarChanged;
     }
 
     // Re-read stats every time the panel is shown, in case a run finished while it was hidden.
@@ -93,6 +104,34 @@ public class ProfilePanelUI : MonoBehaviour
         if (lifetimeAccuracyText) lifetimeAccuracyText.text = StatsManager.LifetimeAccuracy.ToString("F1") + "%";
         if (totalCoinsText) totalCoinsText.text = StatsManager.TotalCoinsCollected.ToString();
         if (runsPlayedText) runsPlayedText.text = StatsManager.RunsPlayed.ToString();
+
+        RefreshAvatar();
+    }
+
+    private void HandleAvatarChanged(string _)
+    {
+        RefreshAvatar();
+    }
+
+    public void RefreshAvatar()
+    {
+        if (avatarImage != null)
+        {
+            Sprite s = avatarPicker != null ? avatarPicker.GetAvatarSprite(StatsManager.SelectedAvatar) : null;
+            if (s != null)
+            {
+                avatarImage.sprite = s;
+                avatarImage.enabled = true;
+            }
+        }
+    }
+
+    public void OpenAvatarPicker()
+    {
+        if (avatarPicker != null)
+        {
+            avatarPicker.Show();
+        }
     }
 
     // Skill title derived from the live stats and the Inspector-editable rank ladder.
