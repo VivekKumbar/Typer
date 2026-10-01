@@ -449,6 +449,7 @@ MonoBehaviour:
   minSecondsForWpm: 5
   shield: 0
   repairUpgrade: {fileID: 11400000, guid: 14b74e12a8aa28f43a1e47329f0695f6, type: 2}
+  coinsBankedThisRun: 0
 --- !u!4 &65784107
 Transform:
   m_ObjectHideFlags: 0
@@ -11772,7 +11773,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -921}
+  m_AnchoredPosition: {x: 0, y: -435}
   m_SizeDelta: {x: -40, y: 80}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1447194546

@@ -32,7 +32,8 @@ public class PauseMenu : MonoBehaviour
     public void Resume()
     {
         IsPaused = false;
-        Time.timeScale = 1f;
+        bool draftOpen = UpgradeManager.Instance != null && UpgradeManager.Instance.IsDraftOpen;
+        Time.timeScale = draftOpen ? 0f : 1f;
         AudioListener.pause = false;
         if (pausePanel) pausePanel.SetActive(false);
         BridgeManager.SendLevelResumed();
@@ -48,6 +49,12 @@ public class PauseMenu : MonoBehaviour
     {
         if (paused)
             Pause();
+    }
+
+    // Called from the WebGL template's visibilitychange handler (document.hidden).
+    public void PauseFromBrowserHidden()
+    {
+        Pause();
     }
 
     private void OnDisable()

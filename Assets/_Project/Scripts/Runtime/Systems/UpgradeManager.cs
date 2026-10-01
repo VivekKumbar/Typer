@@ -168,7 +168,8 @@ public class UpgradeManager : MonoBehaviour
         if (GameManager.Instance != null)
             GameManager.Instance.SaveProgressIfActive();
 
-        if (weFroze && Time.timeScale == 0f)
+        bool paused = PauseMenu.Instance != null && PauseMenu.Instance.IsPaused;
+        if (weFroze && Time.timeScale == 0f && !paused)
             Time.timeScale = 1f;
     }
 

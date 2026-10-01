@@ -80,6 +80,7 @@ public static class SaveManager
 
             coins = gm.coins,
             coinsEarnedThisRun = gm.coinsEarnedThisRun,
+            coinsBankedThisRun = gm.coinsBankedThisRun,
 
             activeGameplaySeconds = gm.activeGameplaySeconds,
             correctCharactersThisRun = gm.correctCharactersThisRun,

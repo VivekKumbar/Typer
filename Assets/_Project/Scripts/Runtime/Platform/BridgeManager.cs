@@ -107,11 +107,21 @@ public class BridgeManager : MonoBehaviour
             }
             Time.timeScale = 0f;
             AudioListener.pause = true;
+            if (PauseMenu.Instance != null) PauseMenu.Instance.Pause();
         }
         else
         {
-            Time.timeScale = s_savedTimeScale > 0f ? s_savedTimeScale : 1f;
-            if (!s_isHostAudioMuted)
+            // Never un-freeze underneath the pause menu, upgrade draft, or game over —
+            // only the player's Resume (or the draft/revive flow) may restart time.
+            bool menuPaused = PauseMenu.Instance != null && PauseMenu.Instance.IsPaused;
+            bool holdFrozen = menuPaused
+                || (GameManager.Instance != null && GameManager.Instance.IsGameOver)
+                || (UpgradeManager.Instance != null && UpgradeManager.Instance.IsDraftOpen);
+            if (!holdFrozen)
+            {
+                Time.timeScale = s_savedTimeScale > 0f ? s_savedTimeScale : 1f;
+            }
+            if (!s_isHostAudioMuted && !menuPaused)
             {
                 AudioListener.pause = false;
             }

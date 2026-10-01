@@ -16,7 +16,6 @@ public class GameManager : MonoBehaviour
     [Header("Economy")]
     public int coins = 0;             // spendable this run
     public int coinsEarnedThisRun = 0; // total earned this run (for banking)
-    private bool earningsBanked = false;
     private bool runStatsRecorded = false;
 
     [Header("WPM (per run) — shown ONLY on the Game Over panel")]
@@ -63,6 +62,9 @@ public class GameManager : MonoBehaviour
             shield = Mathf.Max(0, save.gmShield);
             coins = Mathf.Max(0, save.coins);
             coinsEarnedThisRun = Mathf.Max(0, save.coinsEarnedThisRun);
+            coinsBankedThisRun = save.coinsBankedThisRun < 0
+                ? coinsEarnedThisRun
+                : Mathf.Clamp(save.coinsBankedThisRun, 0, coinsEarnedThisRun);
             activeGameplaySeconds = Mathf.Max(0f, save.activeGameplaySeconds);      // Continue resumes the same WPM run
             correctCharactersThisRun = Mathf.Max(0, save.correctCharactersThisRun); // (old saves lack these -> 0)
             RunContext.RestoreFromSave(save); // word packs: exactly what was locked in when saved
@@ -240,15 +242,14 @@ public class GameManager : MonoBehaviour
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
     }
 
-    private int coinsBankedThisRun = 0;
+    // Persisted in RunSaveData so a Continue doesn't re-deposit coins that were already banked.
+    [HideInInspector] public int coinsBankedThisRun = 0;
 
-    // Deposits this run's earnings into the persistent Wallet exactly once (or unbanked delta upon continue).
-    // Safe to call from game over, quit-to-menu, or app background.
+    // Deposits whatever this run has earned but not yet banked. Idempotent, so it
+    // is safe to call at every save point; no once-per-run latch, which used to
+    // drop every coin earned after the first mid-run bank.
     public void BankEarnings()
     {
-        if (earningsBanked) return;
-        earningsBanked = true;
-
         int toBank = Mathf.Max(0, coinsEarnedThisRun - coinsBankedThisRun);
         if (toBank > 0)
         {
@@ -277,25 +278,25 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Restores tower health to full, unmarks game over, and allows banking further earnings.
+    /// Restores tower health to full and unmarks game over.
     /// </summary>
     public void ReviveFortress()
     {
         IsGameOver = false;
-        earningsBanked = false;
         currentHealth = maxHealth;
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
     }
 
-    // Writes a mid-run save if the run is still active — used when pausing to
-    // the Main Menu (RestartButton.GoToMenu) and from the app-exit hooks
-    // below. Unlike BankEarnings this has no "only once" guard: saving is
-    // idempotent (each write just overwrites the last), so it's safe to call
-    // on every background/foreground cycle, not just the first.
+    // Writes a mid-run save if the run is still active — used by the autosave
+    // loop, pausing to the Main Menu (RestartButton.GoToMenu), the app-exit
+    // hooks below, and the WebGL page's hide/close handlers. Banks first so the
+    // wallet and the saved coinsBankedThisRun are written together: a tab
+    // closed mid-run (where OnApplicationQuit may never fire) keeps its coins.
     public void SaveProgressIfActive()
     {
         if (IsGameOver) return;
         if (WaveManager.Instance == null) return;
+        BankEarnings();
         SaveManager.CaptureAndSave(WaveManager.Instance.CurrentWaveNumber);
         PlayerPrefs.Save();
     }
@@ -307,9 +308,7 @@ public class GameManager : MonoBehaviour
     }
 
     // If the app is closed/backgrounded mid-run, bank what we have and save
-    // the run so Continue picks it back up. Mirrors BankEarnings' own guard
-    // (IsGameOver) rather than sharing its one-time latch, since a save write
-    // should still happen on every background, not just the first.
+    // the run so Continue picks it back up.
     void OnApplicationPause(bool paused)
     {
         if (!paused) return;

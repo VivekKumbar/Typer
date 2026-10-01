@@ -75,7 +75,17 @@
             function triggerSave() {
                 if (window.unityInstance) {
                     try {
-                        window.unityInstance.SendMessage('GameManager', 'SaveProgressIfActive');
+                        // GameManager lives on the "Game manager" GameObject in GameScene.
+                        window.unityInstance.SendMessage('Game manager', 'SaveProgressIfActive');
+                    } catch (e) {}
+                }
+            }
+
+            function triggerPause() {
+                if (window.unityInstance) {
+                    try {
+                        // PauseMenu lives on the "UIManager" GameObject in GameScene.
+                        window.unityInstance.SendMessage('UIManager', 'PauseFromBrowserHidden');
                     } catch (e) {}
                 }
             }
@@ -83,7 +93,10 @@
             window.addEventListener('beforeunload', triggerSave);
             window.addEventListener('pagehide', triggerSave);
             document.addEventListener('visibilitychange', function() {
-                if (document.visibilityState === 'hidden') triggerSave();
+                if (document.visibilityState === 'hidden') {
+                    triggerPause();
+                    triggerSave();
+                }
             });
         </script>
         <script src="./playgama-bridge-unity.js"></script>
