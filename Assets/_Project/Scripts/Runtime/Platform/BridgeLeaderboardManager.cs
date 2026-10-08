@@ -42,7 +42,8 @@ public static class BridgeLeaderboardManager
 #if UNITY_WEBGL
         try
         {
-            if (Bridge.leaderboards != null)
+            // Skip platforms without leaderboards so the call doesn't log errors there.
+            if (Bridge.leaderboards != null && Bridge.leaderboards.type != LeaderboardType.NotAvailable)
             {
                 Bridge.leaderboards.SetScore(leaderboardId, score, success =>
                 {
@@ -68,7 +69,7 @@ public static class BridgeLeaderboardManager
 #if UNITY_WEBGL
         try
         {
-            if (Bridge.leaderboards != null)
+            if (Bridge.leaderboards != null && Bridge.leaderboards.type == LeaderboardType.NativePopup)
             {
                 Bridge.leaderboards.ShowNativePopup(leaderboardId, callback);
                 return;
