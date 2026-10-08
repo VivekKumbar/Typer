@@ -74,6 +74,17 @@ public class MainMenu : MonoBehaviour
     [Tooltip("The whole Watch Ad button root -- hidden whenever no rewarded ad is ready, so the player never taps a dead button.")]
     public GameObject watchAdButtonRoot;
     public Button watchAdButton;
+    [Tooltip("The button's text -- shows the reward when ready, and a countdown during the cooldown.")]
+    public TMP_Text watchAdLabel;
+    [Tooltip("Minutes between Watch Ad rewards. Persisted across sessions.")]
+    public float watchAdCooldownMinutes = 30f;
+    [Tooltip("The Shop's item list. Its bottom edge is raised to make room for the Watch Ad footer, and dropped back down when no ad is available so no empty gap shows.")]
+    public RectTransform shopItemList;
+    [Tooltip("Bottom offset of the Shop item list when the Watch Ad footer is hidden.")]
+    public float shopListBottomWithoutWatchAd = 16f;
+    private float shopListBottomWithWatchAd = -1f;
+
+    const string WatchAdNextTimeKey = "TypeKeep_WatchAdNextUtcTicks";
 
     void Start()
     {
@@ -81,47 +92,91 @@ public class MainMenu : MonoBehaviour
         SfxPlayer.PlayMainMenu();
         MusicManager.PlayMenuMusic(); // makes sure the menu track is playing (returns from a run already restarted it in RestartButton.GoToMenu)
         if (ftueReplayButton != null) ftueReplayButton.onClick.AddListener(ReplayFtue);
-        // No ad SDK integrated yet on this branch (WebGL-first pass, ads come
-        // back before publishing) -- Watch Ad stays hidden and unwired rather
-        // than deleted, so re-enabling it later is just: add the listener
-        // back, call RefreshWatchAdButton() here, and restore the ad-ready
-        // check inside it.
-        if (watchAdButtonRoot != null) watchAdButtonRoot.SetActive(false);
-        else if (watchAdButton != null) watchAdButton.gameObject.SetActive(false);
+        if (watchAdButton != null) watchAdButton.onClick.AddListener(OnWatchAdClicked);
+        if (shopItemList != null) shopListBottomWithWatchAd = shopItemList.offsetMin.y;
+        RefreshWatchAdButton();
         MaybeShowInterstitial();
     }
 
-    // Re-wire this to the eventual ad SDK's "rewarded ad ready" check, then
-    // call it from Start() (and after each ad closes) to drive the button's
-    // visibility again.
-    void RefreshWatchAdButton()
-    {
-        bool ready = false;
-        if (watchAdButtonRoot != null) watchAdButtonRoot.SetActive(ready);
-        else if (watchAdButton != null) watchAdButton.gameObject.SetActive(ready);
-    }
+    private bool watchAdInProgress;
+    private int lastShownCooldownSeconds = -1;
+    private float nextWatchAdRefresh;
 
-    // Not currently wired to the (hidden) Watch Ad button -- re-hook this in
-    // Start() once a real ad SDK replaces the ad-showing call below.
-    void OnWatchAdClicked()
+    void Update()
     {
-        Debug.Log("[MainMenu] Watch Ad tapped, but no ad SDK is integrated yet for this build.");
+        if (watchAdButton == null || Time.unscaledTime < nextWatchAdRefresh) return;
+        nextWatchAdRefresh = Time.unscaledTime + 0.25f;
         RefreshWatchAdButton();
     }
 
-    // Grants the Watch Ad reward -- called by OnWatchAdClicked once a real ad
-    // SDK's reward callback replaces the log above.
+    // Seconds left on the cooldown. Clamped to one full cooldown so a clock
+    // moved backwards can't lock the button for longer than intended.
+    int WatchAdCooldownRemaining()
+    {
+        // Stored as "utc:<ticks>" so BridgeStorageSync.Preload keeps it a string
+        // (a bare number would be re-imported as a float and lost).
+        string stored = PlayerPrefs.GetString(WatchAdNextTimeKey, "");
+        long ticks;
+        if (!stored.StartsWith("utc:") || !long.TryParse(stored.Substring(4), out ticks)) return 0;
+        double remaining = (new System.DateTime(ticks, System.DateTimeKind.Utc) - System.DateTime.UtcNow).TotalSeconds;
+        return Mathf.Clamp(Mathf.CeilToInt((float)remaining), 0, Mathf.CeilToInt(watchAdCooldownMinutes * 60f));
+    }
+
+    // Shown only when the platform can actually serve a rewarded ad, so the
+    // player never taps a dead button; disabled while an ad is playing or on cooldown.
+    void RefreshWatchAdButton()
+    {
+        bool supported = PlayGamaAds.Instance != null && PlayGamaAds.Instance.IsRewardedSupported();
+        if (watchAdButtonRoot != null) { if (watchAdButtonRoot.activeSelf != supported) watchAdButtonRoot.SetActive(supported); }
+        else if (watchAdButton != null && watchAdButton.gameObject.activeSelf != supported) watchAdButton.gameObject.SetActive(supported);
+        if (shopItemList != null && shopListBottomWithWatchAd >= 0f)
+        {
+            float bottom = supported ? shopListBottomWithWatchAd : shopListBottomWithoutWatchAd;
+            if (!Mathf.Approximately(shopItemList.offsetMin.y, bottom))
+                shopItemList.offsetMin = new Vector2(shopItemList.offsetMin.x, bottom);
+        }
+        if (!supported || watchAdButton == null) return;
+
+        int cooldown = WatchAdCooldownRemaining();
+        watchAdButton.interactable = !watchAdInProgress && cooldown == 0;
+
+        if (watchAdLabel == null || cooldown == lastShownCooldownSeconds) return;
+        lastShownCooldownSeconds = cooldown;
+        watchAdLabel.text = cooldown > 0
+            ? "<size=62%>NEXT AD IN</size>\n" + (cooldown / 60).ToString("00") + ":" + (cooldown % 60).ToString("00")
+            : "<color=#FFD24D>+" + watchAdCoinReward + "</color>\n<size=62%>WATCH AD</size>";
+    }
+
+    void OnWatchAdClicked()
+    {
+        if (watchAdInProgress || PlayGamaAds.Instance == null || !PlayGamaAds.Instance.IsRewardedSupported()) return;
+        if (WatchAdCooldownRemaining() > 0) return;
+        watchAdInProgress = true;
+        RefreshWatchAdButton();
+        PlayGamaAds.Instance.ShowRewarded(success =>
+        {
+            watchAdInProgress = false;
+            if (this == null) return; // menu scene unloaded while the ad was open
+            if (success)
+            {
+                GrantWatchAdReward();
+                long next = System.DateTime.UtcNow.AddMinutes(watchAdCooldownMinutes).Ticks;
+                BridgeStorageSync.SetString(WatchAdNextTimeKey, "utc:" + next);
+                if (watchAdButton != null) UIToast.ShowAt(watchAdButton.transform, "+" + watchAdCoinReward + " Coins!", new Color(1f, 0.85f, 0.2f));
+            }
+            lastShownCooldownSeconds = -1;
+            RefreshWatchAdButton();
+        }, "Watch Ad for +" + watchAdCoinReward + " Coins");
+    }
+
     void GrantWatchAdReward()
     {
         Wallet.Add(watchAdCoinReward);
     }
 
-    // DEBUG CONSOLE HOOK: "resetadcooldown". No-op on this branch -- the
-    // Watch Ad button has no live ad SDK or cooldown tracking wired up yet
-    // (see GrantWatchAdReward above), so there's no cooldown state to clear.
-    // Kept so the console command still compiles/runs; give it real cooldown
-    // state to clear once ads are wired back in.
-    public static void DebugResetAdCooldown() { }
+    // DEBUG CONSOLE HOOK: "resetadcooldown". Clears the Watch Ad cooldown;
+    // the button picks it up on its next refresh.
+    public static void DebugResetAdCooldown() => BridgeStorageSync.DeleteKey(WatchAdNextTimeKey);
 
     // DEBUG CONSOLE HOOK: "forcereward". Routes through the same
     // GrantWatchAdReward() a real completed ad would call.
@@ -142,7 +197,7 @@ public class MainMenu : MonoBehaviour
 
         if (gamesPlayed >= gamesPlayedForInterstitial)
         {
-            if (PlayGamaAds.Instance != null)
+            if (PlayGamaAds.Instance != null && PlayGamaAds.Instance.IsInterstitialSupported())
             {
                 PlayGamaAds.Instance.ShowInterstitial(success =>
                 {

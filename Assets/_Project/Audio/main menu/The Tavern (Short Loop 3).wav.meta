@@ -1,4 +1,4 @@
-﻿fileFormatVersion: 2
+fileFormatVersion: 2
 guid: 0bac3f80ce8127844b10297ab61a116d
 AudioImporter:
   externalObjects: {}
@@ -18,8 +18,8 @@ AudioImporter:
       loadType: 0
       sampleRateSetting: 2
       sampleRateOverride: 44100
-      compressionFormat: 1
-      quality: 0.5
+      compressionFormat: 7
+      quality: 0.4
       conversionMode: 0
       preloadAudioData: 1
   forceToMono: 0

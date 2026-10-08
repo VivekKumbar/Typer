@@ -231,20 +231,20 @@ public class PlayGamaAds : MonoBehaviour
     // PUBLIC AD APIS
     // =========================================================================
 
+    // The simulator stands in for missing ads only in the editor and in
+    // Development builds; release builds never show it to real players.
+    static bool SimulatorAllowed => Application.isEditor || Debug.isDebugBuild;
+
     public bool IsInterstitialSupported()
     {
 #if UNITY_WEBGL && !UNITY_EDITOR
         try
         {
-            return Bridge.advertisement != null && Bridge.advertisement.isInterstitialSupported;
+            if (Bridge.advertisement != null && Bridge.advertisement.isInterstitialSupported) return true;
         }
-        catch
-        {
-            return false;
-        }
-#else
-        return true;
+        catch { }
 #endif
+        return SimulatorAllowed;
     }
 
     public bool IsRewardedSupported()
@@ -252,15 +252,11 @@ public class PlayGamaAds : MonoBehaviour
 #if UNITY_WEBGL && !UNITY_EDITOR
         try
         {
-            return Bridge.advertisement != null && Bridge.advertisement.isRewardedSupported;
+            if (Bridge.advertisement != null && Bridge.advertisement.isRewardedSupported) return true;
         }
-        catch
-        {
-            return false;
-        }
-#else
-        return true;
+        catch { }
 #endif
+        return SimulatorAllowed;
     }
 
     public void ShowInterstitial(Action<bool> onComplete = null)
@@ -299,7 +295,8 @@ public class PlayGamaAds : MonoBehaviour
             Debug.LogError($"Playgama Interstitial failed: {e}");
         }
 #endif
-        StartSimulatedAd(false, "Simulating Interstitial Ad", onComplete);
+        if (SimulatorAllowed) StartSimulatedAd(false, "Simulating Interstitial Ad", onComplete);
+        else onComplete?.Invoke(false); // release build: no supported ad means no ad
     }
 
     public void ShowRewarded(Action<bool> onRewarded = null, string adTitle = "Simulating Rewarded Video Ad")
@@ -345,6 +342,7 @@ public class PlayGamaAds : MonoBehaviour
             Debug.LogError($"Playgama Rewarded failed: {e}");
         }
 #endif
-        StartSimulatedAd(true, adTitle, onRewarded);
+        if (SimulatorAllowed) StartSimulatedAd(true, adTitle, onRewarded);
+        else onRewarded?.Invoke(false); // release build: no supported ad means no reward
     }
 }

@@ -8,6 +8,8 @@ public class ShieldButton : MonoBehaviour
 {
     public TMP_Text labelText;
     private Button button;
+    private bool labelSearched;
+    private int lastLabelState = int.MinValue; // -1 = shield up, otherwise the cost shown
 
     void Awake()
     {
@@ -17,6 +19,8 @@ public class ShieldButton : MonoBehaviour
 
     void OnEnable()
     {
+        labelSearched = false;
+        lastLabelState = int.MinValue;
         FindLabelIfNeeded();
         RefreshLabel();
     }
@@ -29,7 +33,9 @@ public class ShieldButton : MonoBehaviour
 
     public void FindLabelIfNeeded()
     {
-        if (labelText != null) return;
+        // The fallback scans every TMP_Text in memory, so run it once per enable, not every frame.
+        if (labelText != null || labelSearched) return;
+        labelSearched = true;
         if (transform.parent != null)
         {
             var t = transform.parent.Find("ShieldLabel");
@@ -89,9 +95,10 @@ public class ShieldButton : MonoBehaviour
     {
         FindLabelIfNeeded();
         var sm = ShieldManager.Instance;
-        if (labelText != null && sm != null)
-        {
-            labelText.text = sm.IsActive ? "SHIELD UP" : $"SHIELD ({sm.cost})";
-        }
+        if (labelText == null || sm == null) return;
+        int state = sm.IsActive ? -1 : sm.cost;
+        if (state == lastLabelState) return;
+        lastLabelState = state;
+        labelText.text = sm.IsActive ? "SHIELD UP" : $"SHIELD ({sm.cost})";
     }
 }

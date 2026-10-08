@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 93330e628daf67244b7ad53b7bb92ded, type: 3}
   m_Name: Item_TowerOrange
   m_EditorClassIdentifier: Assembly-CSharp::ShopItem
-  id: tower_blue
-  displayName: Blue Turret
+  id: tower_orange
+  displayName: Orange Turret
   description: 
   icon: {fileID: 21300000, guid: 8dea29013e34f294b94c20f00f8f9534, type: 3}
   previewImage: {fileID: 0}
@@ -21,5 +21,5 @@ MonoBehaviour:
   kind: 0
   slot: TowerSkin
   appliesToEnemyType: 
-  payload: {fileID: 2100000, guid: 4903e681e747a5a41b7bd4017cd154a0, type: 2}
+  payload: {fileID: 2100000, guid: 1506229195ac90c419bea776b37a55b7, type: 2}
   ownedByDefault: 1

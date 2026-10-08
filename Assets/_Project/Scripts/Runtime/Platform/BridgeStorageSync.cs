@@ -16,6 +16,7 @@ public static class BridgeStorageSync
     {
         // Wallet & economy
         "TypeKeep_TotalCoins",
+        "TypeKeep_WatchAdNextUtcTicks",
 
         // Lifetime stats & personal bests
         "Stats_EnemiesDestroyed",
