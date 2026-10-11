@@ -99,12 +99,14 @@ public class UpgradeButton : MonoBehaviour
                 SfxPlayer.PlayGameStart();
                 UIToast.ShowAt(transform, $"+{amount} HP Repaired!", Color.green);
                 Debug.Log($"[UpgradeButton] Repaired +{amount} HP! Health now {gm.currentHealth}/{gm.maxHealth}, coins left: {gm.coins}");
+                CoinFlyManager.ShowCoinDeduction(cost);
                 break;
             case UpgradeType.MaxHealth: 
                 gm.maxHealth += amount; 
                 gm.HealFortress(amount); 
                 SfxPlayer.PlayGameStart();
                 UIToast.ShowAt(transform, $"+{amount} Max HP!", Color.green);
+                CoinFlyManager.ShowCoinDeduction(cost);
                 break;
         }
 

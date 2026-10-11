@@ -132,6 +132,7 @@ public class AbilityClickTrigger : MonoBehaviour, IPointerDownHandler, IPointerU
             gm.HealFortress(amount);
             SfxPlayer.PlayGameStart();
             UIToast.ShowAt(toastOrigin, $"+{amount} HP Repaired!", Color.green);
+            CoinFlyManager.ShowCoinDeduction(cost);
         }
     }
 

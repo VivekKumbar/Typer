@@ -298,6 +298,7 @@ MonoBehaviour:
   minSecondsForWpm: 5
   shield: 0
   repairUpgrade: {fileID: 11400000, guid: 14b74e12a8aa28f43a1e47329f0695f6, type: 2}
+  coinsBankedThisRun: 0
 --- !u!4 &65784107
 Transform:
   m_ObjectHideFlags: 0

@@ -5494,6 +5494,11 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   arcHeight: 150
+  deductionColor: {r: 1, g: 0.22, b: 0.22, a: 1}
+  deductionFontSize: 36
+  deductionOffset: {x: -10, y: -42}
+  deductionFloatDistance: 35
+  deductionDuration: 0.9
   prewarmCount: 8
 --- !u!4 &662607725
 Transform:
@@ -15384,7 +15389,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 900.1273, y: -175.10376}
+  m_AnchoredPosition: {x: 900.1273, y: -206}
   m_SizeDelta: {x: 203.2203, y: 99.8806}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!225 &1950898345

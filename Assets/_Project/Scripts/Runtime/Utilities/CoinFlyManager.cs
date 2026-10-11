@@ -67,6 +67,18 @@ public class CoinFlyManager : MonoBehaviour
     [Tooltip("How far (pixels) the flight path bulges sideways at its midpoint, for a curved arc instead of a straight line. Left/right is randomized per coin.")]
     [Range(0f, 500f)] public float arcHeight = 150f;
 
+    [Header("Deduction indicator")]
+    [Tooltip("Color of the floating coin deduction text.")]
+    public Color deductionColor = new Color(1f, 0.22f, 0.22f, 1f);
+    [Tooltip("Font size of the deduction indicator text.")]
+    public float deductionFontSize = 36f;
+    [Tooltip("Offset from the counter target where deduction text spawns.")]
+    public Vector2 deductionOffset = new Vector2(-15f, -50f);
+    [Tooltip("How far (pixels) the deduction text floats downwards.")]
+    public float deductionFloatDistance = 30f;
+    [Tooltip("Seconds the deduction indicator stays on screen.")]
+    public float deductionDuration = 0.9f;
+
     [Header("Pooling")]
     [Tooltip("How many coin visuals to pre-instantiate at Start, to avoid first-use hitches.")]
     public int prewarmCount = 8;
@@ -74,6 +86,8 @@ public class CoinFlyManager : MonoBehaviour
     private readonly Queue<Image> pool = new Queue<Image>();
     private int displayedTotal;
     private int pendingInFlight; // sum of shares currently mid-flight, not yet landed
+    private int lastDeductionFrame = -1;
+    private int lastDeductionAmount = -1;
 
     void Awake()
     {
@@ -84,6 +98,13 @@ public class CoinFlyManager : MonoBehaviour
     {
         if (counterBounce == null && counterText != null)
             counterBounce = counterText.GetComponent<CounterBounce>();
+        if (counterTarget == null && counterText != null)
+            counterTarget = counterText.rectTransform;
+        if (flyLayer == null)
+        {
+            Canvas c = GetComponentInParent<Canvas>();
+            if (c != null) flyLayer = c.transform as RectTransform;
+        }
         if (worldCamera == null)
             worldCamera = Camera.main;
 
@@ -124,6 +145,7 @@ public class CoinFlyManager : MonoBehaviour
             displayedTotal = Mathf.Max(0, displayedTotal - spent);
             RefreshText();
             if (counterBounce != null) counterBounce.Bounce();
+            ShowDeduction(spent);
         }
     }
 
@@ -264,5 +286,132 @@ public class CoinFlyManager : MonoBehaviour
 
         coin.gameObject.SetActive(false);
         pool.Enqueue(coin);
+    }
+
+    /// <summary>
+    /// Shows a brief floating red text indicator near the coin counter (e.g. "-20", "-30")
+    /// to clearly display coins spent when repairing or using abilities.
+    /// </summary>
+    public static void ShowCoinDeduction(int amount)
+    {
+        if (Instance != null)
+            Instance.ShowDeduction(amount);
+    }
+
+    public void ShowDeduction(int amount)
+    {
+        if (amount <= 0 || flyLayer == null || counterTarget == null) return;
+
+        // Deduplication guard: ignore duplicate calls in the exact same frame for the same amount
+        if (Time.frameCount == lastDeductionFrame && amount == lastDeductionAmount)
+            return;
+
+        lastDeductionFrame = Time.frameCount;
+        lastDeductionAmount = amount;
+
+        StartCoroutine(AnimateDeduction(amount));
+    }
+
+    private IEnumerator AnimateDeduction(int amount)
+    {
+        // Root container under flyLayer
+        GameObject indicator = new GameObject("CoinDeductionText", typeof(RectTransform), typeof(CanvasGroup));
+        RectTransform rt = indicator.GetComponent<RectTransform>();
+        CanvasGroup cg = indicator.GetComponent<CanvasGroup>();
+        cg.blocksRaycasts = false;
+        cg.interactable = false;
+
+        rt.SetParent(flyLayer, false);
+
+        // Convert counterTarget position to flyLayer local space
+        Vector3 counterLocal = flyLayer.InverseTransformPoint(counterTarget.position);
+
+        // Small horizontal jitter so rapid clicks don't stack directly on top of each other
+        float jitterX = Random.Range(-8f, 8f);
+        Vector2 startPos = new Vector2(counterLocal.x + deductionOffset.x + jitterX, counterLocal.y + deductionOffset.y);
+        rt.anchoredPosition = startPos;
+        rt.sizeDelta = new Vector2(160f, 50f);
+        rt.pivot = new Vector2(0.5f, 0.5f);
+
+        // Drop shadow text for high-contrast readability against any background
+        GameObject shadowGO = new GameObject("Shadow", typeof(RectTransform));
+        shadowGO.transform.SetParent(indicator.transform, false);
+        RectTransform shadowRT = shadowGO.GetComponent<RectTransform>();
+        shadowRT.anchorMin = Vector2.zero;
+        shadowRT.anchorMax = Vector2.one;
+        shadowRT.sizeDelta = Vector2.zero;
+        shadowRT.anchoredPosition = new Vector2(2f, -2f);
+
+        TMP_Text shadowTMP = shadowGO.AddComponent<TextMeshProUGUI>();
+        if (counterText != null) shadowTMP.font = counterText.font;
+        shadowTMP.text = $"-{amount}";
+        shadowTMP.fontSize = deductionFontSize;
+        shadowTMP.fontStyle = FontStyles.Bold;
+        shadowTMP.alignment = TextAlignmentOptions.Center;
+        shadowTMP.color = new Color(0f, 0f, 0f, 0.85f);
+        shadowTMP.raycastTarget = false;
+
+        // Main red text
+        GameObject mainGO = new GameObject("Text", typeof(RectTransform));
+        mainGO.transform.SetParent(indicator.transform, false);
+        RectTransform mainRT = mainGO.GetComponent<RectTransform>();
+        mainRT.anchorMin = Vector2.zero;
+        mainRT.anchorMax = Vector2.one;
+        mainRT.sizeDelta = Vector2.zero;
+        mainRT.anchoredPosition = Vector2.zero;
+
+        TMP_Text mainTMP = mainGO.AddComponent<TextMeshProUGUI>();
+        if (counterText != null) mainTMP.font = counterText.font;
+        mainTMP.text = $"-{amount}";
+        mainTMP.fontSize = deductionFontSize;
+        mainTMP.fontStyle = FontStyles.Bold;
+        mainTMP.alignment = TextAlignmentOptions.Center;
+        mainTMP.color = deductionColor;
+        mainTMP.raycastTarget = false;
+
+        // Animation: scale punch + downward float + fade out
+        float dur = Mathf.Max(0.2f, deductionDuration);
+        float popDur = 0.12f;
+        float elapsed = 0f;
+
+        while (elapsed < dur)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t = Mathf.Clamp01(elapsed / dur);
+
+            // Drift downward
+            rt.anchoredPosition = startPos - new Vector2(0f, deductionFloatDistance * t);
+
+            // Pop scale (0.6 -> 1.15 -> 1.0)
+            if (elapsed < popDur)
+            {
+                float popT = elapsed / popDur;
+                indicator.transform.localScale = Vector3.Lerp(Vector3.one * 0.6f, Vector3.one * 1.15f, popT);
+            }
+            else if (elapsed < popDur * 1.8f)
+            {
+                float settleT = (elapsed - popDur) / (popDur * 0.8f);
+                indicator.transform.localScale = Vector3.Lerp(Vector3.one * 1.15f, Vector3.one, settleT);
+            }
+            else
+            {
+                indicator.transform.localScale = Vector3.one;
+            }
+
+            // Alpha fade out in second half
+            if (t > 0.45f)
+            {
+                float fadeT = (t - 0.45f) / 0.55f;
+                cg.alpha = Mathf.Lerp(1f, 0f, fadeT);
+            }
+            else
+            {
+                cg.alpha = 1f;
+            }
+
+            yield return null;
+        }
+
+        Destroy(indicator);
     }
 }

@@ -109,6 +109,7 @@ public class HealthBarClickHandler : MonoBehaviour, IPointerDownHandler, IPointe
                 SfxPlayer.PlayGameStart();
                 UIToast.ShowAt(toastOrigin, $"+{amount} HP Repaired!", Color.green);
                 Debug.Log($"[HealthBar] Repaired +{amount} HP! Current: {gm.currentHealth}/{gm.maxHealth}, Coins left: {gm.coins}");
+                CoinFlyManager.ShowCoinDeduction(cost);
             }
         }
     }
