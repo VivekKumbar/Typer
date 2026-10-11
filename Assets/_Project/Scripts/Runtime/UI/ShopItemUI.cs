@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -46,7 +47,10 @@ public class ShopItemUI : MonoBehaviour
                 iconImage.color = item.icon != null ? Color.white : new Color(1, 1, 1, 0);
             }
         }
-        if (previewImage && item.previewImage != null) previewImage.sprite = item.previewImage;
+        if (previewImage && item.previewImage != null)
+            previewImage.sprite = item.slot == "GroundSkin"
+                ? CroppedToCard(item.previewImage, previewImage.rectTransform.rect.size)
+                : item.previewImage;
         if (nameText)  nameText.text = item.displayName;
 
         Refresh();
@@ -55,6 +59,36 @@ public class ShopItemUI : MonoBehaviour
             actionButton.onClick.RemoveAllListeners();
             actionButton.onClick.AddListener(OnAction);
         }
+    }
+
+    // Ground art is tall (9:16) but the card is wider than it is tall, so show a
+    // centre crop at the card's aspect instead of squashing the whole map in.
+    static readonly Dictionary<Sprite, Sprite> s_cardCrops = new Dictionary<Sprite, Sprite>();
+
+    static Sprite CroppedToCard(Sprite source, Vector2 cardSize)
+    {
+        if (cardSize.x <= 0f || cardSize.y <= 0f) return source;
+        if (source.packed && source.packingMode == SpritePackingMode.Tight) return source; // no rect to crop from
+        if (s_cardCrops.TryGetValue(source, out Sprite cached) && cached != null) return cached;
+
+        Rect r = source.textureRect;
+        float cardAspect = cardSize.x / cardSize.y;
+        Rect crop;
+        if (r.width / r.height < cardAspect)
+        {
+            float h = r.width / cardAspect;
+            crop = new Rect(r.x, r.y + (r.height - h) * 0.5f, r.width, h);
+        }
+        else
+        {
+            float w = r.height * cardAspect;
+            crop = new Rect(r.x + (r.width - w) * 0.5f, r.y, w, r.height);
+        }
+
+        Sprite cropped = Sprite.Create(source.texture, crop, new Vector2(0.5f, 0.5f), source.pixelsPerUnit);
+        cropped.name = source.name + "_Card";
+        s_cardCrops[source] = cropped;
+        return cropped;
     }
 
     public void Refresh()

@@ -1,5 +1,7 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 // Maps one CSV row's iconName to a real Sprite -- sprites can't live in a
 // CSV, so this is the Inspector-side lookup table. Add one entry per
@@ -26,6 +28,9 @@ public class AchievementsPanel : MonoBehaviour
     public Transform listRoot;
     public AchievementCardUI cardPrefab;
 
+    [Header("Scroll")]
+    public ScrollRect scrollRect;
+
     [Header("Icons")]
     [Tooltip("Maps each CSV row's iconName to a real Sprite -- I'll drag my own art in here. Placeholder/empty entries are fine until then.")]
     public List<AchievementIconEntry> icons = new List<AchievementIconEntry>();
@@ -37,6 +42,7 @@ public class AchievementsPanel : MonoBehaviour
     void Awake()
     {
         AchievementManager.Bank = bank;
+        if (scrollRect == null) scrollRect = GetComponentInChildren<ScrollRect>();
     }
 
     void Start()
@@ -69,6 +75,31 @@ public class AchievementsPanel : MonoBehaviour
             card.Setup(data, this);
             spawnedCards.Add(card);
         }
+
+        ResetScroll();
+        StartCoroutine(DeferredResetScroll());
+    }
+
+    public void ResetScroll()
+    {
+        if (scrollRect != null)
+        {
+            scrollRect.StopMovement();
+            Canvas.ForceUpdateCanvases();
+            scrollRect.verticalNormalizedPosition = 1f;
+            if (scrollRect.content != null)
+            {
+                Vector2 pos = scrollRect.content.anchoredPosition;
+                pos.y = 0f;
+                scrollRect.content.anchoredPosition = pos;
+            }
+        }
+    }
+
+    private System.Collections.IEnumerator DeferredResetScroll()
+    {
+        yield return null;
+        ResetScroll();
     }
 
     void HandleStatsChanged() => RefreshAllCards();

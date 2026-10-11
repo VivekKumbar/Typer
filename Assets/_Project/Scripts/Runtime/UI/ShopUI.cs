@@ -40,6 +40,10 @@ public class ShopUI : MonoBehaviour
     [Tooltip("The Main Menu's level carousel -- refreshed on OnDisable so its card backgrounds pick up any Ground Skin change made while the shop was open, without needing to close/reopen the app. Leave empty if this ShopUI isn't the one shown over the Main Menu.")]
     public LevelCarousel levelCarousel;
 
+    [Header("Card Snapping Scroll (optional)")]
+    [Tooltip("Snap-to-card scroller that keeps items perfectly centered and framed without chopped borders. Auto-resolved from ItemScroll if empty.")]
+    public ShopCardSnapScroll snapScroll;
+
     private readonly List<ShopItemUI> spawnedCards = new List<ShopItemUI>();
     private readonly List<Image> categoryButtonImages = new List<Image>();
     private int currentCategory = 0;
@@ -155,6 +159,44 @@ public class ShopUI : MonoBehaviour
             ShopItemUI card = Instantiate(itemCardPrefab, itemGridRoot);
             card.Setup(item, this);
             spawnedCards.Add(card);
+        }
+
+        if (snapScroll == null)
+            snapScroll = GetComponentInChildren<ShopCardSnapScroll>();
+
+        if (snapScroll != null)
+        {
+            snapScroll.RefreshCards(spawnedCards);
+            snapScroll.SnapTo(0, instant: true);
+        }
+        else
+        {
+            ResetScroll();
+        }
+    }
+
+    public void ResetScroll()
+    {
+        if (snapScroll == null)
+            snapScroll = GetComponentInChildren<ShopCardSnapScroll>();
+
+        if (snapScroll != null)
+        {
+            snapScroll.SnapTo(0, instant: true);
+            return;
+        }
+
+        ScrollRect sr = itemGridRoot != null ? itemGridRoot.GetComponentInParent<ScrollRect>() : null;
+        if (sr != null)
+        {
+            Canvas.ForceUpdateCanvases();
+            sr.verticalNormalizedPosition = 1f;
+            if (sr.content != null)
+            {
+                Vector2 pos = sr.content.anchoredPosition;
+                pos.y = 0f;
+                sr.content.anchoredPosition = pos;
+            }
         }
     }
 
