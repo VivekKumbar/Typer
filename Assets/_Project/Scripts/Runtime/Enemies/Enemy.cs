@@ -115,7 +115,11 @@ public class Enemy : MonoBehaviour
         baseScale = transform.localScale;
         baseMoveSpeed = moveSpeed;
         if (label != null)
+        {
             labelBaseLocalY = label.transform.localPosition.y;
+            label.enableWordWrapping = false;
+            label.overflowMode = TextOverflowModes.Overflow;
+        }
         if (enemyAnimator == null) enemyAnimator = GetComponentInChildren<EnemyAnimator>();
         if (dissolve == null) dissolve = GetComponentInChildren<EnemyDissolve>();
         if (skinApplier == null) skinApplier = GetComponentInChildren<EnemySkinApplier>();
@@ -166,6 +170,11 @@ public class Enemy : MonoBehaviour
         nextPhaseWordProvider = wordProvider;
         TypedCount = 0;
         IsDefeated = false;
+        if (label != null)
+        {
+            label.enableWordWrapping = false;
+            label.overflowMode = TextOverflowModes.Overflow;
+        }
         RefreshLabel();
 
         // Face the tower immediately on spawn (no initial spin)

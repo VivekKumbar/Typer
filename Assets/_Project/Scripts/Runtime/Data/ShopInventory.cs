@@ -17,11 +17,21 @@ public static class ShopInventory
         BridgeStorageSync.SetInt("owned_" + item.id, 1);
     }
 
+    // ---- wave progression gating ----
+    public static bool IsLockedByWave(ShopItem item)
+    {
+        if (item == null) return false;
+        if (item.requiredWave <= 1) return false;
+        if (IsOwned(item)) return false;
+        return StatsManager.HighestWave < item.requiredWave;
+    }
+
     // ---- buying ----
-    // Returns true on success. Fails if already owned or not enough coins.
+    // Returns true on success. Fails if already owned, wave-locked, or not enough coins.
     public static bool Buy(ShopItem item)
     {
         if (item == null || IsOwned(item)) return false;
+        if (IsLockedByWave(item)) return false;
         if (!Wallet.Spend(item.price)) return false; // uses collected coins
         SetOwned(item);
         return true;

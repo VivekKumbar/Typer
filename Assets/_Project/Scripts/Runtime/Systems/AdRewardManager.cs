@@ -40,6 +40,23 @@ public class AdRewardManager : MonoBehaviour
     public const string LastMainMenuAdTimeKey = "LastMainMenuAdTime";
 
     // =========================================================================
+    // 1B. DOUBLE COINS BALANCING & SOFT-CAP CONFIGURATION
+    // =========================================================================
+    [Header("Double Coins Balancing")]
+    [Tooltip("Coins up to this threshold receive full 100% matching.")]
+    [SerializeField]
+    private int doubleCoinsSoftCap = 1500;
+
+    [Tooltip("Percentage match applied to round earnings beyond the soft cap (0.25 = 25%).")]
+    [Range(0.05f, 1.0f)]
+    [SerializeField]
+    private float overflowMatchRate = 0.25f;
+
+    [Tooltip("Absolute maximum bonus coins that can ever be granted by a single ad (0 = no hard limit).")]
+    [SerializeField]
+    private int maxDoubleCoinsCap = 4000;
+
+    // =========================================================================
     // 2. DYNAMIC TEXT CONFIGURATION (INSPECTOR EDITABLE / TRANSLATABLE)
     // =========================================================================
     [Header("Dynamic Text Configuration (Inspector Editable)")]
@@ -245,6 +262,22 @@ public class AdRewardManager : MonoBehaviour
     }
 
     /// <summary>
+    /// Computes the balanced coin bonus amount with soft-cap protection against economy inflation.
+    /// </summary>
+    public int CalculateDoubleCoinsReward(int roundCoins)
+    {
+        if (roundCoins <= 0) return 0;
+        int baseMatch = Mathf.Min(roundCoins, doubleCoinsSoftCap);
+        int overflow = Mathf.Max(0, roundCoins - doubleCoinsSoftCap);
+        int bonus = baseMatch + Mathf.RoundToInt(overflow * overflowMatchRate);
+        if (maxDoubleCoinsCap > 0)
+        {
+            bonus = Mathf.Min(bonus, maxDoubleCoinsCap);
+        }
+        return bonus;
+    }
+
+    /// <summary>
     /// Returns the coins earned by the player during this specific round.
     /// </summary>
     public int GetCoinsCollectedThisRound()
@@ -268,7 +301,7 @@ public class AdRewardManager : MonoBehaviour
         }
 
         int coinsCollectedThisRound = GetCoinsCollectedThisRound();
-        int bonusCoins = coinsCollectedThisRound; // +100% proportional double coins
+        int bonusCoins = CalculateDoubleCoinsReward(coinsCollectedThisRound); // soft-capped double coins
 
         // 1. Bind customizable offer text
         if (promptLabel != null)
@@ -459,8 +492,13 @@ public class AdRewardManager : MonoBehaviour
         }
         else
         {
-            // End-of-level Double Coins: proportional match (+100%) of round earnings
-            coinsToGrant = coinsCollected;
+            // End-of-level Double Coins: soft-capped proportional match of round earnings
+            coinsToGrant = CalculateDoubleCoinsReward(coinsCollected);
+            if (coinsToGrant < coinsCollected)
+            {
+                popupTitle = "MEGA COIN BONUS!";
+                popupMessage = $"You watched the ad and earned a massive {coinsToGrant} bonus coins!";
+            }
         }
 
         if (coinsToGrant > 0)

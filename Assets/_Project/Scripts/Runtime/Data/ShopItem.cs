@@ -16,7 +16,11 @@ public class ShopItem : ScriptableObject
     public Sprite previewImage;
 
     [Header("Cost")]
-    public int price = 100;
+    public int price = 4000;
+
+    [Header("Progression Gating")]
+    [Tooltip("Minimum highest wave the player must reach to unlock purchasing this item (0 or 1 = unlocked immediately). Max requirement is Wave 15.")]
+    public int requiredWave = 0;
 
     [Header("Type")]
     public ShopItemKind kind = ShopItemKind.Cosmetic;

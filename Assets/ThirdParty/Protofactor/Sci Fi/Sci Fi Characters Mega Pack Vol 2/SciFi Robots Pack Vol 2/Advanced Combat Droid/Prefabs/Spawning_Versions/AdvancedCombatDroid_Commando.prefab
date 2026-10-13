@@ -1357,11 +1357,18 @@ MonoBehaviour:
   enemyTypeId: 
   coinsOnDeath: 3
   coinPrefab: {fileID: 8797919699153396519, guid: 1c8fa89830f2e8d49a13a2c8df51bd27, type: 3}
+  currentWaveNumber: 1
+  isBoss: 0
+  totalPhases: 1
+  currentPhase: 1
   damage: 10
   minLetters: 3
   maxLetters: 5
+  highlightNextLetter: 0
+  nextLetterPulseSpeed: 4
   bigWordLength: 5
   moveSpeed: 1.5
+  minEnemyGap: 1.5
   turnSpeed: 10
   modelYawOffset: 0
   rotateTowardsTarget: 1
@@ -1372,6 +1379,7 @@ MonoBehaviour:
   deathEffect: {fileID: 0}
   popScale: 1.5
   SlowMultiplier: 1
+  NearTowerSlowMultiplier: 1
 --- !u!114 &3323389371276388430
 MonoBehaviour:
   m_ObjectHideFlags: 0

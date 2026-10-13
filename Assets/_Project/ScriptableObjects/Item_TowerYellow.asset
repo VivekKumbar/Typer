@@ -17,7 +17,8 @@ MonoBehaviour:
   description: 
   icon: {fileID: 21300000, guid: 8db41b50f17fc6046868f75c6458ae60, type: 3}
   previewImage: {fileID: 0}
-  price: 1700
+  price: 4000
+  requiredWave: 0
   kind: 0
   slot: TowerSkin
   appliesToEnemyType: 

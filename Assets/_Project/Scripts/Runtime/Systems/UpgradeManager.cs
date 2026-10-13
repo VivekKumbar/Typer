@@ -173,6 +173,19 @@ public class UpgradeManager : MonoBehaviour
             Time.timeScale = 1f;
     }
 
+    /// <summary>
+    /// Rerolls the offered upgrades during an active between-wave draft.
+    /// </summary>
+    public void RerollDraft()
+    {
+        if (!IsDraftOpen) return;
+        List<UpgradeDefinition> newOffers = PickOffers();
+        if (newOffers != null && newOffers.Count > 0 && draftUI != null)
+        {
+            draftUI.RefreshOffers(newOffers, def => picked = def);
+        }
+    }
+
     List<UpgradeDefinition> PickOffers()
     {
         List<UpgradeDefinition> candidates = new List<UpgradeDefinition>();

@@ -10,9 +10,14 @@ public class ComboManager : MonoBehaviour
 
     [Header("Combo")]
     public int combo;
-    [Tooltip("Every this-many combo adds +1 to the coin multiplier.")]
+    [Tooltip("Every this-many combo adds to the initial tier requirement.")]
     public int comboPerMultiplierStep = 10;
-    public float maxMultiplier = 5f;
+    [Tooltip("Maximum combo multiplier ceiling (rebalanced from 5x/10x to 3.0x to prevent economy runaway).")]
+    public float maxMultiplier = 3.0f;
+    [Tooltip("If true, uses diminishing returns curve rather than linear scaling.")]
+    public bool useDiminishingReturns = true;
+    [Tooltip("Multiplier step increment between combo tiers (e.g. 0.5 for 1.0x, 1.5x, 2.0x, 2.5x, 3.0x).")]
+    public float multiplierStep = 0.5f;
 
     // Highest combo reached this run (a fresh instance each time GameScene loads,
     // so this naturally starts at 0 per run — no manual reset needed).
@@ -63,6 +68,12 @@ public class ComboManager : MonoBehaviour
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
 
+        // Safety guard: if an old scene or prefab serialization had maxMultiplier = 10f or 5f, clamp to balanced 3.0f
+        if (maxMultiplier > 3.5f)
+        {
+            maxMultiplier = 3.0f;
+        }
+
         // Combo/overload restore is nice-to-have, not required — if this is
         // skipped or defaults to 0 the run is still perfectly playable. Raw
         // restore, same reasoning as ShieldManager: don't clamp against
@@ -107,10 +118,33 @@ public class ComboManager : MonoBehaviour
         }
     }
 
-    float CurrentMultiplier()
+    public float CurrentMultiplier()
     {
-        float m = 1f + Mathf.Floor((float)combo / Mathf.Max(1, comboPerMultiplierStep));
-        return Mathf.Min(m, maxMultiplier);
+        if (!useDiminishingReturns)
+        {
+            float linear = 1f + Mathf.Floor((float)combo / Mathf.Max(1, comboPerMultiplierStep));
+            return Mathf.Min(linear, maxMultiplier);
+        }
+
+        if (combo < comboPerMultiplierStep) return 1.0f;
+
+        // Diminishing returns progression:
+        // Tier 1 (10 combo): 1.5x (+0.5)
+        // Tier 2 (25 combo): 2.0x (+0.5, needs +15 combo)
+        // Tier 3 (45 combo): 2.5x (+0.5, needs +20 combo)
+        // Tier 4 (70 combo): 3.0x (+0.5, needs +25 combo)
+        int currentReq = comboPerMultiplierStep;
+        int delta = 15;
+        float mult = 1.0f;
+
+        while (combo >= currentReq && mult < maxMultiplier)
+        {
+            mult += multiplierStep;
+            currentReq += delta;
+            delta += 5;
+        }
+
+        return Mathf.Min(mult, maxMultiplier);
     }
 
     float GreedMultiplier()

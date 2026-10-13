@@ -3,6 +3,7 @@ first_blood,First Blood,Defeat your first enemy,EnemiesKilled,1,50,icon_sword
 enemy_slayer,Enemy Slayer,Defeat 100 enemies,EnemiesKilled,100,200,icon_sword
 enemy_destroyer,Enemy Destroyer,Defeat 500 enemies,EnemiesKilled,500,1000,icon_sword
 wave_survivor,Wave Survivor,"Reach wave 10 in a single run",HighestWave,10,150,icon_wave
+wave_champion,Wave Champion,"Reach wave 15 in a single run",HighestWave,15,350,icon_wave
 wave_master,Wave Master,"Reach wave 25 in a single run",HighestWave,25,500,icon_wave
 combo_starter,Combo Starter,Reach a combo of 20,HighestCombo,20,100,icon_combo
 combo_king,Combo King,Reach a combo of 50,HighestCombo,50,400,icon_combo

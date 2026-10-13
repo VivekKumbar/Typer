@@ -1490,7 +1490,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4279900902
+    rgba: 1710822
   m_fontColor: {r: 0.9, g: 0.1, b: 0.1, a: 0}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -9359,7 +9359,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ComboManager
   combo: 0
   comboPerMultiplierStep: 10
-  maxMultiplier: 10
+  maxMultiplier: 3
+  useDiminishingReturns: 1
+  multiplierStep: 0.5
   overloadMax: 30
   overload: 0
   overloadReady: 0
@@ -9846,6 +9848,10 @@ MonoBehaviour:
   panelRoot: {fileID: 1222043134}
   cardGridRoot: {fileID: 668897420}
   cardPrefab: {fileID: 916192670144165966, guid: b9c1dae01308d7746aa07254f3aa2490, type: 3}
+  rerollButton: {fileID: 0}
+  rerollLabel: {fileID: 0}
+  baseRerollCost: 50
+  rerollCostIncrement: 50
 --- !u!224 &1222043136
 RectTransform:
   m_ObjectHideFlags: 0
@@ -15729,6 +15735,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameOverAdOffer
   bonusFraction: 1
   minimumBonusCoins: 0
+  softCapThreshold: 1500
+  overflowMatchRate: 0.25
+  maxBonusCap: 4000
   countdownSeconds: 0
   watchAdButtonRoot: {fileID: 1955700301}
   watchAdButton: {fileID: 1955700303}

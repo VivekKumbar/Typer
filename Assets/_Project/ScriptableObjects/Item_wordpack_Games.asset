@@ -17,7 +17,8 @@ MonoBehaviour:
   description: Challenge yourself with exciting classic games.
   icon: {fileID: 21300000, guid: f17a200b394f9d9438296802a71b43cf, type: 3}
   previewImage: {fileID: 0}
-  price: 1200
+  price: 6400
+  requiredWave: 10
   kind: 3
   slot: WordPack
   appliesToEnemyType: 

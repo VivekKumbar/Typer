@@ -317,7 +317,10 @@ public class AdManager : MonoBehaviour
         if (isAdShowing) return;
 
         currentRewardType = AdRewardType.DoubleCoins;
-        pendingCoinsToDouble = Mathf.Max(0, coinsCollected);
+        int baseMatch = Mathf.Min(coinsCollected, 1500);
+        int overflow = Mathf.Max(0, coinsCollected - 1500);
+        int calculated = baseMatch + Mathf.RoundToInt(overflow * 0.25f);
+        pendingCoinsToDouble = Mathf.Min(calculated, 4000);
         onCustomRewardGranted = null;
         onCustomRewardSkippedOrFailed = null;
 

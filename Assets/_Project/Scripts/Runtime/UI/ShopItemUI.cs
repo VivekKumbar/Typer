@@ -94,6 +94,7 @@ public class ShopItemUI : MonoBehaviour
     public void Refresh()
     {
         bool owned = ShopInventory.IsOwned(item);
+        bool waveLocked = !owned && ShopInventory.IsLockedByWave(item);
 
         if (iconImage && item != null && item.slot == "GroundSkin")
         {
@@ -104,22 +105,22 @@ public class ShopItemUI : MonoBehaviour
         {
             bool selected = WordPackSelection.IsSelected(item);
 
-            if (priceText) priceText.text = owned ? "" : item.price.ToString();
+        if (priceText) priceText.text = owned ? "" : item.price.ToString();
             if (priceGroup) priceGroup.SetActive(!owned);
             if (equippedBadge) equippedBadge.SetActive(false); // not used for word packs
             if (selectedBadge) selectedBadge.SetActive(selected);
-            if (lockedOverlay) lockedOverlay.SetActive(false);
-            if (iconImage && item.icon != null) iconImage.color = Color.white;
+            if (lockedOverlay) lockedOverlay.SetActive(waveLocked);
+            if (iconImage && item.icon != null) iconImage.color = waveLocked ? lockedIconTint : Color.white;
 
             if (actionLabel)
             {
-                if (!owned) actionLabel.text = "BUY";
+                if (waveLocked) actionLabel.text = $"WAVE {item.requiredWave}";
+                else if (!owned) actionLabel.text = "BUY";
                 else if (selected) actionLabel.text = "SELECTED";
                 else actionLabel.text = "SELECT";
             }
 
-            // Always clickable: buy, select, or deselect (deselecting an
-            // already-selected pack is a valid action, unlike single-equip).
+            // Always clickable: buy, select, or deselect (clicking a locked item shows toast requirement)
             if (actionButton) actionButton.interactable = true;
             return;
         }
@@ -128,24 +129,32 @@ public class ShopItemUI : MonoBehaviour
 
         if (priceText) priceText.text = owned ? "" : item.price.ToString();
         if (priceGroup) priceGroup.SetActive(!owned);
-        if (lockedOverlay) lockedOverlay.SetActive(false); // locked look is word packs only
+        if (lockedOverlay) lockedOverlay.SetActive(waveLocked);
+        if (iconImage && item.icon != null) iconImage.color = waveLocked ? lockedIconTint : Color.white;
         if (equippedBadge) equippedBadge.SetActive(equipped);
         if (selectedBadge) selectedBadge.SetActive(false); // not used outside word packs
 
         if (actionLabel)
         {
-            if (!owned) actionLabel.text = "BUY";
+            if (waveLocked) actionLabel.text = $"WAVE {item.requiredWave}";
+            else if (!owned) actionLabel.text = "BUY";
             else if (equipped) actionLabel.text = "EQUIPPED";
             else actionLabel.text = "EQUIP";
         }
 
-        // Can't re-click the equipped item
+        // Can't re-click the equipped item; locked items remain clickable for feedback
         if (actionButton) actionButton.interactable = !(owned && equipped);
     }
 
     void OnAction()
     {
         bool owned = ShopInventory.IsOwned(item);
+
+        if (!owned && ShopInventory.IsLockedByWave(item))
+        {
+            UIToast.ShowAt(transform, $"Reach Wave {item.requiredWave} to unlock!", Color.yellow);
+            return;
+        }
 
         if (item.kind == ShopItemKind.WordPack)
         {
