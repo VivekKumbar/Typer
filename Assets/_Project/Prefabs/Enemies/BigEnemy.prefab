@@ -1455,12 +1455,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 74efa858db57c7b478980025221eaa6c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BigEnemySpawner
-  hordeBurstInterval: 3
-  hordeCountPerBurst: 1
-  hordeSpawnRadius: 2
-  maxAliveMinions: 10
+  hordeBurstInterval: 2
+  hordeCountPerBurst: 4
+  hordeSpawnRadius: 2.5
+  maxAliveMinions: 16
   minionMinLetters: 1
-  minionMaxLetters: 2
+  minionMaxLetters: 1
   allowRandomLettersForMinions: 1
   minionPrefab: {fileID: -7939357370956878308, guid: 43358b0a185f2734896c6d77213675c3, type: 3}
   wordBank: {fileID: 0}

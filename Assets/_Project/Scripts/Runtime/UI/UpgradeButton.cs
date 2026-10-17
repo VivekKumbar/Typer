@@ -10,10 +10,10 @@ public class UpgradeButton : MonoBehaviour
 
     [Header("Config")]
     public UpgradeType type = UpgradeType.RepairFortress;
-    public int cost = 10;          // starting price
+    public int cost = 200;         // starting price (200 coins)
     public int amount = 20;        // how much it heals / adds
-    [Tooltip("Price is multiplied by this after each purchase. 1 = flat cost, 1.5 = +50% each time.")]
-    public float costMultiplier = 1.2f;
+    [Tooltip("Price is multiplied by this after each purchase. 1 = flat cost, 1.4 = +40% each time.")]
+    public float costMultiplier = 1.4f;
 
     [Header("Optional label")]
     public TMP_Text labelText;
@@ -24,6 +24,14 @@ public class UpgradeButton : MonoBehaviour
     {
         button = GetComponent<Button>();
         FindLabelIfNeeded();
+        if (SaveManager.IsContinuing && SaveManager.HasSave())
+        {
+            var save = SaveManager.LoadRun();
+            if (save != null && save.repairCost > 0)
+            {
+                cost = save.repairCost;
+            }
+        }
     }
 
     void OnEnable()
@@ -110,8 +118,9 @@ public class UpgradeButton : MonoBehaviour
                 break;
         }
 
-        cost = Mathf.RoundToInt(cost * costMultiplier); // climbs by the Inspector value
+        cost = Mathf.RoundToInt(cost * costMultiplier); // climbs by 40%
         RefreshLabel();
+        if (gm != null) gm.SaveProgressIfActive();
         return true;
     }
 

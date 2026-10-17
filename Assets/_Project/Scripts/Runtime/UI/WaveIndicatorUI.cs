@@ -61,7 +61,8 @@ public class WaveIndicatorUI : MonoBehaviour
     {
         if (waveText != null)
         {
-            waveText.text = $"Wave {Mathf.Max(1, waveNumber)}";
+            bool isEndless = WaveManager.Instance != null && WaveManager.Instance.IsEndlessWave(waveNumber);
+            waveText.text = isEndless ? $"Endless {Mathf.Max(1, waveNumber)}" : $"Wave {Mathf.Max(1, waveNumber)}";
         }
     }
 

@@ -110,7 +110,7 @@ public class AbilityClickTrigger : MonoBehaviour, IPointerDownHandler, IPointerU
         var gm = GameManager.Instance;
         if (gm == null || gm.IsGameOver) return;
 
-        int cost = 10;
+        int cost = 200;
         int amount = 20;
 
         if (gm.currentHealth >= gm.maxHealth)

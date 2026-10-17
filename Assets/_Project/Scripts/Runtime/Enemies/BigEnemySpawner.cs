@@ -13,19 +13,19 @@ public class BigEnemySpawner : MonoBehaviour
 {
     [Header("Horde (only while this enemy is alive)")]
     [Tooltip("Seconds between horde bursts while this enemy is alive.")]
-    [Range(0.1f, 20f)] public float hordeBurstInterval = 3f;
+    [Range(0.1f, 20f)] public float hordeBurstInterval = 2.0f;
     [Tooltip("Minions spawned per burst.")]
-    [Range(1, 20)] public int hordeCountPerBurst = 3;
+    [Range(1, 20)] public int hordeCountPerBurst = 4;
     [Tooltip("Minions spawn within this radius of the big enemy's CURRENT position — it's walking, so bursts follow wherever it currently is, not a fixed point.")]
-    public float hordeSpawnRadius = 2f;
+    public float hordeSpawnRadius = 2.5f;
     [Tooltip("Cap on THIS spawner's own minions alive at once (defeated/destroyed ones don't count). A burst that would exceed this just spawns fewer, it doesn't queue the rest for later.")]
-    public int maxAliveMinions = 15;
+    public int maxAliveMinions = 16;
 
     [Header("Minion words")]
     [Tooltip("Minimum word length for minions.")]
     public int minionMinLetters = 1;
-    [Tooltip("Maximum word length for minions.")]
-    public int minionMaxLetters = 2;
+    [Tooltip("Maximum word length for minions (1 = single letters only).")]
+    public int minionMaxLetters = 1;
     [Tooltip("If WordBank has no words in the Min/Max Letters range (it falls back to ANY word length), generate random letters instead — keeps minions trivial to type regardless of what's in the word pack.")]
     public bool allowRandomLettersForMinions = true;
 

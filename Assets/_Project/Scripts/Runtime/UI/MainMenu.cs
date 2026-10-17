@@ -84,6 +84,12 @@ public class MainMenu : MonoBehaviour
     public float shopListBottomWithoutWatchAd = 16f;
     private float shopListBottomWithWatchAd = -1f;
 
+    [Header("Shop & Coin Section Navigation")]
+    [Tooltip("The Coin Pill button on the Main Menu -- clicking it opens the Shop panel.")]
+    public Button coinPillButton;
+    [Tooltip("The Shop panel to open when clicking the Coin Pill or Shop button.")]
+    public GameObject shopPanel;
+
     const string WatchAdNextTimeKey = "TypeKeep_WatchAdNextUtcTicks";
 
     void Start()
@@ -93,9 +99,20 @@ public class MainMenu : MonoBehaviour
         MusicManager.PlayMenuMusic(); // makes sure the menu track is playing (returns from a run already restarted it in RestartButton.GoToMenu)
         if (ftueReplayButton != null) ftueReplayButton.onClick.AddListener(ReplayFtue);
         if (watchAdButton != null) watchAdButton.onClick.AddListener(OnWatchAdClicked);
+        if (coinPillButton != null) coinPillButton.onClick.AddListener(OpenShop);
         if (shopItemList != null) shopListBottomWithWatchAd = shopItemList.offsetMin.y;
         RefreshWatchAdButton();
         MaybeShowInterstitial();
+
+        if (PlayGamaAds.Instance != null && PlayGamaAds.Instance.IsBannerSupported())
+        {
+            PlayGamaAds.Instance.ShowBanner();
+        }
+    }
+
+    public void OpenShop()
+    {
+        if (shopPanel != null) shopPanel.SetActive(true);
     }
 
     private bool watchAdInProgress;

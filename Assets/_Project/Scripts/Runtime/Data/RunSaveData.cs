@@ -24,6 +24,7 @@ public class RunSaveData
     public int coinsEarnedThisRun;
     // -1 = save predates this field; GameManager treats that as "all earnings already banked".
     public int coinsBankedThisRun = -1;
+    public int repairCost = 200;
 
     [Header("WPM (this run) — resumed on Continue, same as coins")]
     public float activeGameplaySeconds;   // accumulated genuine-typing seconds (see GameManager.IsTypingWindowOpen)

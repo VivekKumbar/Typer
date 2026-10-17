@@ -5,6 +5,12 @@ using Playgama;
 using Playgama.Modules.Advertisement;
 #endif
 
+public enum AdBannerPosition
+{
+    Bottom,
+    Top
+}
+
 public class PlayGamaAds : MonoBehaviour
 {
     private static PlayGamaAds _instance;
@@ -25,6 +31,17 @@ public class PlayGamaAds : MonoBehaviour
             return _instance;
         }
     }
+
+    [Header("Banner Ads")]
+    [Tooltip("If enabled, automatically shows a banner ad on game start / Main Menu.")]
+    public bool autoShowBanner = true;
+    public AdBannerPosition defaultBannerPosition = AdBannerPosition.Bottom;
+
+    private bool _isBannerShowing = false;
+    private bool _isShowingSimulatedBanner = false;
+    private AdBannerPosition _currentBannerPosition = AdBannerPosition.Bottom;
+
+    public bool IsBannerShowing => _isBannerShowing;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void AutoInitialize()
@@ -49,6 +66,14 @@ public class PlayGamaAds : MonoBehaviour
 
         _instance = this;
         DontDestroyOnLoad(gameObject);
+    }
+
+    private void Start()
+    {
+        if (autoShowBanner && IsBannerSupported())
+        {
+            ShowBanner(defaultBannerPosition);
+        }
     }
 
     // =========================================================================
@@ -82,6 +107,8 @@ public class PlayGamaAds : MonoBehaviour
         }
     }
 
+    private float _timeScaleBeforeAd = 1f;
+
     private void StartSimulatedAd(bool isRewarded, string title, Action<bool> callback)
     {
         _isShowingSimulatedAd = true;
@@ -92,6 +119,8 @@ public class PlayGamaAds : MonoBehaviour
         _simulatedAdCallback = callback;
         _wasAudioMutedBeforeAd = AudioListener.pause;
         AudioListener.pause = true;
+        _timeScaleBeforeAd = Time.timeScale;
+        if (Time.timeScale > 0f) Time.timeScale = 0f;
 
         Debug.Log($"[PlayGamaAds] Started simulated ad: {title} (duration: {_simulatedAdDuration}s)");
     }
@@ -100,6 +129,7 @@ public class PlayGamaAds : MonoBehaviour
     {
         _isShowingSimulatedAd = false;
         AudioListener.pause = _wasAudioMutedBeforeAd;
+        Time.timeScale = _timeScaleBeforeAd;
 
         Action<bool> cb = _simulatedAdCallback;
         _simulatedAdCallback = null;
@@ -118,6 +148,26 @@ public class PlayGamaAds : MonoBehaviour
 
     private void OnGUI()
     {
+        if (_isShowingSimulatedBanner && !_isShowingSimulatedAd)
+        {
+            float bannerHeight = 50f;
+            float by = _currentBannerPosition == AdBannerPosition.Top ? 0f : Screen.height - bannerHeight;
+            Rect bannerRect = new Rect(0, by, Screen.width, bannerHeight);
+
+            GUI.color = new Color(0.08f, 0.10f, 0.16f, 0.94f);
+            GUI.DrawTexture(bannerRect, Texture2D.whiteTexture);
+            GUI.color = Color.white;
+
+            var bannerStyle = new GUIStyle(GUI.skin.label)
+            {
+                fontSize = 12,
+                fontStyle = FontStyle.Bold,
+                alignment = TextAnchor.MiddleCenter
+            };
+            bannerStyle.normal.textColor = new Color(0.4f, 0.8f, 1f);
+            GUI.Label(bannerRect, "PLAYGAMA BANNER AD (SIMULATOR - 728x90 BOTTOM)", bannerStyle);
+        }
+
         if (!_isShowingSimulatedAd) return;
 
         // Dark dim backdrop over entire screen
@@ -235,6 +285,69 @@ public class PlayGamaAds : MonoBehaviour
     // Development builds; release builds never show it to real players.
     static bool SimulatorAllowed => Application.isEditor || Debug.isDebugBuild;
 
+    public bool IsBannerSupported()
+    {
+#if UNITY_WEBGL && !UNITY_EDITOR
+        try
+        {
+            if (Bridge.advertisement != null && Bridge.advertisement.isBannerSupported) return true;
+        }
+        catch { }
+#endif
+        return SimulatorAllowed;
+    }
+
+    public void ShowBanner(AdBannerPosition position = AdBannerPosition.Bottom, string placement = null)
+    {
+        _currentBannerPosition = position;
+        _isBannerShowing = true;
+
+#if UNITY_WEBGL && !UNITY_EDITOR
+        try
+        {
+            if (Bridge.advertisement != null && Bridge.advertisement.isBannerSupported)
+            {
+                var bridgePos = position == AdBannerPosition.Top ? BannerPosition.Top : BannerPosition.Bottom;
+                Bridge.advertisement.ShowBanner(bridgePos, placement);
+                Debug.Log($"[PlayGamaAds] Playgama ShowBanner called ({position}).");
+                return;
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"[PlayGamaAds] Playgama ShowBanner failed: {e}");
+        }
+#endif
+        if (SimulatorAllowed)
+        {
+            _isShowingSimulatedBanner = true;
+            Debug.Log($"[PlayGamaAds] Showing simulated banner ad ({position}).");
+        }
+    }
+
+    public void HideBanner()
+    {
+        _isBannerShowing = false;
+
+#if UNITY_WEBGL && !UNITY_EDITOR
+        try
+        {
+            if (Bridge.advertisement != null)
+            {
+                Bridge.advertisement.HideBanner();
+                Debug.Log("[PlayGamaAds] Playgama HideBanner called.");
+                return;
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"[PlayGamaAds] Playgama HideBanner failed: {e}");
+        }
+#endif
+        _isShowingSimulatedBanner = false;
+        Debug.Log("[PlayGamaAds] Hiding simulated banner ad.");
+    }
+
     public bool IsInterstitialSupported()
     {
 #if UNITY_WEBGL && !UNITY_EDITOR
@@ -268,7 +381,9 @@ public class PlayGamaAds : MonoBehaviour
             {
                 Action<InterstitialState> handler = null;
                 bool wasAudioMuted = AudioListener.pause;
+                float prevTimeScale = Time.timeScale;
                 AudioListener.pause = true;
+                if (Time.timeScale > 0f) Time.timeScale = 0f;
 
                 handler = state =>
                 {
@@ -276,12 +391,14 @@ public class PlayGamaAds : MonoBehaviour
                     {
                         Bridge.advertisement.interstitialStateChanged -= handler;
                         AudioListener.pause = wasAudioMuted;
+                        Time.timeScale = prevTimeScale;
                         onComplete?.Invoke(true);
                     }
                     else if (state == InterstitialState.Failed)
                     {
                         Bridge.advertisement.interstitialStateChanged -= handler;
                         AudioListener.pause = wasAudioMuted;
+                        Time.timeScale = prevTimeScale;
                         onComplete?.Invoke(false);
                     }
                 };
@@ -309,7 +426,9 @@ public class PlayGamaAds : MonoBehaviour
                 Action<RewardedState> handler = null;
                 bool rewarded = false;
                 bool wasAudioMuted = AudioListener.pause;
+                float prevTimeScale = Time.timeScale;
                 AudioListener.pause = true;
+                if (Time.timeScale > 0f) Time.timeScale = 0f;
 
                 handler = state =>
                 {
@@ -321,6 +440,7 @@ public class PlayGamaAds : MonoBehaviour
                     {
                         Bridge.advertisement.rewardedStateChanged -= handler;
                         AudioListener.pause = wasAudioMuted;
+                        Time.timeScale = prevTimeScale;
                         if (rewarded)
                             Debug.Log("[PlayGamaAds] Rewarded ad completed successfully.");
                         onRewarded?.Invoke(rewarded);
@@ -329,6 +449,7 @@ public class PlayGamaAds : MonoBehaviour
                     {
                         Bridge.advertisement.rewardedStateChanged -= handler;
                         AudioListener.pause = wasAudioMuted;
+                        Time.timeScale = prevTimeScale;
                         onRewarded?.Invoke(false);
                     }
                 };

@@ -70,11 +70,19 @@ public class WaveManager : MonoBehaviour
     [Header("Authored Waves (Used if useMathematicalScaling is disabled)")]
     public Wave[] waves;
 
-    [Header("Endless mode (after authored waves if useMathematicalScaling is disabled)")]
-    public int endlessStartCount = 10;
-    public int endlessCountPerWave = 2;
+    [Header("Endless mode (starts at wave 20)")]
+    [Tooltip("The wave number where Endless Mode starts (default: 20).")]
+    public int endlessStartWave = 20;
+    [Tooltip("Number of enemies per wave during Endless Mode (default: 20).")]
+    public int endlessEnemyCount = 20;
+    [Tooltip("Break countdown in seconds between endless waves (default: 5s).")]
+    public float endlessBreakTime = 5.0f;
+    public int endlessStartCount = 20;
+    public int endlessCountPerWave = 0;
     public float endlessSpawnInterval = 1.0f;
     public float endlessSpeedBonusPerWave = 0.1f;
+
+    public bool IsEndlessWave(int waveNumber) => waveNumber >= endlessStartWave;
 
     [Header("Timing")]
     [Tooltip("Seconds the wave banner stays up before enemies start spawning.")]
@@ -95,18 +103,18 @@ public class WaveManager : MonoBehaviour
     [Header("Boss Encounter Cadence (ZType Style)")]
     [Tooltip("The big enemy prefab (Enemy + BigEnemySpawner). Leave empty to disable this feature entirely.")]
     public Enemy bigEnemyPrefab;
-    [Tooltip("A boss appears every this-many waves after first appearance (e.g. Wave 5, 8, 11, 14, 17...).")]
-    public int bigEnemyEveryNWaves = 3;
+    [Tooltip("A boss appears every this-many waves after first appearance (e.g. Wave 5, 10, 15, 20...).")]
+    public int bigEnemyEveryNWaves = 5;
     [Tooltip("The first wave a boss appears on.")]
     public int firstBigEnemyWave = 5;
     [Tooltip("Word length on the boss's FIRST appearance.")]
-    public int bigEnemyStartLength = 7;
+    public int bigEnemyStartLength = 8;
     [Tooltip("How much longer the boss's word gets each subsequent appearance (2nd, 3rd, ...).")]
     public int bigEnemyLengthGrowthPerAppearance = 1;
     [Tooltip("Optional cap on the boss's word length. 0 = no cap.")]
-    public int bigEnemyMaxLength = 12;
-    [Tooltip("Number of armor / word phases for the boss (Phase 1 shield, Phase 2 core).")]
-    public int bossPhases = 2;
+    public int bigEnemyMaxLength = 14;
+    [Tooltip("Number of armor / word phases for the boss (Phase 1 shield, Phase 2 core, Phase 3 reactor).")]
+    public int bossPhases = 3;
     [Tooltip("On a boss wave, the normal enemy count for that wave is multiplied by this — fewer normal enemies to focus on the boss.")]
     [Range(0f, 1f)] public float normalCountMultiplierOnBigWave = 0.4f;
 
@@ -336,13 +344,13 @@ public class WaveManager : MonoBehaviour
             yield return Countdown(thisBreakTime);
             if (GameOver) yield break;
 
-            // Big enemy / Boss encounter (cadence starts at Wave 5, recurs every 3rd wave)
+            bool isEndless = IsEndlessWave(waveNumber);
             bool bigWave = IsBigEnemyWave(waveNumber);
             Enemy activeBoss = null;
-            if (bigWave && bigEnemyPrefab != null)
+
+            // On normal boss waves (pre-endless: Waves 5, 10, 15), boss spawns up-front
+            if (!isEndless && bigWave && bigEnemyPrefab != null)
             {
-                // Same "this wave has a boss" check that gates the spawn itself,
-                // so the warning and the boss can never go out of sync.
                 if (bossWarningBanner != null)
                     yield return bossWarningBanner.ShowAndWait();
                 if (GameOver) yield break;
@@ -354,8 +362,7 @@ public class WaveManager : MonoBehaviour
             if (NativeKeyboardInput.Instance != null)
                 NativeKeyboardInput.Instance.FocusInputField();
 
-            // If a boss is active, pause standard minion spawns until the boss is defeated.
-            // This allows the player to focus on the boss and its mini missile fragments without screen clutter!
+            // Wait for up-front boss to be defeated before normal minions spawn
             if (activeBoss != null)
             {
                 while (activeBoss != null && !activeBoss.IsDefeated)
@@ -366,11 +373,10 @@ public class WaveManager : MonoBehaviour
                 }
             }
 
-            // Spawn this wave's enemies (Night can scale how many; a boss
-            // wave also thins the normal spawns to make room for the boss duel)
+            // Spawn this wave's enemies (in endless: exactly 20 enemies)
             float countMult = DayNightCycle.Instance != null ? DayNightCycle.Instance.CurrentProfile.enemyCountMultiplier : 1f;
-            int enemyCount = Mathf.Max(1, Mathf.RoundToInt(w.enemyCount * countMult));
-            if (bigWave) enemyCount = Mathf.Max(1, Mathf.RoundToInt(enemyCount * normalCountMultiplierOnBigWave));
+            int enemyCount = isEndless ? endlessEnemyCount : Mathf.Max(1, Mathf.RoundToInt(w.enemyCount * countMult));
+            if (!isEndless && bigWave) enemyCount = Mathf.Max(1, Mathf.RoundToInt(enemyCount * normalCountMultiplierOnBigWave));
 
             int maxActive = GetMaxActiveEnemies(waveNumber);
 
@@ -380,7 +386,6 @@ public class WaveManager : MonoBehaviour
                 if (debugSkipRequested) break; // "skipwave"/"setwave" -- abandon this wave's remaining spawns
 
                 // Screen density protection: wait if too many enemies are active simultaneously.
-                // Ensures Wave 1 has at most 2 active enemies on screen at any time!
                 while (Enemy.Active.Count >= maxActive)
                 {
                     if (GameOver) yield break;
@@ -394,11 +399,35 @@ public class WaveManager : MonoBehaviour
             }
             debugSkipRequested = false; // consumed -- doesn't leak into the next wave
 
-            // Wait until the field is clear before starting the next wave
+            // Wait until normal wave enemies are defeated
             while (Enemy.Active.Count > 0)
             {
                 if (GameOver) yield break;
                 yield return null;
+            }
+
+            // In Endless Mode: "after every 20 enemies the boss should come"
+            if (isEndless && bigEnemyPrefab != null)
+            {
+                if (bossWarningBanner != null)
+                    yield return bossWarningBanner.ShowAndWait();
+                if (GameOver) yield break;
+
+                activeBoss = SpawnBigEnemy(waveNumber);
+
+                while (activeBoss != null && !activeBoss.IsDefeated)
+                {
+                    if (GameOver) yield break;
+                    if (debugSkipRequested) break;
+                    yield return null;
+                }
+
+                // Wait until any spawned minions from the boss are also cleared
+                while (Enemy.Active.Count > 0)
+                {
+                    if (GameOver) yield break;
+                    yield return null;
+                }
             }
 
             waveActive = false; // field is clear -- nothing left to type until the next wave goes live
@@ -424,8 +453,15 @@ public class WaveManager : MonoBehaviour
             SaveManager.CaptureAndSave(waveNumber + 1);
 
             // Between-wave upgrade draft: pauses, offers 3 cards, resumes on pick.
+            // Boss waves (every 5th wave and endless boss waves) grant 2 abilities!
             if (UpgradeManager.Instance != null)
-                yield return UpgradeManager.Instance.RunDraft();
+            {
+                int draftPicks = (bigWave || isEndless) ? 2 : 1;
+                for (int d = 0; d < draftPicks; d++)
+                {
+                    yield return UpgradeManager.Instance.RunDraft();
+                }
+            }
 
             waveIndex++;
         }
@@ -439,19 +475,34 @@ public class WaveManager : MonoBehaviour
     public Wave GetWave(int index)
     {
         int waveNumber = index + 1;
+        bool isEndless = IsEndlessWave(waveNumber);
+
         if (!useMathematicalScaling && waves != null && index < waves.Length && waves[index] != null)
         {
             return waves[index];
         }
 
+        string waveLabel;
+        if (isEndless)
+        {
+            waveLabel = IsBigEnemyWave(waveNumber) ? $"ENDLESS BOSS WAVE {waveNumber}" : $"ENDLESS WAVE {waveNumber}";
+        }
+        else
+        {
+            waveLabel = IsBigEnemyWave(waveNumber) ? $"BOSS WAVE {waveNumber}" : $"WAVE {waveNumber}";
+        }
+
+        int enemies = isEndless ? endlessEnemyCount : GetEnemyCount(waveNumber);
+        float brkTime = isEndless ? endlessBreakTime : -1f;
+
         // Dynamic 1.1x mathematical scaling curve
         return new Wave
         {
-            label = IsBigEnemyWave(waveNumber) ? $"BOSS WAVE {waveNumber}" : $"WAVE {waveNumber}",
-            enemyCount = GetEnemyCount(waveNumber),
+            label = waveLabel,
+            enemyCount = enemies,
             spawnInterval = GetSpawnInterval(waveNumber),
             speedBonus = GetSpeedBonus(waveNumber),
-            breakTimeOverride = -1f
+            breakTimeOverride = brkTime
         };
     }
 
@@ -482,6 +533,8 @@ public class WaveManager : MonoBehaviour
 
     public int GetEnemyCount(int waveNumber)
     {
+        if (IsEndlessWave(waveNumber)) return endlessEnemyCount;
+
         int count = Mathf.RoundToInt(baseEnemyCount * Mathf.Pow(enemyCountGrowthFactor, waveNumber - 1));
         return Mathf.Clamp(count, baseEnemyCount, maxEnemyCountClamp);
     }
@@ -537,17 +590,18 @@ public class WaveManager : MonoBehaviour
 
     public bool IsBigEnemyWave(int waveNumber)
     {
+        if (IsEndlessWave(waveNumber)) return true; // in endless, after every 20 enemies the boss comes
         if (bigEnemyEveryNWaves <= 0 || waveNumber < firstBigEnemyWave) return false;
         return (waveNumber - firstBigEnemyWave) % bigEnemyEveryNWaves == 0;
     }
 
-    // Spawns a high-threat flagship boss with multi-phase words (Phase 1 shield armor, Phase 2 core).
+    // Spawns a high-threat flagship boss with multi-phase words (Phase 1 shield armor, Phase 2 core, Phase 3 reactor).
     Enemy SpawnBigEnemy(int waveNumber)
     {
         bigEnemyAppearances++;
         int baseLen = bigEnemyStartLength + (bigEnemyAppearances - 1) * bigEnemyLengthGrowthPerAppearance;
         if (bigEnemyMaxLength > 0) baseLen = Mathf.Min(baseLen, bigEnemyMaxLength);
-        baseLen = Mathf.Max(4, baseLen);
+        baseLen = Mathf.Max(5, baseLen);
 
         Vector3 pos = new Vector3(Random.Range(minX * 0.5f, maxX * 0.5f), groundY, spawnZ);
         Enemy boss = EnemyPool.Instance != null
@@ -559,19 +613,30 @@ public class WaveManager : MonoBehaviour
 
         System.Func<int, string> wordProvider = (phaseIndex) =>
         {
-            int pLen = Mathf.Clamp(baseLen + (phaseIndex - 1), 4, 14);
+            int pLen = Mathf.Clamp(baseLen + (phaseIndex - 1), 5, 15);
             string pw = wordBank != null ? wordBank.GetWord(pLen, pLen) : null;
-            if (string.IsNullOrEmpty(pw)) pw = (phaseIndex == 2 ? "REACTOR" : "OVERLOAD");
+            if (string.IsNullOrEmpty(pw))
+            {
+                if (phaseIndex == 2) pw = "REACTOR";
+                else if (phaseIndex == 3) pw = "OVERDRIVE";
+                else pw = "ANNIHILATOR";
+            }
             return pw;
         };
+
+        // 3 phases by default; escalates to 4 phases in late endless waves
+        int effectivePhases = (IsEndlessWave(waveNumber) && waveNumber >= 25) ? 4 : bossPhases;
+
+        // Progressive approach drift speed on later waves
+        float bossSpeed = Mathf.Min(0.35f, Mathf.Max(0f, (waveNumber - 5) * 0.02f));
 
         boss.Init(
             word: firstWord,
             fortress: fortress,
-            speedBonus: 0f, // Boss moves at deliberate flagship drift speed
+            speedBonus: bossSpeed,
             waveNumber: waveNumber,
             isBossEnemy: true,
-            phases: bossPhases,
+            phases: effectivePhases,
             wordProvider: wordProvider
         );
 

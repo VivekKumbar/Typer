@@ -37,7 +37,8 @@ public class HUD : MonoBehaviour
 
         if (persistentWaveText != null && WaveManager.Instance != null)
         {
-            persistentWaveText.text = $"Wave {WaveManager.Instance.currentWave}";
+            bool isEndless = WaveManager.Instance.IsEndlessWave(WaveManager.Instance.currentWave);
+            persistentWaveText.text = isEndless ? $"Endless {WaveManager.Instance.currentWave}" : $"Wave {WaveManager.Instance.currentWave}";
             WaveManager.Instance.OnWaveStarted += UpdateWaveDisplay;
         }
 
@@ -110,7 +111,10 @@ public class HUD : MonoBehaviour
     void UpdateWaveDisplay(int wave)
     {
         if (persistentWaveText != null)
-            persistentWaveText.text = $"Wave {wave}";
+        {
+            bool isEndless = WaveManager.Instance != null && WaveManager.Instance.IsEndlessWave(wave);
+            persistentWaveText.text = isEndless ? $"Endless {wave}" : $"Wave {wave}";
+        }
     }
 
     void UpdateHealth(int cur, int max)
@@ -152,6 +156,10 @@ public class HUD : MonoBehaviour
         // closed here so the popup is never sharing the screen with stray text.
         if (cachedWaveBanner != null) cachedWaveBanner.Hide();
         if (gameOverPanel) gameOverPanel.SetActive(true);
+        if (PlayGamaAds.Instance != null && PlayGamaAds.Instance.IsBannerSupported())
+        {
+            PlayGamaAds.Instance.ShowBanner();
+        }
     }
 
     public void HideGameOver()

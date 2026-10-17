@@ -73,7 +73,7 @@ public class HealthBarClickHandler : MonoBehaviour, IPointerDownHandler, IPointe
         if (gm == null || gm.IsGameOver) return;
 
         var ub = FindAnyObjectByType<UpgradeButton>();
-        int cost = ub != null ? ub.cost : 10;
+        int cost = ub != null ? ub.cost : 200;
         int amount = ub != null ? ub.amount : 20;
 
         Transform toastOrigin = bounceTarget != null ? bounceTarget : transform;

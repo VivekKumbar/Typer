@@ -81,6 +81,7 @@ public static class SaveManager
             coins = gm.coins,
             coinsEarnedThisRun = gm.coinsEarnedThisRun,
             coinsBankedThisRun = gm.coinsBankedThisRun,
+            repairCost = Object.FindAnyObjectByType<UpgradeButton>() != null ? Object.FindAnyObjectByType<UpgradeButton>().cost : 200,
 
             activeGameplaySeconds = gm.activeGameplaySeconds,
             correctCharactersThisRun = gm.correctCharactersThisRun,
